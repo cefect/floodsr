@@ -1,0 +1,14 @@
+{% extends "!layout.html" %}
+
+{# Add lightweight metadata and branding hooks for this project docs theme. #}
+{% block extrahead %}
+  {{ super() }}
+  <meta name="description" content="floodsr documentation" />
+{% endblock %}
+
+{% block footer %}
+  {{ super() }}
+  <div class="floodsr-footer-note">
+    Starter docs template for the floodsr project.
+  </div>
+{% endblock %}

@@ -1,0 +1,25 @@
+name: floodsr_docs_compose
+services:
+  dev:
+    build:
+      context: ../..
+      dockerfile: docs/container/Dockerfile
+      target: dev
+    image: cefect/floodsr-docs:dev-v0.1
+    environment:
+      XDG_CONFIG_HOME: /home/cefect/.config
+      PYTHONPATH: /workspace
+    volumes:
+      - ../..:/workspace:delegated
+      - /home/cefect/.config:/home/cefect/.config:rw
+      - /home/cefect/.codex:/home/cefect/.codex:rw
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    working_dir: /workspace/docs
+    user: 1000:1000
+    tty: true
+    stdin_open: true
+    cpus: 4
+    mem_limit: 8g
+    command:
+      - sleep infinity

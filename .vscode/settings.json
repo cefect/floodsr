@@ -1,0 +1,24 @@
+{
+	"files.exclude": {
+		"**/__pycache__": true,
+		"**/.pytest_cache": true,
+
+		"LICENSE": true
+	},
+	
+	"search.exclude": {
+		"**/__pycache__": true,
+		"**/.pytest_cache": true,
+		"**/env": true,
+		"**/.snakemake": true,
+		"LICENSE": true
+	},
+"jupyter.notebookFileRoot": "${workspaceFolder}",
+	"python-envs.pythonProjects": [
+		{
+			"path": "",
+			"envManager": "ms-python.python:system",
+			"packageManager": "ms-python.python:pip"
+		}
+	]
+}

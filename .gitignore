@@ -28,12 +28,14 @@ venv.bak/
 
 #VS Code
 *.code-workspace
-.devcontainer/
 
 #gdal 
 *.gpkg-wal
 *.gpkg-shm
 *.aux.xml
+
+# docs
+docs/_build/
 
 #windows shortcuts
 *.lnk

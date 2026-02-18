@@ -1,0 +1,39 @@
+:root {
+  --floodsr-brand-deep: #0b3a53;
+  --floodsr-brand-accent: #0d8f87;
+  --floodsr-brand-soft: #e8f4f6;
+}
+
+.wy-side-nav-search,
+.wy-nav-top {
+  background: linear-gradient(135deg, var(--floodsr-brand-deep), var(--floodsr-brand-accent));
+}
+
+.wy-side-nav-search input[type="text"] {
+  border-radius: 6px;
+}
+
+a {
+  color: var(--floodsr-brand-accent);
+}
+
+a:hover {
+  color: var(--floodsr-brand-deep);
+}
+
+.floodsr-footer-note {
+  margin-top: 12px;
+  color: #5a6973;
+  font-size: 0.85rem;
+}
+
+.rst-content h1,
+.rst-content h2,
+.rst-content h3 {
+  color: var(--floodsr-brand-deep);
+}
+
+.rst-content code.literal {
+  background: var(--floodsr-brand-soft);
+  border: 1px solid #cde2e7;
+}
