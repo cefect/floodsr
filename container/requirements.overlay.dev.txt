@@ -1,0 +1,11 @@
+# Notebook extras for the dev target.
+jupyterlab==4.5.4
+notebook==7.5.3
+ipykernel==7.2.0
+pandas==3.0.1
+contextily==1.7.0
+colorcet==3.1.0
+imageio==2.37.2
+xlsxwriter==3.2.9
+palettable==3.3.3
+pillow==12.1.1

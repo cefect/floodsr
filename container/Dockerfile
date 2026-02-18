@@ -57,12 +57,22 @@ RUN python -m pip freeze --all > /tmp/requirements.final.txt
 # Dev
 ########################
 
-FROM inference AS dev
+FROM base AS dev
 
 # declare args again for this stage
 ARG USERNAME
 ARG USER_UID
 ARG USER_GID
+ARG OLD_USERNAME=vscode
+
+# Notebook layer: keep base package versions pinned via freeze constraints.
+COPY container/requirements.overlay.dev.txt /tmp/requirements.overlay.dev.txt
+RUN python -m pip freeze --all > /tmp/requirements.base-dev.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python -m pip install \
+    --constraint /tmp/requirements.base-dev.txt \
+    --requirement /tmp/requirements.overlay.dev.txt
+RUN python -m pip freeze --all > /tmp/requirements.dev.txt
 
 
 
@@ -72,20 +82,20 @@ ARG USER_GID
 
 # rename existing user if present; otherwise create the dev user
 RUN set -eux; \
-    if id -u "${OLD_USERNAME}" >/dev/null 2>&1; then \
+    if id -u "${OLD_USERNAME}" >/dev/null 2>&1 && [ "${OLD_USERNAME}" != "${USERNAME}" ]; then \
         usermod -l "${USERNAME}" "${OLD_USERNAME}"; \
         usermod -d "/home/${USERNAME}" -m "${USERNAME}"; \
         groupmod -n "${USERNAME}" "${OLD_USERNAME}" || true; \
-        usermod -u "${USER_UID}" "${USERNAME}" || true; \
-        groupmod -g "${USER_GID}" "${USERNAME}" || true; \
-    else \
+    elif ! id -u "${USERNAME}" >/dev/null 2>&1; then \
         groupadd --gid "${USER_GID}" "${USERNAME}"; \
         useradd  --uid "${USER_UID}" --gid "${USER_GID}" --create-home --shell /bin/bash "${USERNAME}"; \
-    fi
+    fi; \
+    usermod -u "${USER_UID}" "${USERNAME}" || true; \
+    groupmod -g "${USER_GID}" "${USERNAME}" || true
 
 # add to sudo + common dev tooling
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
         sudo \
         git \
@@ -97,7 +107,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         curl \
         rsync  \
         procps \
-        strace 
+        strace \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-${USERNAME} \
     && chmod 0440 /etc/sudoers.d/90-${USERNAME}

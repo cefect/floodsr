@@ -36,8 +36,6 @@ venv.bak/
 
 #windows shortcuts
 *.lnk
+ 
 
-#cef build files
-definitions.py
-
-
+_inputs/
