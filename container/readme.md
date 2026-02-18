@@ -72,8 +72,8 @@ docker run --rm --entrypoint /bin/bash "$IMAGE_NAME" -lc "python -m pip freeze" 
 ```
 
 
-update the .devcontainer/compose
+update the main devcontainer compose
 ```bash
  
-yq -y -i '.services.dev.image = env.IMAGE_NAME' .devcontainer/docker-compose.yml
+yq -y -i '.services.dev.image = env.IMAGE_NAME' .devcontainer/main/docker-compose.yml
 ```

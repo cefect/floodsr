@@ -1,0 +1,29 @@
+{
+  "name": "floodsr_docs_DC",
+  "dockerComposeFile": "./docker-compose.yml",
+  "service": "dev",
+  "workspaceFolder": "/workspace/docs",
+  "shutdownAction": "stopCompose",
+  // Keep host/container UID in sync for mounted repo edits.
+  "updateRemoteUserUID": true,
+  "containerUser": "cefect",
+  "remoteUser": "cefect",
+  "containerEnv": {
+    "CODEX_HOME": "/home/cefect/.codex"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "openai.chatgpt",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "lextudio.restructuredtext",
+        "trond-snekvik.simple-rst"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.terminal.activateEnvironment": false
+      }
+    }
+  }
+}
