@@ -1,0 +1,5 @@
+# Overlay-only dependencies for this project image.
+# Keep this list focused on additions; base package versions are constrained from upstream freeze.
+tf2onnx==1.8.4
+# ONNX 1.19+ requires newer ml_dtypes symbols than TF 2.15's ~=0.2.0 pin.
+onnx==1.18.0

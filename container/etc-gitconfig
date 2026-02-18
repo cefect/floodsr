@@ -1,0 +1,11 @@
+# etc-gitconfig
+[core]
+    autocrlf = false
+    eol = lf
+    filemode = false
+
+[safe]
+    directory = /workspace
+
+[push]
+    followTags = true

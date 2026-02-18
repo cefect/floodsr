@@ -1,0 +1,16 @@
+certifi==2026.1.4
+charset-normalizer==3.4.4
+flatbuffers==25.12.19
+gitdb==4.0.12
+GitPython==3.1.41
+idna==3.11
+numpy==2.4.2
+onnx==1.18.0
+protobuf==6.33.5
+requests==2.32.5
+setuptools==78.1.1
+six==1.17.0
+smmap==5.0.2
+tf2onnx==1.8.4
+typing_extensions==4.15.0
+urllib3==2.6.3
