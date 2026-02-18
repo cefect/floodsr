@@ -28,6 +28,7 @@ venv.bak/
 
 #VS Code
 *.code-workspace
+.devcontainer/
 
 #gdal 
 *.gpkg-wal
