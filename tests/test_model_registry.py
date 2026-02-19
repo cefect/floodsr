@@ -5,7 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from floodsr.model_registry import fetch_model, get_retrieval_backend, list_models
+from floodsr.model_registry import DEFAULT_MANIFEST_FP, fetch_model, get_retrieval_backend, list_models
+from floodsr.checksums import verify_sha256
 
 
 @pytest.fixture(scope="function")
@@ -76,6 +77,63 @@ def test_fetch_model_fails_on_checksum_mismatch(tmp_path: Path):
     assert "checksum mismatch" in str(exc_info.value)
 
 
+def test_default_manifest_dummy_entry_fetch_and_checksum(tmp_path: Path):
+    """Ensure default-manifest dummy entry runs full fetch and checksum validation."""
+    model_version = "dummy_local_test_model"
+    model_fp = fetch_model(model_version, cache_dir=tmp_path / "cache")
+    expected_sha256 = next(record.sha256 for record in list_models() if record.version == model_version)
+    is_match = verify_sha256(model_fp, expected_sha256)
+    assert isinstance(model_fp, Path)
+    assert is_match
+
+
+@pytest.mark.parametrize(
+    "field_name, bad_value, expected_exception, expected_message",
+    [
+        pytest.param(
+            "sha256",
+            "0" * 64,
+            ValueError,
+            "checksum mismatch",
+            id="bad_sha256_should_fail_checksum_validation",
+        ),
+        pytest.param(
+            "url",
+            "tests/data/does_not_exist.onnx",
+            FileNotFoundError,
+            "source model not found",
+            id="bad_url_should_fail_source_resolution",
+        ),
+    ],
+)
+def test_default_manifest_injected_bad_values_fail_fetch(
+    tmp_path: Path,
+    field_name: str,
+    bad_value: str,
+    expected_exception: type[Exception],
+    expected_message: str,
+):
+    """Ensure bad model entries injected into manifest fail end-to-end fetch validation."""
+    model_version = "dummy_local_test_model"
+    manifest = json.loads(DEFAULT_MANIFEST_FP.read_text(encoding="utf-8"))
+    assert model_version in manifest["models"], f"missing required test model '{model_version}' in default manifest"
+
+    # Inject one bad value into a temporary copy of the default manifest.
+    manifest["models"][model_version][field_name] = bad_value
+    bad_manifest_fp = tmp_path / "models_bad.json"
+    bad_manifest_fp.write_text(json.dumps(manifest), encoding="utf-8")
+
+    with pytest.raises(expected_exception) as exc_info:
+        fetch_model(
+            model_version,
+            cache_dir=tmp_path / "cache",
+            manifest_fp=bad_manifest_fp,
+            force=True,
+        )
+    assert isinstance(exc_info.value, expected_exception)
+    assert expected_message in str(exc_info.value)
+
+
 def test_default_manifest_http_links_resolve(tmp_path: Path):
     """Ensure HTTP model URLs in the default manifest resolve with project fetch logic."""
     log = logging.getLogger(__name__)
@@ -101,3 +159,4 @@ def test_default_manifest_http_links_resolve(tmp_path: Path):
 
         assert isinstance(model_fp, Path)
         assert model_fp.exists()
+

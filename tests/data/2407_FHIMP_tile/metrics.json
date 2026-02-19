@@ -1,0 +1,15 @@
+{
+  "model_version": "4690176_0_1770580046_train_base_16",
+  "model_file_name": "model_infer.onnx",
+  "lowres_fp": "lowres032.tif",
+  "dem_fp": "hires002_dem.tif",
+  "truth_fp": "hires002.tif",
+  "precision": 3,
+  "metrics": {
+    "mase_m": 0.058874,
+    "rmse_m": 0.105933,
+    "ssim": 0.666199
+  },
+  "source": "dev/infer_test_tiles.ipynb sr_* metrics (model only, no bilinear)"
+}
+
