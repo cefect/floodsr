@@ -12,6 +12,7 @@ The project needs an MVP inference path that works cross-platform and can be cal
 - GPU support is deferred, but architecture must keep a stable CLI contract while allowing future execution provider swaps (CUDA on Linux, DirectML on Windows, etc.).
 
 ## Model I/O Contract (from `dev/infer_test_tiles.ipynb`)
+NOTE: may have other contracts as additional models are added.
 
 - Model I/O names:
   - inputs: `depth_lr`, `dem_hr`
@@ -45,6 +46,9 @@ The project needs an MVP inference path that works cross-platform and can be cal
 - Runtime/provider policy for MVP:
   - ORT session is created with `providers=["CPUExecutionProvider"]`
   - input names and static dimensions are validated against ORT session metadata before `session.run(...)`
+
+### pre-processing
+see `docs/dev/adr/0009-preproccessing.md`
 
 ## Consequences
 
