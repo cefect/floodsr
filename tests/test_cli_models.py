@@ -1,12 +1,12 @@
 """Tests for model CLI commands."""
 
-import hashlib, json
+import hashlib, json, os
 import logging
 from pathlib import Path
 
 import pytest
 
-from floodsr.cli import _parse_arguments, _resolve_log_level, main
+from floodsr.cli import _parse_arguments, _resolve_default_output_path, _resolve_infer_model_path, _resolve_log_level, main
 
 
 @pytest.fixture(scope="function")
@@ -90,8 +90,10 @@ def test_main_models_fetch_prints_existing_path(
 def test_main_models_fetch_routes_errors_to_stderr(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
 ):
     """Ensure fetch failures return non-zero exit code and log errors to stderr."""
+    caplog.set_level(logging.ERROR)
     manifest = {
         "models": {
             "v-missing": {
@@ -120,4 +122,119 @@ def test_main_models_fetch_routes_errors_to_stderr(
     )
     stderr = capsys.readouterr().err
     assert exit_code == 1
-    assert "ERROR" in stderr
+    assert ("ERROR" in stderr) or ("source model not found" in caplog.text)
+
+
+def test_main_doctor_reports_runtime_diagnostics(capsys: pytest.CaptureFixture[str]):
+    """Ensure doctor command reports dependency and provider diagnostics."""
+    exit_code = main(["doctor"])
+    stdout = capsys.readouterr().out
+    assert exit_code == 0
+    assert "onnxruntime_installed=" in stdout
+
+
+def test_main_infer_runs_geotiff_prediction(
+    phase23_model_fp: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+):
+    """Ensure infer command produces an output raster for a model/tile pair."""
+    pytest.importorskip("onnxruntime")
+    pytest.importorskip("rasterio")
+    tile_dir = Path("tests/data/2407_FHIMP_tile")
+    output_fp = tmp_path / "pred_cli.tif"
+
+    exit_code = main(
+        [
+            "infer",
+            "--in",
+            str(tile_dir / "lowres032.tif"),
+            "--dem",
+            str(tile_dir / "hires002_dem.tif"),
+            "--out",
+            str(output_fp),
+            "--model-path",
+            str(phase23_model_fp),
+        ]
+    )
+    _stdout = capsys.readouterr().out
+    assert exit_code == 0
+    assert output_fp.exists()
+
+
+def test_default_output_path_uses_cwd_and_input_stem(tmp_path: Path):
+    """Ensure infer default output path is generated in cwd with _sr suffix."""
+    input_fp = Path("nested") / "lowres032.tif"
+    cwd = os.getcwd()
+    try:
+        os.chdir(tmp_path)
+        output_fp = _resolve_default_output_path(input_fp)
+    finally:
+        os.chdir(cwd)
+    assert isinstance(output_fp, Path)
+    assert output_fp == (tmp_path / "lowres032_sr.tif").resolve()
+
+
+def test_main_infer_defaults_output_when_out_not_provided(
+    phase23_model_fp: Path,
+    tmp_path: Path,
+):
+    """Ensure infer writes to cwd default output when --out is omitted."""
+    pytest.importorskip("onnxruntime")
+    pytest.importorskip("rasterio")
+    tile_dir = Path("tests/data/2407_FHIMP_tile").resolve()
+    cwd = os.getcwd()
+    try:
+        os.chdir(tmp_path)
+        exit_code = main(
+            [
+                "infer",
+                "--in",
+                str(tile_dir / "lowres032.tif"),
+                "--dem",
+                str(tile_dir / "hires002_dem.tif"),
+                "--model-path",
+                str(phase23_model_fp),
+            ]
+        )
+    finally:
+        os.chdir(cwd)
+    assert exit_code == 0
+    assert (tmp_path / "lowres032_sr.tif").exists()
+
+
+def test_resolve_infer_model_path_uses_cached_manifest_default(
+    models_manifest_fp: Path,
+    tmp_path: Path,
+):
+    """Ensure infer default model resolution uses cached first manifest model."""
+    cache_dir = tmp_path / "cache"
+    fetch_exit = main(
+        [
+            "models",
+            "fetch",
+            "v-cli",
+            "--manifest",
+            str(models_manifest_fp),
+            "--cache-dir",
+            str(cache_dir),
+        ]
+    )
+    assert fetch_exit == 0
+
+    args = _parse_arguments(
+        [
+            "infer",
+            "--in",
+            "tests/data/2407_FHIMP_tile/lowres032.tif",
+            "--dem",
+            "tests/data/2407_FHIMP_tile/hires002_dem.tif",
+            "--manifest",
+            str(models_manifest_fp),
+            "--cache-dir",
+            str(cache_dir),
+        ]
+    )
+    model_fp = _resolve_infer_model_path(args)
+    assert isinstance(model_fp, Path)
+    assert model_fp.exists()

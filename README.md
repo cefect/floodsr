@@ -1,6 +1,15 @@
 # floodsr
 
 Super-Resolution for flood hazard rasters.
+Ingests lores water grid and hires DEM and infers a hires water grid using the specifeid model and backend.
+
+Implemented models (see `floodsr/models.json`):
+- **4690176_0_1770580046_train_base_16**: 16x DEM-conditioned ResUNet
+- **CostGrow** (future)
+
+Implemented backend:
+- **ONNX Runtime** (CPU)
+- **CUDA** (future)
 
 
 ## Installation
@@ -12,7 +21,7 @@ pip install -e ".[dev]"
 
 ## Use
 
-The Phase-4 CLI surface is focused on model registry operations.
+Current CLI surface includes model registry, single-tile GeoTIFF inference, and runtime diagnostics.
 
 List available model versions:
 
@@ -29,27 +38,29 @@ Fetch a model by version into the default cache:
 floodsr models fetch 4690176_0_1770580046_train_base_16 --force
 ```
 
-Fetch using explicit options:
+
+Run one inference pass from GeoTIFF inputs:
 
 ```bash
-floodsr models fetch 4690176_0_1770580046_train_base_16 \
-  --cache-dir ./tmp/model-cache \
-  --backend file \
-  --manifest ./floodsr/models.json
+floodsr infer \
+  --in tests/data/2407_FHIMP_tile/lowres032.tif \
+  --dem tests/data/2407_FHIMP_tile/hires002_dem.tif  
 ```
 
-Notes:
-- `models list` supports `--manifest <path>` to use a custom manifest.
-- `models fetch` supports `--manifest`, `--cache-dir`, `--backend {http,file}`, and `--force`.
-- Logging controls: `-v/--verbose`, `-q/--quiet`, and `--log-level {DEBUG,INFO,WARNING,ERROR}`.
-- for private GitHub release assets, set `FLOODSR_GITHUB_TOKEN` (or `GITHUB_TOKEN` / `GH_TOKEN`) before `models fetch`.
-- `.devcontainer/main` and `.devcontainer/docs` pass these token env vars from host to container.
-- If the `floodsr` console script is not installed yet, use:
+Run inference with explicit local model path:
 
 ```bash
-python -m floodsr.cli models list
+floodsr infer \
+  --in tests/data/2407_FHIMP_tile/lowres032.tif \
+  --dem tests/data/2407_FHIMP_tile/hires002_dem.tif \
+  --out ./tmp/pred_sr.tif \
+  --model-path _inputs/4690176_0_1770580046_train_base_16/model_infer.onnx
 ```
 
+Doctor diagnostics:
 
+```bash
+floodsr doctor
+```
 
  
