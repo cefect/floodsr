@@ -149,6 +149,22 @@ engine.load(model_path)
 * Add `floodsr models fetch` + `floodsr models list`.
 * Integration tests: corrupt download should fail checksum.
 
+current models:
+
+#### 4690176_0_1770580046_train_base_16
+16x DEM-conditioned ResUNet. training run from the Feb training experiments. 
+[release](https://github.com/cefect/floodsr/releases/tag/v2026.02.19) with:
+- train_config.json: training config + stats used for normalization
+- model_infer.onnx: the ONNX export of the trained model, which is what the inference code will use.
+
+note: 
+- there are more files in the release that should be ignored. 
+- repo is private (for now)
+
+
+
+
+
 ### Phase 5 — GeoTIFF I/O + tiling + stitching  
 
  

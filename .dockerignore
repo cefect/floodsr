@@ -1,0 +1,31 @@
+# VCS (also speeds builds)
+.git
+.gitmodules
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Common secret stores (runtime-mount these instead)
+**/.ssh/
+**/.aws/
+**/.azure/
+**/.config/gcloud/
+**/.config/earthengine/
+**/.docker/config.json
+**/.git-credentials
+**/.netrc
+**/.npmrc
+**/.pypirc
+
+# Key/token patterns
+**/id_rsa*
+**/id_ed25519*
+**/*.pem
+**/*.key
+**/*secret*
+**/*token*
+
+# Your specific examples
+**/.codex/auth.json
