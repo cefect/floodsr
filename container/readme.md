@@ -59,7 +59,7 @@ docker run --rm --entrypoint /bin/bash "$IMAGE_NAME" -lc "python -m pip freeze" 
 
 ## build dev
 ```bash
-export IMAGE_NAME='cefect/floodsr:dev-v0.2'
+export IMAGE_NAME='cefect/floodsr:dev-v0.3'
 
 docker buildx build --load -t $IMAGE_NAME -f container/Dockerfile --target dev .
 
