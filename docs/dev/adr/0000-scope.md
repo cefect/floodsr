@@ -12,7 +12,7 @@ future features:
 - GPU support
 
 Out of scope:
-- performance/validation against a known tile (only do a bit of this in dev for pytests)
+- runtime performance/validation against a known tile
 - plotting/visualization of results (a tiny bit for dev only)
 
 ## CLI
