@@ -31,3 +31,6 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 include = ["floodsr*"]
+
+[tool.setuptools.package-data]
+floodsr = ["models.json"]
