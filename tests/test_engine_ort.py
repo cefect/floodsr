@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 from floodsr.engine import EngineORT
+from tests.conftest import inference_model_fp, tile_data_dir
 
 
 @pytest.fixture(scope="function")
@@ -24,10 +25,10 @@ def tile_arrays(tile_data_dir):
     }
 
 
-def test_engine_ort_run_tile_returns_float32_prediction(phase23_model_fp, tile_arrays):
+def test_engine_ort_run_tile_returns_float32_prediction(inference_model_fp, tile_arrays):
     """Ensure ORT engine inference returns float32 predictions with data."""
     pytest.importorskip("onnxruntime")
-    engine = EngineORT(phase23_model_fp)
+    engine = EngineORT(inference_model_fp)
     result = engine.run_tile(
         tile_arrays["depth_lr_raw"],
         tile_arrays["dem_hr_raw"],
@@ -38,10 +39,10 @@ def test_engine_ort_run_tile_returns_float32_prediction(phase23_model_fp, tile_a
     assert result["prediction_m"].size > 0
 
 
-def test_engine_ort_run_tile_is_deterministic(phase23_model_fp, tile_arrays):
+def test_engine_ort_run_tile_is_deterministic(inference_model_fp, tile_arrays):
     """Ensure repeated ORT inference on same tile returns identical arrays."""
     pytest.importorskip("onnxruntime")
-    engine = EngineORT(phase23_model_fp)
+    engine = EngineORT(inference_model_fp)
     run1 = engine.run_tile(
         tile_arrays["depth_lr_raw"],
         tile_arrays["dem_hr_raw"],
@@ -56,4 +57,3 @@ def test_engine_ort_run_tile_is_deterministic(phase23_model_fp, tile_arrays):
     )
     assert isinstance(run1["prediction_m"], np.ndarray)
     assert np.array_equal(run1["prediction_m"], run2["prediction_m"])
-
