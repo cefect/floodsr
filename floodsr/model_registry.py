@@ -1,6 +1,6 @@
 """Model manifest resolution and retrieval backends."""
 
-import json, logging, os, shutil, subprocess
+import json, logging, os, shutil, subprocess, sys
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.error import HTTPError, URLError
@@ -13,6 +13,45 @@ from floodsr.checksums import assert_sha256, verify_sha256
 
 DEFAULT_MANIFEST_FP = Path(__file__).with_name("models.json")
 log = logging.getLogger(__name__)
+
+
+def _stream_response_to_destination(response, destination: Path, logger=None, chunk_size: int = 1024 * 1024) -> Path:
+    """Stream an HTTP response to disk with a simple progress bar when possible."""
+    log = logger or logging.getLogger(__name__)
+
+    # Parse response size so progress can report percent complete.
+    total_bytes = response.headers.get("Content-Length")
+    try:
+        total_size = int(total_bytes) if total_bytes else None
+    except ValueError:
+        total_size = None
+
+    # Only draw a progress bar for TTY stderr with known total size.
+    show_progress = bool(total_size) and sys.stderr.isatty()
+    downloaded = 0
+    with destination.open("wb") as stream:
+        chunk = response.read(chunk_size)
+        while chunk:
+            stream.write(chunk)
+            downloaded += len(chunk)
+
+            if show_progress and total_size:
+                width = 30
+                ratio = min(downloaded / total_size, 1.0)
+                filled = int(width * ratio)
+                bar = "#" * filled + "-" * (width - filled)
+                sys.stderr.write(
+                    f"\r[{bar}] {ratio * 100:6.2f}% ({downloaded:,}/{total_size:,} bytes)"
+                )
+                sys.stderr.flush()
+
+            chunk = response.read(chunk_size)
+
+    if show_progress:
+        sys.stderr.write("\n")
+        sys.stderr.flush()
+    log.debug(f"downloaded {downloaded:,} bytes to\n    {destination}")
+    return destination
 
 
 def get_github_auth_token(logger=None) -> str | None:
@@ -99,8 +138,8 @@ class HttpRetrievalBackend(WeightsRetrievalBackend):
 
         # First attempt: no credentials (works for public assets and avoids needless token use).
         try:
-            with urlopen(Request(source)) as response, destination.open("wb") as stream:  # nosec B310
-                shutil.copyfileobj(response, stream)
+            with urlopen(Request(source)) as response:  # nosec B310
+                _stream_response_to_destination(response, destination, logger=log)
             return destination
         except HTTPError as err:
             unauthenticated_http_error = err
@@ -123,8 +162,8 @@ class HttpRetrievalBackend(WeightsRetrievalBackend):
         request_headers = {"Authorization": f"Bearer {auth_token}"}
         request = Request(source, headers=request_headers)
         try:
-            with urlopen(request) as response, destination.open("wb") as stream:  # nosec B310
-                shutil.copyfileobj(response, stream)
+            with urlopen(request) as response:  # nosec B310
+                _stream_response_to_destination(response, destination, logger=log)
             return destination
         except HTTPError as err:
             # Private GitHub release assets can still 404 on the web URL, so resolve via API.
@@ -159,8 +198,8 @@ class HttpRetrievalBackend(WeightsRetrievalBackend):
                         "Authorization": f"Bearer {auth_token}",
                     },
                 )
-                with urlopen(asset_request) as asset_response, destination.open("wb") as stream:  # nosec B310
-                    shutil.copyfileobj(asset_response, stream)
+                with urlopen(asset_request) as asset_response:  # nosec B310
+                    _stream_response_to_destination(asset_response, destination, logger=log)
                 return destination
 
             message = f"failed to download model from '{source}' (HTTP {err.code})"
