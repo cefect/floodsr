@@ -1,4 +1,4 @@
-# ADR-0001: MVP Runtime and CLI Contract
+# ADR-0001: Runtime and CLI Contract
  
 
 The project needs an MVP inference path that works cross-platform and can be called both from shell scripts and a QGIS plugin subprocess.
