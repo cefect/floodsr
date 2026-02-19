@@ -1,0 +1,12 @@
+ 
+{
+  "models": { 
+    "4690176_0_1770580046_train_base_16": {
+      "file_name": "model_infer.onnx",
+      "url": "https://github.com/cefect/floodsr/releases/download/v2026.02.19/model_infer.onnx",
+      "sha256": "acde89cdbcdbaaea0275df5b367b9c59987249efa3bb6a84327898a56c38e820",
+      "description": "16x DEM-conditioned ResUNet exported for inference."
+    }
+  }
+}
+
