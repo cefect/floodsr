@@ -9,8 +9,7 @@ PROJECT_ROOT = Path(__file__).parent.resolve()
 GEOTIF_OPTIONS= dict(driver='GTiff',
                      dtype='float32',
                         compress='LZW',
-                        nodata=-9999,
- 
+                        nodata=-9999, 
                         )
 
 GPKG_OPTIONS= dict(driver='GPKG', engine='pyogrio',

@@ -10,13 +10,13 @@ Architecture decisions are tracked in ADRs: `docs/dev/adr`
 - [x] lock ONNX model I/O: tensor names, channel order, dtype, nodata handling,  output scaling/clipping. see  `docs/dev/adr/0001-mvp-runtime-and-cli-contract.md` 
 - [ ] add a small golden test case
 
-### Phase 2 - ONNX Runtime (ORT) CPU engine MVP
+### ONNX Runtime (ORT) CPU engine MVP
 ADR refs: `docs/dev/adr/0001-mvp-runtime-and-cli-contract.md`, `docs/dev/adr/0004-repository-and-module-architecture.md`
 
 - [x] implement `EngineORT` session load/run path
 - [x] add deterministic CPU unit tests
 
-### Phase 3 - CLI MVP
+### CLI MVP
 ADR refs: `docs/dev/adr/0001-mvp-runtime-and-cli-contract.md`, `docs/dev/adr/0003-logging-policy-cli-and-library.md`, `docs/dev/adr/0004-repository-and-module-architecture.md`
 
 - [x] implement `floodsr infer` from GeoTiff
