@@ -137,6 +137,12 @@ RUN set -eux; \
 COPY container/etc-gitconfig /etc/gitconfig
 RUN chmod 644 /etc/gitconfig
 
+# Register a stable Jupyter kernelspec for the dev image Python.
+RUN /usr/local/bin/python -m ipykernel install \
+    --sys-prefix \
+    --name python-usr-local \
+    --display-name "Python (/usr/local/bin/python)"
+
 # set default user
 USER ${USER_UID}:${USER_GID}
 WORKDIR /workspace
