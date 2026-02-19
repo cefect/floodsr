@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from floodsr.cli import _parse_arguments, _resolve_default_output_path, _resolve_infer_model_path, _resolve_log_level, main
+from tests.conftest import inference_model_fp
 
 
 @pytest.fixture(scope="function")
@@ -134,7 +135,7 @@ def test_main_doctor_reports_runtime_diagnostics(capsys: pytest.CaptureFixture[s
 
 
 def test_main_infer_runs_geotiff_prediction(
-    phase23_model_fp: Path,
+    inference_model_fp: Path,
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ):
@@ -154,7 +155,7 @@ def test_main_infer_runs_geotiff_prediction(
             "--out",
             str(output_fp),
             "--model-path",
-            str(phase23_model_fp),
+            str(inference_model_fp),
         ]
     )
     _stdout = capsys.readouterr().out
@@ -176,7 +177,7 @@ def test_default_output_path_uses_cwd_and_input_stem(tmp_path: Path):
 
 
 def test_main_infer_defaults_output_when_out_not_provided(
-    phase23_model_fp: Path,
+    inference_model_fp: Path,
     tmp_path: Path,
 ):
     """Ensure infer writes to cwd default output when --out is omitted."""
@@ -194,7 +195,7 @@ def test_main_infer_defaults_output_when_out_not_provided(
                 "--dem",
                 str(tile_dir / "hires002_dem.tif"),
                 "--model-path",
-                str(phase23_model_fp),
+                str(inference_model_fp),
             ]
         )
     finally:

@@ -64,6 +64,12 @@ def tile_metrics_fp(tile_data_dir):
 
 _TILE_METRICS_FILES = sorted(pathlib.Path("tests/data").glob("*/metrics.json"))
 
+_MODEL_TILE_METRICS_FILES = []
+for _metrics_fp in _TILE_METRICS_FILES:
+    _artifact = json.loads(_metrics_fp.read_text(encoding="utf-8"))
+    if bool(_artifact.get("model_compatible", True)):
+        _MODEL_TILE_METRICS_FILES.append(_metrics_fp)
+
 
 @pytest.fixture(
     scope="function",
@@ -80,9 +86,24 @@ def tile_case(request):
     return {"tile_dir": tile_dir, "metrics_fp": metrics_fp, "artifact": artifact}
 
 
+@pytest.fixture(
+    scope="function",
+    params=_MODEL_TILE_METRICS_FILES or [None],
+    ids=lambda v: v.parent.name if v is not None else "no_model_tile_metrics",
+)
+def model_tile_case(request):
+    """Return one model-compatible tile case discovered from tests/data/*/metrics.json."""
+    metrics_fp = request.param
+    if metrics_fp is None:
+        pytest.skip("no model-compatible tile metrics artifacts found under tests/data/*/metrics.json")
+    tile_dir = metrics_fp.parent
+    artifact = json.loads(metrics_fp.read_text(encoding="utf-8"))
+    return {"tile_dir": tile_dir, "metrics_fp": metrics_fp, "artifact": artifact}
+
+
 @pytest.fixture(scope="function")
-def phase23_model_fp(tmp_path):
-    """Resolve local model path used by Phase 2/3 engine and CLI tests."""
+def inference_model_fp(tmp_path):
+    """Resolve local model path used by engine and CLI inference tests."""
     model_version = "4690176_0_1770580046_train_base_16"
     local_fp = pathlib.Path("_inputs") / model_version / "model_infer.onnx"
     if local_fp.exists():
