@@ -13,14 +13,14 @@ Architecture decisions are tracked in ADRs: `docs/dev/adr`
 ### Phase 2 - ONNX Runtime (ORT) CPU engine MVP
 ADR refs: `docs/dev/adr/0001-mvp-runtime-and-cli-contract.md`, `docs/dev/adr/0004-repository-and-module-architecture.md`
 
-- [ ] implement `EngineORT` session load/run path
-- [ ] add deterministic CPU unit tests
+- [x] implement `EngineORT` session load/run path
+- [x] add deterministic CPU unit tests
 
 ### Phase 3 - CLI MVP
 ADR refs: `docs/dev/adr/0001-mvp-runtime-and-cli-contract.md`, `docs/dev/adr/0003-logging-policy-cli-and-library.md`, `docs/dev/adr/0004-repository-and-module-architecture.md`
 
-- [ ] implement `floodsr infer` from GeoTiff
-- [ ] add `floodsr doctor` backend/extras diagnostics
+- [x] implement `floodsr infer` from GeoTiff
+- [x] add `floodsr doctor` backend/extras diagnostics
 
 ### Phase 4 - Model registry UX
 ADR refs: `docs/dev/adr/0005-model-registry-and-artifact-validation.md`, `docs/dev/adr/0004-repository-and-module-architecture.md`

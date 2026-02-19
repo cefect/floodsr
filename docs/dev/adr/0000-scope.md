@@ -6,6 +6,7 @@ features/scope of MVP:
 - fetches model weights and params from a manifest and caches them locally
 - ONNX Runtime w/ CPUExecutionProvider. 
 - pip installable package with CLI entrypoint
+- let rasterio handle raster driver support. i.e., default to GeoTiff, but allow any rasterio-supported format as input/output.
 
 future features:
 - QGIS plugin GUI (separate project)
@@ -21,3 +22,4 @@ Out of scope:
 - no `truth` or `metrics`. just inference
 - if `--model-version` not specified, use first listed in `models.json` if found in cache, otherwise fallback to first in cache.  if nothing in cache, error with instructions to fetch a model.
 - provide progress bar and final diagnostics on completion (runtime, shape in, shape out, model version used, file size out)
+- default output should be in cwd with the same name (and filetype and properties... other than shape) as the input but with `_sr.tif` suffix. allow `--out` to specify a different path.
