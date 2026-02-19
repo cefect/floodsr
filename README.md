@@ -26,7 +26,7 @@ floodsr models list
 Fetch a model by version into the default cache:
 
 ```bash
-floodsr models fetch 4690176_0_1770580046_train_base_16
+floodsr models fetch 4690176_0_1770580046_train_base_16 --force
 ```
 
 Fetch using explicit options:
