@@ -13,8 +13,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
-    make \
-    && rm -rf /var/lib/apt/lists/*
+    make
 
 # Capture base image Python requirements as constraints for minimal-diff overlays.
 RUN python -m pip freeze --all > /tmp/requirements.base.txt
@@ -71,6 +70,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
         sudo \
         git \
+        gh \
         git-lfs \
         openssh-client \
         wget \
@@ -79,8 +79,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         curl \
         rsync \
         procps \
-        strace \
-    && rm -rf /var/lib/apt/lists/*
+        strace
 
 RUN echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-${USERNAME} \
     && chmod 0440 /etc/sudoers.d/90-${USERNAME}
