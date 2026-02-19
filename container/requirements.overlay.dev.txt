@@ -10,3 +10,5 @@ xlsxwriter==3.2.9
 palettable==3.3.3
 pillow==12.1.1
 matplotlib
+pytest
+pyproj
