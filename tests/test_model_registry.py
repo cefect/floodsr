@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from floodsr.model_registry import get_retrieval_backend, list_models
+from floodsr.model_registry import fetch_model, get_retrieval_backend, list_models
 
 
 @pytest.fixture(scope="function")
