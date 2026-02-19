@@ -1,11 +1,12 @@
 """Tests for model CLI commands."""
 
 import hashlib, json
+import logging
 from pathlib import Path
 
 import pytest
 
-from floodsr.cli import main
+from floodsr.cli import _parse_arguments, _resolve_log_level, main
 
 
 @pytest.fixture(scope="function")
@@ -40,6 +41,21 @@ def test_main_models_list_outputs_model_version(models_manifest_fp: Path, capsys
 
 
 @pytest.mark.parametrize(
+    "cli_args, expected_level",
+    [
+        pytest.param([], logging.INFO, id="default_info_level"),
+        pytest.param(["-v", "-v"], logging.DEBUG, id="repeat_verbose_to_debug"),
+    ],
+)
+def test_resolve_log_level_from_cli_arguments(cli_args: list[str], expected_level: int):
+    """Ensure CLI logging defaults and verbosity flags resolve effective levels."""
+    parsed_args = _parse_arguments([*cli_args, "models", "list"])
+    resolved_level = _resolve_log_level(parsed_args)
+    assert isinstance(resolved_level, int)
+    assert resolved_level == expected_level
+
+
+@pytest.mark.parametrize(
     "backend_name",
     [
         pytest.param(None, id="auto_backend"),
@@ -71,8 +87,11 @@ def test_main_models_fetch_prints_existing_path(
     assert output_fp.exists()
 
 
-def test_main_models_fetch_returns_error_for_missing_source(tmp_path: Path):
-    """Ensure fetch failures return non-zero exit code with a concise CLI error."""
+def test_main_models_fetch_routes_errors_to_stderr(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+):
+    """Ensure fetch failures return non-zero exit code and log errors to stderr."""
     manifest = {
         "models": {
             "v-missing": {
@@ -88,6 +107,8 @@ def test_main_models_fetch_returns_error_for_missing_source(tmp_path: Path):
 
     exit_code = main(
         [
+            "--log-level",
+            "ERROR",
             "models",
             "fetch",
             "v-missing",
@@ -97,5 +118,6 @@ def test_main_models_fetch_returns_error_for_missing_source(tmp_path: Path):
             str(tmp_path / "cache"),
         ]
     )
-    assert isinstance(exit_code, int)
+    stderr = capsys.readouterr().err
     assert exit_code == 1
+    assert "ERROR" in stderr

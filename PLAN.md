@@ -13,6 +13,8 @@ Ship one pip package that provides:
 - a library (`floodsr`)
 - a CLI entrypoint (`floodsr`)
 
+### installation method
+
 Recommend `pipx` as the primary installation method for end users, because it guarantees isolation and keeps QGIS clean.
 
 Make ORT an install extra rather than a hard dependency, so you can support CPU vs GPU variants cleanly (because ORT says only one of `onnxruntime` / `onnxruntime-gpu` should be in an environment).
@@ -21,6 +23,21 @@ Concretely:
 
 - `floodsr[cpu]` -> depends on `onnxruntime`
 - `floodsr[cuda]` -> depends on `onnxruntime-gpu` (later)
+
+
+### logging
+use logging.getLogger(__name__).
+stdlib logging configured in the CLI entrypoint, with:
+- verbosity flags: -v/--verbose (repeatable) and -q/--quiet
+- default: INFO
+
+routing:
+- DEBUG/INFO → stdout (so output can be piped)
+- WARNING/ERROR → stderr
+
+transparent expert controls:
+- --log-level {DEBUG,INFO,WARNING,ERROR}
+ 
 
 
 ## Project structure outline (repo layout)
@@ -166,8 +183,6 @@ note:
 
 
 ### Phase 5 — GeoTIFF I/O + tiling + stitching  
-
- 
 * Implement:
 
   * windowed reads

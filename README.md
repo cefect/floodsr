@@ -41,6 +41,7 @@ floodsr models fetch 4690176_0_1770580046_train_base_16 \
 Notes:
 - `models list` supports `--manifest <path>` to use a custom manifest.
 - `models fetch` supports `--manifest`, `--cache-dir`, `--backend {http,file}`, and `--force`.
+- Logging controls: `-v/--verbose`, `-q/--quiet`, and `--log-level {DEBUG,INFO,WARNING,ERROR}`.
 - for private GitHub release assets, set `FLOODSR_GITHUB_TOKEN` (or `GITHUB_TOKEN` / `GH_TOKEN`) before `models fetch`.
 - `.devcontainer/main` and `.devcontainer/docs` pass these token env vars from host to container.
 - If the `floodsr` console script is not installed yet, use:

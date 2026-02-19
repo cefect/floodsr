@@ -1,10 +1,29 @@
 """Command line interface for model operations."""
 
 import argparse
-import sys
+import logging
 from pathlib import Path
 
 from floodsr.model_registry import fetch_model, list_models
+
+
+log = logging.getLogger(__name__)
+
+
+def _resolve_log_level(args: argparse.Namespace) -> int:
+    """Resolve effective logging level from explicit level or verbosity flags."""
+    if args.log_level is not None:
+        return getattr(logging, args.log_level)
+
+    # Start from INFO, then apply -v and -q offsets with DEBUG/ERROR clamp.
+    level = logging.INFO - (10 * int(args.verbose)) + (10 * int(args.quiet))
+    return max(logging.DEBUG, min(logging.ERROR, level))
+
+
+def _configure_logging(args: argparse.Namespace) -> None:
+    """Configure stdlib logging using Python default handler routing."""
+    effective_level = _resolve_log_level(args)
+    logging.basicConfig(level=effective_level, force=True)
 
 
 def main_cli(args: argparse.Namespace) -> int:
@@ -33,16 +52,38 @@ def main_cli(args: argparse.Namespace) -> int:
 def main(argv: list[str] | None = None) -> int:
     """Run the floodsr CLI and return an exit code."""
     args = _parse_arguments(argv)
+    _configure_logging(args)
     try:
         return main_cli(args)
     except Exception as err:
-        print(f"ERROR: {err}", file=sys.stderr)
+        log.error(f"{err}")
+        log.debug("unhandled CLI exception", exc_info=True)
         return 1
 
 
 def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
     """Parse CLI arguments for floodsr."""
     parser = argparse.ArgumentParser(prog="floodsr", description="FloodSR command line interface.")
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help="Increase logging verbosity (repeatable).",
+    )
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        action="count",
+        default=0,
+        help="Decrease logging verbosity (repeatable).",
+    )
+    parser.add_argument(
+        "--log-level",
+        choices=("DEBUG", "INFO", "WARNING", "ERROR"),
+        default=None,
+        help="Explicit log level override.",
+    )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # Register model-related commands.
