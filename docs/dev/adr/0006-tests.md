@@ -5,3 +5,4 @@
 - test structure should mirror module structure for discoverability
 - tests should minimize extra code and focus on input/output contract validation
 - use fixtures for common test data setup (`tests/conftest.py`)
+- model tile metric regression checks should read from a `metrics.json` in the test tile dir. 
