@@ -1,38 +1,26 @@
 # Docs workspace
 
-This folder contains the Sphinx + Read the Docs setup for `floodsr`.
+This folder contains user documentation and developer architecture records.
 
-## Files
+## Structure
 
-- `docs/conf.py`: Sphinx configuration.
-- `docs/index.rst`: current single-page starter content.
-- `docs/_templates/layout.html`: template override for light branding.
-- `docs/_static/custom.css`: theme-level style overrides.
-- `docs/.devcontainer/`: docs-focused VS Code dev container.
-- `docs/container/`: docs Dockerfile and requirements overlays.
+- `docs/user/`: user-facing docs + RTD/Sphinx implementation and docs container.
+- `docs/dev/adr/`: architectural decision records (ADRs).
 
-## Edit and build from inside container
+## Build user docs
 
-1. Open the `docs/` folder in VS Code.
-2. Run **Dev Containers: Reopen in Container**.
-3. Confirm current working directory is `/workspace/docs`.
-4. Build docs:
+1. Build the docs image (dev target):
 
 ```bash
-sphinx-build -b html . _build/html
+docker buildx build --load -t floodsr-docs:dev -f docs/user/container/Dockerfile --target dev .
 ```
 
-5. Optional live preview:
+2. Build HTML:
 
 ```bash
-sphinx-autobuild . _build/html --host 0.0.0.0 --port 8000
+sphinx-build -b html docs/user docs/user/_build/html
 ```
 
-## Read the Docs setup
+## Read the Docs config
 
-This repo now includes `.readthedocs.yaml` at project root.
-
-1. Push this branch to your remote.
-2. In Read the Docs, use **Import a Project** for this repository.
-3. Keep the default config path: `.readthedocs.yaml`.
-4. Trigger a build and verify `docs/index.rst` renders.
+- `docs/user/.readthedocs.yaml`
