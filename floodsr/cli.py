@@ -104,6 +104,9 @@ def main_cli(args: argparse.Namespace) -> int:
             output_fp=output_fp,
             max_depth=args.max_depth,
             dem_pct_clip=args.dem_pct_clip,
+            window_method=args.window_method,
+            tile_overlap=args.tile_overlap,
+            tile_size=args.tile_size,
             logger=log,
         )
 
@@ -254,6 +257,24 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
         type=float,
         default=None,
         help="Optional DEM percentile clip override when train stats are incomplete.",
+    )
+    infer_parser.add_argument(
+        "--window-method",
+        choices=("hard", "feather"),
+        default="feather",
+        help="Tile mosaicing method for inference.",
+    )
+    infer_parser.add_argument(
+        "--tile-overlap",
+        type=int,
+        default=None,
+        help="Feather overlap in low-res pixels. Ignored unless --window-method=feather.",
+    )
+    infer_parser.add_argument(
+        "--tile-size",
+        type=int,
+        default=None,
+        help="LR tile size override (must match model LR input size).",
     )
 
     # Register diagnostic command.
