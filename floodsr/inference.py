@@ -1,178 +1,28 @@
-"""Inference utilities aligned with the notebook proof-of-concept contract."""
+"""Inference execution for FloodSR raster workflows."""
 
-import json
 import logging
 import math
-import re
+import tempfile
 import time
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Dict
 
 import numpy as np
 
+try:
+    from tqdm import tqdm
+except ImportError:  # pragma: no cover - optional dependency fallback
+    tqdm = None
 
-def _as_numeric_np_array(
-    arr: np.ndarray,
-    name: str,
-    min_rank: int = 1,
-    allow_ranks: Optional[Tuple[int, ...]] = None,
-    require_single_channel_last_dim: bool = False,
-) -> np.ndarray:
-    """Convert input to NumPy array and validate dtype/rank constraints."""
-    out = np.asarray(arr)
-    if out.dtype == np.bool_ or not np.issubdtype(out.dtype, np.number):
-        raise AssertionError(f"{name} must have numeric dtype; got {out.dtype}")
-
-    rank = int(out.ndim)
-    if allow_ranks is not None:
-        if rank not in allow_ranks:
-            raise AssertionError(f"{name} rank must be one of {allow_ranks}; got rank {rank} shape {out.shape}")
-    elif rank < min_rank:
-        raise AssertionError(f"{name} rank must be >= {min_rank}; got rank {rank} shape {out.shape}")
-
-    if require_single_channel_last_dim and rank >= 3 and out.shape[-1] != 1:
-        raise AssertionError(f"{name} last dim must be 1 for rank >=3; got shape {out.shape}")
-
-    if not np.all(np.isfinite(out)):
-        raise AssertionError(f"{name} must contain only finite values")
-    return out
-
-
-def _parse_dem_normalization_stats(ref_stats: Dict[str, float]) -> Tuple[float, float, float]:
-    """Validate and unpack DEM normalization stats dictionary."""
-    required = {"p_clip", "dem_min", "dem_max"}
-    missing = required.difference(ref_stats.keys())
-    if missing:
-        raise AssertionError(f"DEM ref_stats missing keys: {sorted(missing)}")
-
-    p_clip = float(ref_stats["p_clip"])
-    dem_min = float(ref_stats["dem_min"])
-    dem_max = float(ref_stats["dem_max"])
-
-    if not (np.isfinite(p_clip) and np.isfinite(dem_min) and np.isfinite(dem_max)):
-        raise AssertionError("DEM ref_stats values must be finite")
-    if p_clip < 0:
-        raise AssertionError(f"DEM p_clip must be >= 0; got {p_clip}")
-    if dem_min > dem_max:
-        raise AssertionError(f"DEM dem_min must be <= dem_max; got min={dem_min} max={dem_max}")
-    if (dem_max - dem_min) <= 0:
-        raise AssertionError(f"DEM range must be > 0; got min={dem_min}, max={dem_max}")
-    return p_clip, dem_min, dem_max
-
-
-def normalize_dem_with_stats_np(
-    arr: np.ndarray,
-    p_clip: float,
-    dem_min: float,
-    dem_max: float,
-) -> np.ndarray:
-    """Normalize DEM with already-computed clip/min/max stats."""
-    if not (np.isfinite(p_clip) and np.isfinite(dem_min) and np.isfinite(dem_max)):
-        raise AssertionError("p_clip, dem_min, and dem_max must be finite")
-
-    dem_range = dem_max - dem_min
-    if dem_range <= 0:
-        if np.isclose(dem_range, 0.0) and np.isclose(dem_min, 0.0):
-            # All-zero DEM tiles can occur at padded/nodata edges after clipping; keep a
-            # stable normalized representation instead of failing the full inference pass.
-            return np.zeros_like(_as_numeric_np_array(
-                arr,
-                "dem_arr",
-                allow_ranks=(2, 3, 4),
-                require_single_channel_last_dim=True,
-            ).astype(np.float32, copy=False))
-
-        raise AssertionError(f"DEM range must be > 0; got min={dem_min}, max={dem_max}")
-
-    arr_np = _as_numeric_np_array(
-        arr,
-        "dem_arr",
-        allow_ranks=(2, 3, 4),
-        require_single_channel_last_dim=True,
-    ).astype(np.float32, copy=False)
-
-    arr_clipped = np.clip(arr_np, 0.0, float(p_clip))
-    arr_norm = (arr_clipped - float(dem_min)) / float(dem_range)
-    arr_norm = np.clip(arr_norm, 0.0, 1.0)
-    return arr_norm.astype(np.float32, copy=False)
-
-
-def normalize_dem(
-    arr: Optional[np.ndarray],
-    pct_clip: float = 95.0,
-    ref_stats: Optional[Dict[str, float]] = None,
-) -> Tuple[Optional[np.ndarray], Optional[Dict[str, float]]]:
-    """Clip DEM and min-max normalize to [0,1] with notebook-compatible rules."""
-    if arr is None:
-        return None, None
-
-    if ref_stats is None:
-        pct_clip = float(pct_clip)
-        if not np.isfinite(pct_clip) or not (0 < pct_clip <= 100):
-            raise AssertionError(f"dem_pct_clip must be finite and in (0, 100]; got {pct_clip}")
-
-        arr_np = _as_numeric_np_array(
-            arr,
-            "dem_arr",
-            allow_ranks=(2, 3, 4),
-            require_single_channel_last_dim=True,
-        ).astype(np.float32, copy=False)
-        arr_np = np.clip(arr_np, 0.0, None)
-        p_clip = float(np.nanpercentile(arr_np, pct_clip))
-        arr_for_stats = np.clip(arr_np, 0.0, p_clip)
-        dem_min = float(np.nanmin(arr_for_stats))
-        dem_max = float(np.nanmax(arr_for_stats))
-    else:
-        p_clip, dem_min, dem_max = _parse_dem_normalization_stats(ref_stats)
-
-    arr_norm = normalize_dem_with_stats_np(arr, p_clip=p_clip, dem_min=dem_min, dem_max=dem_max)
-    return arr_norm, {"p_clip": p_clip, "dem_min": dem_min, "dem_max": dem_max}
-
-
-def _depth_log1p_denom(max_depth: float) -> float:
-    """Compute and validate denominator used by depth log1p scaling."""
-    max_depth = float(max_depth)
-    if not np.isfinite(max_depth) or max_depth <= 0:
-        raise AssertionError(f"max_depth must be finite and > 0; got {max_depth}")
-
-    denom = float(np.log1p(max_depth))
-    if not np.isfinite(denom) or denom <= 0:
-        raise AssertionError(f"log1p(max_depth) must be finite and > 0; got {denom}")
-    return denom
-
-
-def scale_depth_log1p_np(arr: Optional[np.ndarray], max_depth: float) -> Optional[np.ndarray]:
-    """Clip depth values and apply log1p normalization."""
-    if arr is None:
-        return None
-
-    denom = _depth_log1p_denom(max_depth)
-    arr_np = _as_numeric_np_array(arr, "depth_arr", min_rank=1).astype(np.float32, copy=False)
-    arr_np = np.clip(arr_np, 0.0, float(max_depth))
-    scaled = np.log1p(arr_np) / denom
-    scaled = np.clip(scaled, 0.0, 1.0)
-    return scaled.astype(np.float32, copy=False)
-
-
-def invert_depth_log1p_np(arr: Optional[np.ndarray], max_depth: float) -> Optional[np.ndarray]:
-    """Invert normalized log1p depth values back to depth units."""
-    if arr is None:
-        return None
-
-    denom = _depth_log1p_denom(max_depth)
-    arr_np = _as_numeric_np_array(arr, "normalized_depth_arr", min_rank=1).astype(np.float32, copy=False)
-    arr_np = np.clip(arr_np, 0.0, 1.0)
-    inv = np.expm1(arr_np * denom)
-    inv = np.clip(inv, 0.0, float(max_depth))
-    return inv.astype(np.float32, copy=False)
-
-
-def replace_nodata_with_zero(arr: np.ndarray, nodata: float | None) -> np.ndarray:
-    """Replace nodata values with 0.0 for notebook-compatible preprocessing."""
-    arr_np = np.asarray(arr, dtype=np.float32)
-    if nodata is None:
-        return arr_np
-    return np.where(np.isclose(arr_np, nodata), 0.0, arr_np).astype(np.float32, copy=False)
+from floodsr.preprocessing import (
+    _build_tile_starts,
+    normalize_dem,
+    _read_single_band_raster,
+    _write_single_band_raster,
+    scale_depth_log1p_np,
+    resolve_preprocess_config,
+    write_prepared_rasters,
+)
 
 
 def compute_depth_error_metrics(
@@ -240,247 +90,225 @@ def compute_depth_error_metrics(
     }
 
 
-def load_train_config(model_fp: str | Path, logger=None) -> dict | None:
-    """Load train_config.json from model directory when present."""
-    log = logger or logging.getLogger(__name__)
-    model_path = Path(model_fp).expanduser().resolve()
-    train_config_fp = model_path.parent / "train_config.json"
-    if not train_config_fp.exists():
-        log.debug(f"train config not found for model\n    {model_path}")
-        return None
-    log.debug(f"loaded train config from\n    {train_config_fp}")
-    return json.loads(train_config_fp.read_text(encoding="utf-8"))
+def _pixel_size_m(profile: dict) -> tuple[float, float]:
+    """Extract absolute pixel size in projection units."""
+    transform = profile.get("transform")
+    if transform is None:
+        return (float("nan"), float("nan"))
+    if hasattr(transform, "a") and hasattr(transform, "e"):
+        return (abs(float(transform.a)), abs(float(transform.e)))
+    return (abs(float(transform[0])), abs(float(transform[4])))
 
 
-def resolve_preprocess_config(
-    model_fp: str | Path,
-    max_depth: float | None = None,
-    dem_pct_clip: float | None = None,
-    logger=None,
-) -> dict[str, object]:
-    """Resolve preprocessing constants from model-adjacent train_config when available."""
-    log = logger or logging.getLogger(__name__)
-    model_path = Path(model_fp).expanduser().resolve()
-    assert model_path.exists(), f"model file does not exist: {model_path}"
-
-    resolved_max_depth = 5.0 if max_depth is None else float(max_depth)
-    resolved_dem_pct_clip = 95.0 if dem_pct_clip is None else float(dem_pct_clip)
-    dem_ref_stats = None
-    resolved_lr_tile = None
-    resolved_scale = None
-    resolved_dem_resolution = None
-    train_cfg = load_train_config(model_path, logger=log)
-    if train_cfg is not None:
-        if max_depth is None and train_cfg.get("max_depth") is not None:
-            resolved_max_depth = float(train_cfg["max_depth"])
-        if dem_pct_clip is None and train_cfg.get("dem_pct_clip") is not None:
-            resolved_dem_pct_clip = float(train_cfg["dem_pct_clip"])
-        dem_stats_cfg = train_cfg.get("dem_stats") or {}
-        required_keys = {"p_clip", "dem_min", "dem_max"}
-        if required_keys.issubset(dem_stats_cfg):
-            dem_ref_stats = {k: float(dem_stats_cfg[k]) for k in sorted(required_keys)}
-        input_shape = train_cfg.get("input_shape")
-        if isinstance(input_shape, (tuple, list)) and len(input_shape) >= 2:
-            lr_h = input_shape[0]
-            if isinstance(lr_h, (int, float)) and float(lr_h).is_integer():
-                resolved_lr_tile = int(lr_h)
-        if train_cfg.get("upscale") is not None:
-            resolved_scale = int(train_cfg["upscale"])
-        if train_cfg.get("dem_fp"):
-            dem_fp = str(train_cfg.get("dem_fp"))
-            match = re.search(r"(?:^|[_/])([0-9]{2,})_?dem", dem_fp)
-            if match is not None:
-                resolved_dem_resolution = int(match.group(1))
-
-    log.debug(
-        f"resolved preprocessing config: max_depth={resolved_max_depth}, "
-        f"dem_pct_clip={resolved_dem_pct_clip}, has_dem_ref_stats={dem_ref_stats is not None}, "
-        f"lr_tile={resolved_lr_tile}, scale={resolved_scale}, "
-        f"model_dem_resolution={resolved_dem_resolution}"
-    )
-    return {
-        "max_depth": resolved_max_depth,
-        "dem_pct_clip": resolved_dem_pct_clip,
-        "dem_ref_stats": dem_ref_stats,
-        "lr_tile": resolved_lr_tile,
-        "scale": resolved_scale,
-        "model_dem_resolution": resolved_dem_resolution,
-    }
+def _iter_windows(y_starts: list[int], x_starts: list[int], use_progress: bool):
+    """Build iterable of window origins with optional tqdm progress."""
+    total = len(y_starts) * len(x_starts)
+    windows = ((yi, xi, y0, x0) for yi, y0 in enumerate(y_starts) for xi, x0 in enumerate(x_starts))
+    if use_progress and tqdm is not None:
+        return tqdm(windows, desc="windowed inference", total=total, unit="window")
+    return windows
 
 
-def _read_single_band_raster(fp: str | Path) -> tuple[np.ndarray, float | None, dict]:
-    """Read a single-band raster and return array, nodata, and profile."""
-    import rasterio
-
-    path = Path(fp).expanduser().resolve()
-    assert path.exists(), f"raster does not exist: {path}"
-    with rasterio.open(path) as ds:
-        arr = ds.read(1).astype(np.float32)
-        nodata = ds.nodata
-        profile = ds.profile.copy()
-    return arr, nodata, profile
-
-
-def _write_single_band_raster(fp: str | Path, arr: np.ndarray, profile: dict) -> Path:
-    """Write a float32 single-band raster with a copied profile."""
-    import rasterio
-    from rasterio.drivers import driver_from_extension
-
-    path = Path(fp).expanduser().resolve()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        resolved_driver = driver_from_extension(path)
-    except ValueError:
-        resolved_driver = "GTiff"
-    out_profile = profile.copy()
-    out_profile.update(dtype="float32", count=1, driver=resolved_driver)
-    if not bool(out_profile.get("tiled", False)):
-        out_profile.pop("blockxsize", None)
-        out_profile.pop("blockysize", None)
-    with rasterio.open(path, "w", **out_profile) as ds:
-        ds.write(arr.astype(np.float32, copy=False), 1)
-    return path
-
-
-def _build_tile_starts(total_size: int, tile_size: int, stride: int) -> list[int]:
-    """Build tile origin positions that always include trailing-edge coverage."""
-    assert total_size > 0, f"total_size must be > 0; got {total_size}"
-    assert tile_size > 0, f"tile_size must be > 0; got {tile_size}"
-    assert stride > 0, f"stride must be > 0; got {stride}"
-    starts = list(range(0, max(total_size - tile_size + 1, 1), stride))
-    last_start = total_size - tile_size
-    if starts[-1] != last_start:
-        starts.append(last_start)
-    return starts
-
-
-def _align_depth_and_dem_inputs(
+def infer_from_prepared_inputs(
+    *,
+    engine,
     depth_lr_fp: str | Path,
     dem_hr_fp: str | Path,
-    scale: int,
+    preprocess_cfg: Dict[str, object],
+    model_lr_tile: int,
+    model_scale: int,
+    contract_hr_tile: int,
+    window_method: str,
+    overlap_lr: int,
     logger=None,
-) -> dict[str, Any]:
-    """Read inputs, enforce geospatial compatibility, and align them for model tiling."""
-    import rasterio
-    from rasterio.warp import Resampling, reproject
-    from rasterio.windows import from_bounds
-    from rasterio.transform import from_bounds as bounds_to_transform
-
+) -> tuple[np.ndarray, int]:
+    """Run tiled inference against prepared depth/DEM rasters."""
     log = logger or logging.getLogger(__name__)
-    assert scale > 0, f"scale must be > 0; got {scale}"
-    depth_path = Path(depth_lr_fp).expanduser().resolve()
-    dem_path = Path(dem_hr_fp).expanduser().resolve()
-    assert depth_path.exists(), f"low-res depth raster does not exist: {depth_path}"
-    assert dem_path.exists(), f"hires DEM raster does not exist: {dem_path}"
+    assert window_method in {"hard", "feather"}, f"unsupported window_method={window_method}"
 
-    with rasterio.open(depth_path) as depth_ds, rasterio.open(dem_path) as dem_ds:
-        assert depth_ds.count == 1, f"depth raster must have 1 band; got {depth_ds.count}"
-        assert dem_ds.count == 1, f"DEM raster must have 1 band; got {dem_ds.count}"
+    depth_lr_raw, _depth_lr_nodata, depth_lr_profile = _read_single_band_raster(depth_lr_fp)
+    dem_hr_raw, _dem_hr_nodata, dem_hr_profile = _read_single_band_raster(dem_hr_fp)
+    assert depth_lr_raw.ndim == 2, f"aligned depth must be 2D; got {depth_lr_raw.shape}"
+    assert dem_hr_raw.ndim == 2, f"aligned DEM must be 2D; got {dem_hr_raw.shape}"
 
-        depth_crs = depth_ds.crs
-        dem_crs = dem_ds.crs
-        if depth_crs is None:
-            assert dem_crs is not None, "both rasters must include CRS when depth CRS is missing"
-            depth_crs = dem_crs
-            log.warning(
-                "assigning missing depth CRS from DEM CRS\n"
-                f"    depth={depth_path}\n"
-                f"    dem={dem_path}"
+    max_depth = float(preprocess_cfg["max_depth"])
+    dem_pct_clip = float(preprocess_cfg["dem_pct_clip"])
+    dem_ref_stats = preprocess_cfg["dem_ref_stats"]
+
+    depth_lr_norm = scale_depth_log1p_np(depth_lr_raw, max_depth=max_depth)
+    dem_hr_norm, dem_stats_used = normalize_dem(dem_hr_raw, pct_clip=dem_pct_clip, ref_stats=dem_ref_stats)
+    assert depth_lr_norm is not None, "depth normalization returned None"
+    assert dem_hr_norm is not None, "DEM normalization returned None"
+    assert dem_stats_used is not None, "DEM normalization did not return stats"
+    assert np.isfinite(depth_lr_norm).all(), "normalized low-res depth contains non-finite values"
+    assert np.isfinite(dem_hr_norm).all(), "normalized DEM contains non-finite values"
+    log.info(
+        "input/preprocess summary:\n"
+        f"  aligned depth_lr shape={depth_lr_raw.shape} res={_pixel_size_m(depth_lr_profile)} m/pix\n"
+        f"  aligned dem_hr shape={dem_hr_raw.shape} res={_pixel_size_m(dem_hr_profile)} m/pix\n"
+        f"  max_depth={max_depth}\n"
+        f"  dem_pct_clip={dem_pct_clip}\n"
+        f"  dem_ref_stats={dem_stats_used}\n"
+        f"  normalized depth range={float(np.nanmin(depth_lr_norm)):.6f}..{float(np.nanmax(depth_lr_norm)):.6f}\n"
+        f"  normalized dem range={float(np.nanmin(dem_hr_norm)):.6f}..{float(np.nanmax(dem_hr_norm)):.6f}"
+    )
+
+    crop_h, crop_w = dem_hr_norm.shape
+    assert crop_h > 0 and crop_w > 0, f"aligned DEM has invalid shape {(crop_h, crop_w)}"
+    expected_lr_h = crop_h // model_scale
+    expected_lr_w = crop_w // model_scale
+    assert expected_lr_h > 0 and expected_lr_w > 0, (
+        f"expected low-resolution shape invalid {(expected_lr_h, expected_lr_w)} from crop {(crop_h, crop_w)} and scale={model_scale}"
+    )
+    assert depth_lr_norm.shape == (expected_lr_h, expected_lr_w), (
+        f"depth shape {depth_lr_raw.shape} does not match crop/scale target {(expected_lr_h, expected_lr_w)}"
+    )
+
+    if depth_lr_raw.min() > max_depth:
+        log.warning("low-res depth values exceed max_depth; model preprocessing will clip them.")
+
+    pad_h = (int(math.ceil(crop_h / contract_hr_tile)) * contract_hr_tile) - crop_h
+    pad_w = (int(math.ceil(crop_w / contract_hr_tile)) * contract_hr_tile) - crop_w
+
+    dem_pad = np.pad(
+        dem_hr_norm,
+        ((0, pad_h), (0, pad_w)),
+        mode="constant",
+        constant_values=0.0,
+    )
+    depth_pad = np.pad(
+        depth_lr_norm,
+        ((0, pad_h // model_scale), (0, pad_w // model_scale)),
+        mode="constant",
+        constant_values=0.0,
+    )
+
+    hr_pad_h, hr_pad_w = dem_pad.shape
+    depth_pad_h, depth_pad_w = depth_pad.shape
+    assert depth_pad_h == hr_pad_h // model_scale and depth_pad_w == hr_pad_w // model_scale, (
+        f"depth pad shape {(depth_pad_h, depth_pad_w)} incompatible with HR pad {(hr_pad_h, hr_pad_w)}"
+    )
+
+    overlap_hr = overlap_lr * model_scale
+    tile_cache: dict[tuple[int, int], np.ndarray] = {}
+
+    log.info(
+        "window config\n"
+        f"  method={window_method}\n"
+        f"  overlap_lr={overlap_lr}\n"
+        f"  overlap_hr={overlap_hr}\n"
+        f"  tile_size_lr={model_lr_tile}\n"
+        f"  tile_size_hr={contract_hr_tile}"
+    )
+
+    def _predict_tile(y0: int, x0: int) -> np.ndarray:
+        key = (int(y0), int(x0))
+        if key in tile_cache:
+            return tile_cache[key]
+
+        lr_y0 = y0 // model_scale
+        lr_x0 = x0 // model_scale
+        depth_tile = depth_pad[
+            lr_y0 : lr_y0 + model_lr_tile,
+            lr_x0 : lr_x0 + model_lr_tile,
+        ]
+        dem_tile = dem_pad[y0 : y0 + contract_hr_tile, x0 : x0 + contract_hr_tile]
+        assert depth_tile.shape == (model_lr_tile, model_lr_tile), (
+            f"depth tile shape {depth_tile.shape} != {(model_lr_tile, model_lr_tile)}"
+        )
+        assert dem_tile.shape == (contract_hr_tile, contract_hr_tile), (
+            f"DEM tile shape {dem_tile.shape} != {(contract_hr_tile, contract_hr_tile)}"
+        )
+        run_result = engine.run_tile(
+            depth_tile,
+            dem_tile,
+            max_depth=max_depth,
+            dem_pct_clip=dem_pct_clip,
+            dem_ref_stats=dem_ref_stats,
+            normalize_inputs=False,
+            depth_lr_nodata=None,
+            dem_hr_nodata=None,
+            logger=log,
+        )
+        pred = run_result["prediction_m"]
+        assert pred.shape == (contract_hr_tile, contract_hr_tile), (
+            f"prediction shape {pred.shape} != {(contract_hr_tile, contract_hr_tile)}"
+        )
+        tile_cache[key] = pred
+        return pred
+
+    # Prime tile cache with a non-overlap pass (same as notebook inference path).
+    nonoverlap_y = list(range(0, hr_pad_h, contract_hr_tile))
+    nonoverlap_x = list(range(0, hr_pad_w, contract_hr_tile))
+    sr_pad_nonoverlap = np.zeros_like(dem_pad, dtype=np.float32)
+    log.info(
+        f"priming tile cache with non-overlap pass over {len(nonoverlap_y) * len(nonoverlap_x)} windows\n"
+        f"  overlap_lr={overlap_lr}\n"
+        f"  overlap_hr={overlap_hr}"
+    )
+    for _, _, y0, x0 in _iter_windows(nonoverlap_y, nonoverlap_x, use_progress=True):
+        pred_np = _predict_tile(y0, x0)
+        sr_pad_nonoverlap[y0 : y0 + contract_hr_tile, x0 : x0 + contract_hr_tile] = pred_np
+
+    if window_method == "hard":
+        sr_pad = sr_pad_nonoverlap.copy()
+    elif window_method == "feather":
+        stride_hr = contract_hr_tile - overlap_hr
+        if overlap_lr <= 0:
+            raise AssertionError("feather windowing requires overlap_lr > 0")
+        if stride_hr <= 0:
+            raise AssertionError(
+                f"feather stride must be > 0; overlap_lr={overlap_lr}, tile={contract_hr_tile}"
             )
-        assert dem_crs is not None, "both rasters must define CRS"
-        assert depth_crs == dem_crs, (
-            f"CRS mismatch\n"
-            f"    depth={depth_crs}\n"
-            f"    dem={dem_crs}"
+
+        y_starts = _build_tile_starts(hr_pad_h, contract_hr_tile, stride_hr)
+        x_starts = _build_tile_starts(hr_pad_w, contract_hr_tile, stride_hr)
+        feather_1d = np.ones(contract_hr_tile, dtype=np.float32)
+        if overlap_hr > 0:
+            ramp = np.linspace(0.0, 1.0, overlap_hr + 2, dtype=np.float32)[1:-1]
+            feather_1d[:overlap_hr] = ramp
+            feather_1d[-overlap_hr:] = ramp[::-1]
+            feather_1d = np.clip(feather_1d, 1e-3, 1.0)
+
+        accum = np.zeros_like(dem_pad, dtype=np.float32)
+        weight_sum = np.zeros_like(dem_pad, dtype=np.float32)
+        log.info(
+            f"running feather tiling over {len(y_starts)}x{len(x_starts)} grid\n"
+            f"  stride_hr={stride_hr}\n"
+            f"  overlap_hr={overlap_hr}"
         )
-        assert depth_crs.is_projected, f"CRS must be projected; got {depth_crs}"
+        for yi, xi, y0, x0 in _iter_windows(y_starts, x_starts, use_progress=True):
+            pred_np = _predict_tile(y0, x0)
+            wy = feather_1d.copy()
+            wx = feather_1d.copy()
+            if yi == 0:
+                wy[:overlap_hr] = 1.0
+            if yi == len(y_starts) - 1:
+                wy[-overlap_hr:] = 1.0
+            if xi == 0:
+                wx[:overlap_hr] = 1.0
+            if xi == len(x_starts) - 1:
+                wx[-overlap_hr:] = 1.0
 
-        depth_res = (abs(float(depth_ds.res[0])), abs(float(depth_ds.res[1])))
-        dem_res = (abs(float(dem_ds.res[0])), abs(float(dem_ds.res[1])))
-        if not np.isclose(depth_res[0], depth_res[1]):
-            log.warning(f"depth pixels are not square: res={depth_res}")
-        if not np.isclose(dem_res[0], dem_res[1]):
-            log.warning(f"DEM pixels are not square: res={dem_res}")
+            weight = np.outer(wy, wx).astype(np.float32, copy=False)
+            accum[y0 : y0 + contract_hr_tile, x0 : x0 + contract_hr_tile] += pred_np * weight
+            weight_sum[y0 : y0 + contract_hr_tile, x0 : x0 + contract_hr_tile] += weight
 
-        lr_bounds = depth_ds.bounds
-        dem_bounds = dem_ds.bounds
-        if not all(np.isclose(lr_bounds, dem_bounds, atol=1e-6, rtol=0.0)):
-            log.warning(
-                "input bounds differ; clipping DEM to depth raster bounds.\n"
-                f"    depth={lr_bounds}\n"
-                f"    dem={dem_bounds}"
-            )
-
-        dem_window = from_bounds(*lr_bounds, dem_ds.transform).round_offsets().round_lengths()
-        dem_crop = dem_ds.read(1, window=dem_window).astype(np.float32, copy=False)
-        assert dem_crop.size > 0, f"clipped DEM is empty for bounds {lr_bounds}"
-        dem_crop_transform = dem_ds.window_transform(dem_window)
-        dem_nodata = dem_ds.nodata
-        depth_nodata = depth_ds.nodata
-        depth_lr = depth_ds.read(1).astype(np.float32, copy=False)
-        depth_bounds = lr_bounds
-        depth_transform = depth_ds.transform
-        depth_crs = depth_ds.crs
-        depth_profile = depth_ds.profile.copy()
-        dem_profile = dem_ds.profile.copy()
-        dem_bounds = dem_ds.bounds
-
-    if not np.isfinite(dem_crop).all():
-        raise AssertionError("DEM contains non-finite values after clipping")
-    if not np.isfinite(depth_lr).all():
-        raise AssertionError("low-res depth contains non-finite values")
-    if depth_lr.min() < 0.0:
-        raise AssertionError(f"low-res depth has negative values: min={float(depth_lr.min())}")
-
-    dem_h, dem_w = dem_crop.shape
-    crop_h = dem_h - (dem_h % scale)
-    crop_w = dem_w - (dem_w % scale)
-    assert crop_h > 0 and crop_w > 0, f"cropped DEM has invalid size {(crop_h, crop_w)}"
-    if (crop_h, crop_w) != (dem_h, dem_w):
-        log.debug(f"cropping DEM from {(dem_h, dem_w)} to {(crop_h, crop_w)} for scale alignment")
-    dem_crop = dem_crop[:crop_h, :crop_w]
-
-    target_lr_h = crop_h // scale
-    target_lr_w = crop_w // scale
-    assert target_lr_h > 0 and target_lr_w > 0, f"target LR shape invalid {(target_lr_h, target_lr_w)}"
-    was_resampled = (target_lr_h != depth_lr.shape[0] or target_lr_w != depth_lr.shape[1])
-    if was_resampled:
-        log.debug(
-            f"resampling low-res depth from {depth_lr.shape} to {(target_lr_h, target_lr_w)} "
-            f"to enforce model-scale={scale}"
+        sr_pad = np.divide(
+            accum,
+            np.maximum(weight_sum, 1e-6),
+            out=np.zeros_like(accum),
+            where=weight_sum > 0,
         )
-        depth_lr_aligned = np.empty((target_lr_h, target_lr_w), dtype=np.float32)
-        depth_lr_transform = bounds_to_transform(
-            *depth_bounds,
-            width=target_lr_w,
-            height=target_lr_h,
-        )
-        reproject(
-            source=depth_lr,
-            destination=depth_lr_aligned,
-            src_transform=depth_transform,
-            src_crs=depth_crs,
-            src_nodata=depth_nodata,
-            dst_transform=depth_lr_transform,
-            dst_crs=depth_crs,
-            dst_nodata=depth_nodata,
-            resampling=Resampling.bilinear,
-            num_threads=1,
-        )
-        depth_lr = depth_lr_aligned
-    return {
-        "depth_lr": depth_lr,
-        "depth_lr_nodata": depth_nodata,
-        "dem_hr": dem_crop,
-        "dem_hr_nodata": dem_nodata,
-        "depth_lr_profile": depth_profile,
-        "dem_profile": dem_profile,
-        "dem_crop_transform": dem_crop_transform,
-        "crop_shape": (crop_h, crop_w),
-        "resampled": was_resampled,
-        "depth_bounds": depth_bounds,
-    }
-def infer_geotiff(
+    else:
+        raise AssertionError(f"unsupported window_method={window_method}")
+
+    prediction_m = np.clip(sr_pad[:crop_h, :crop_w], 0.0, float(preprocess_cfg["max_depth"]))
+    assert prediction_m.ndim == 2, f"prediction must be 2D; got {prediction_m.shape}"
+    return prediction_m, len(tile_cache)
+
+
+def infer(
     model_fp: str | Path,
     depth_lr_fp: str | Path,
     dem_hr_fp: str | Path,
@@ -493,7 +321,7 @@ def infer_geotiff(
     logger=None,
 ) -> dict[str, object]:
     """
-    Run one GeoTIFF inference using tiled model execution.
+    Run one tiled raster inference pass.
 
     Parameters
     ----------
@@ -521,7 +349,7 @@ def infer_geotiff(
     Returns
     -------
     dict
-        Metadata dictionary with output path, preprocessing config, and runtime diagnostics.
+        Metadata dictionary with output path and runtime diagnostics.
     """
     start = time.perf_counter()
     log = logger or logging.getLogger(__name__)
@@ -536,10 +364,17 @@ def infer_geotiff(
     assert window_method in {"hard", "feather"}, f"unsupported window_method={window_method}"
 
     log.info(
-        f"starting GeoTIFF inference with model\n    {model_path}\n"
+        f"starting raster inference with model\n    {model_path}\n"
         f"depth_lr\n    {depth_lr_path}\n"
         f"dem_hr\n    {dem_hr_path}\n"
         f"output\n    {out_path}"
+    )
+    depth_lr_raw, _, depth_lr_raw_profile = _read_single_band_raster(depth_lr_path)
+    dem_hr_raw, _, dem_hr_raw_profile = _read_single_band_raster(dem_hr_path)
+    log.info(
+        "raw inputs\n"
+        f"  depth_lr shape={depth_lr_raw.shape} res={_pixel_size_m(depth_lr_raw_profile)} m/pix\n"
+        f"  dem_hr  shape={dem_hr_raw.shape} res={_pixel_size_m(dem_hr_raw_profile)} m/pix"
     )
 
     preprocess_cfg = resolve_preprocess_config(
@@ -595,161 +430,46 @@ def infer_geotiff(
     if overlap_lr < 0:
         raise AssertionError(f"tile_overlap must be >= 0; got {overlap_lr}")
 
-    aligned = _align_depth_and_dem_inputs(
-        depth_lr_fp=depth_lr_path,
-        dem_hr_fp=dem_hr_path,
-        scale=model_scale,
-        logger=log,
-    )
-    depth_lr_raw = aligned["depth_lr"]
-    depth_lr_nodata = aligned["depth_lr_nodata"]
-    dem_hr_raw = aligned["dem_hr"]
-    dem_hr_nodata = aligned["dem_hr_nodata"]
-    crop_h, crop_w = aligned["crop_shape"]
-
-    output_profile = aligned["dem_profile"].copy()
-    output_profile.update(
-        {
-            "height": int(crop_h),
-            "width": int(crop_w),
-            "transform": aligned["dem_crop_transform"],
-        }
-    )
-    output_profile.update(dtype="float32", count=1)
-    output_profile.pop("blockxsize", None)
-    output_profile.pop("blockysize", None)
-
-    if depth_lr_raw.min() > float(preprocess_cfg["max_depth"]):
-        log.warning("low-res depth values exceed max_depth; model preprocessing will clip them.")
-
-    pad_h = (int(math.ceil(crop_h / contract_hr_tile)) * contract_hr_tile) - crop_h
-    pad_w = (int(math.ceil(crop_w / contract_hr_tile)) * contract_hr_tile) - crop_w
-
-    depth_pad_val = 0.0 if depth_lr_nodata is None else float(depth_lr_nodata)
-    dem_pad_val = 0.0 if dem_hr_nodata is None else float(dem_hr_nodata)
-    dem_pad = np.pad(
-        dem_hr_raw,
-        ((0, pad_h), (0, pad_w)),
-        mode="constant",
-        constant_values=dem_pad_val,
-    )
-    depth_pad = np.pad(
-        depth_lr_raw,
-        ((0, pad_h // model_scale), (0, pad_w // model_scale)),
-        mode="constant",
-        constant_values=depth_pad_val,
-    )
-
-    hr_pad_h, hr_pad_w = dem_pad.shape
-    depth_pad_h, depth_pad_w = depth_pad.shape
-    assert depth_pad_h == hr_pad_h // model_scale and depth_pad_w == hr_pad_w // model_scale, (
-        f"depth pad shape {(depth_pad_h, depth_pad_w)} incompatible with HR pad {(hr_pad_h, hr_pad_w)}"
-    )
-
-    tile_cache: dict[tuple[int, int], np.ndarray] = {}
-
-    def _predict_tile(y0: int, x0: int) -> np.ndarray:
-        key = (int(y0), int(x0))
-        if key in tile_cache:
-            return tile_cache[key]
-
-        lr_y0 = y0 // model_scale
-        lr_x0 = x0 // model_scale
-        depth_tile = depth_pad[
-            lr_y0 : lr_y0 + model_lr_tile,
-            lr_x0 : lr_x0 + model_lr_tile,
-        ]
-        dem_tile = dem_pad[y0 : y0 + contract_hr_tile, x0 : x0 + contract_hr_tile]
-        assert depth_tile.shape == (model_lr_tile, model_lr_tile), (
-            f"depth tile shape {depth_tile.shape} != {(model_lr_tile, model_lr_tile)}"
+    with tempfile.TemporaryDirectory(prefix="floodsr-prep-") as prepped_dir:
+        prepped = write_prepared_rasters(
+            depth_lr_fp=depth_lr_path,
+            dem_hr_fp=dem_hr_path,
+            scale=model_scale,
+            out_dir=prepped_dir,
+            logger=log,
         )
-        assert dem_tile.shape == (contract_hr_tile, contract_hr_tile), (
-            f"DEM tile shape {dem_tile.shape} != {(contract_hr_tile, contract_hr_tile)}"
+        log.info(
+            "preprocessing complete\n"
+            f"  scale={model_scale} (HR/LR ratio)\n"
+            f"  aligned depth shape={prepped['depth_lr_shape']} "
+            f"resampled={prepped['resampled']}\n"
+            f"  aligned dem shape={prepped['dem_hr_shape']}\n"
+            f"  max_depth={float(preprocess_cfg['max_depth'])} "
+            f"dem_pct_clip={float(preprocess_cfg['dem_pct_clip'])}"
         )
-        run_result = engine.run_tile(
-            depth_tile,
-            dem_tile,
-            max_depth=float(preprocess_cfg["max_depth"]),
-            dem_pct_clip=float(preprocess_cfg["dem_pct_clip"]),
-            dem_ref_stats=preprocess_cfg["dem_ref_stats"],
-            depth_lr_nodata=depth_lr_nodata,
-            dem_hr_nodata=dem_hr_nodata,
-        )
-        pred = run_result["prediction_m"]
-        assert pred.shape == (contract_hr_tile, contract_hr_tile), (
-            f"prediction shape {pred.shape} != {(contract_hr_tile, contract_hr_tile)}"
-        )
-        tile_cache[key] = pred
-        return pred
-
-    if window_method == "hard":
-        sr_pad = np.zeros_like(dem_pad, dtype=np.float32)
-        nonoverlap_y = list(range(0, hr_pad_h, contract_hr_tile))
-        nonoverlap_x = list(range(0, hr_pad_w, contract_hr_tile))
-        log.debug(
-            f"hard mosaicing over {len(nonoverlap_y) * len(nonoverlap_x)} tiles size={contract_hr_tile}"
-        )
-        for y0 in nonoverlap_y:
-            for x0 in nonoverlap_x:
-                pred_np = _predict_tile(y0, x0)
-                sr_pad[y0 : y0 + contract_hr_tile, x0 : x0 + contract_hr_tile] = pred_np
-
-    elif window_method == "feather":
-        overlap_hr = overlap_lr * model_scale
-        stride_hr = contract_hr_tile - overlap_hr
-        if stride_hr <= 0:
-            raise AssertionError(
-                f"feather stride must be > 0; overlap_lr={overlap_lr}, tile={contract_hr_tile}"
-            )
-
-        y_starts = _build_tile_starts(hr_pad_h, contract_hr_tile, stride_hr)
-        x_starts = _build_tile_starts(hr_pad_w, contract_hr_tile, stride_hr)
-        feather_1d = np.ones(contract_hr_tile, dtype=np.float32)
-        if overlap_hr > 0:
-            ramp = np.linspace(0.0, 1.0, overlap_hr + 2, dtype=np.float32)[1:-1]
-            feather_1d[:overlap_hr] = ramp
-            feather_1d[-overlap_hr:] = ramp[::-1]
-            feather_1d = np.clip(feather_1d, 1e-3, 1.0)
-
-        accum = np.zeros_like(dem_pad, dtype=np.float32)
-        weight_sum = np.zeros_like(dem_pad, dtype=np.float32)
-        log.debug(
-            f"feather mosaicing with {len(y_starts)}x{len(x_starts)} tiles and overlap={overlap_hr} px"
-        )
-        for yi, y0 in enumerate(y_starts):
-            for xi, x0 in enumerate(x_starts):
-                pred_np = _predict_tile(y0, x0)
-                wy = feather_1d.copy()
-                wx = feather_1d.copy()
-                if yi == 0:
-                    wy[:overlap_hr] = 1.0
-                if yi == len(y_starts) - 1:
-                    wy[-overlap_hr:] = 1.0
-                if xi == 0:
-                    wx[:overlap_hr] = 1.0
-                if xi == len(x_starts) - 1:
-                    wx[-overlap_hr:] = 1.0
-
-                weight = np.outer(wy, wx).astype(np.float32, copy=False)
-                accum[y0 : y0 + contract_hr_tile, x0 : x0 + contract_hr_tile] += pred_np * weight
-                weight_sum[y0 : y0 + contract_hr_tile, x0 : x0 + contract_hr_tile] += weight
-
-        sr_pad = np.divide(
-            accum,
-            np.maximum(weight_sum, 1e-6),
-            out=np.zeros_like(accum),
-            where=weight_sum > 0,
+        prediction_m, tile_cache_size = infer_from_prepared_inputs(
+            engine=engine,
+            depth_lr_fp=prepped["depth_lr_prepared_fp"],
+            dem_hr_fp=prepped["dem_hr_prepared_fp"],
+            preprocess_cfg=preprocess_cfg,
+            model_lr_tile=model_lr_tile,
+            model_scale=model_scale,
+            contract_hr_tile=contract_hr_tile,
+            window_method=window_method,
+            overlap_lr=overlap_lr,
+            logger=log,
         )
 
-    else:
-        raise AssertionError(f"unsupported window_method={window_method}")
+        _, _, dem_prepared_profile = _read_single_band_raster(prepped["dem_hr_prepared_fp"])
+        output_profile = dem_prepared_profile.copy()
+        output_profile.update(dtype="float32", count=1)
+        output_profile.pop("blockxsize", None)
+        output_profile.pop("blockysize", None)
 
-    prediction_m = np.clip(sr_pad[:crop_h, :crop_w], 0.0, float(preprocess_cfg["max_depth"]))
-    assert prediction_m.ndim == 2, f"prediction must be 2D; got {prediction_m.shape}"
+        out_written_fp = _write_single_band_raster(out_path, prediction_m, output_profile)
 
-    out_written_fp = _write_single_band_raster(out_path, prediction_m, output_profile)
     runtime_s = time.perf_counter() - start
-    log.info(f"finished GeoTIFF inference in {runtime_s:.3f}s; wrote output to\n    {out_written_fp}")
+    log.info(f"finished raster inference in {runtime_s:.3f}s; wrote output to\n    {out_written_fp}")
     return {
         "output_fp": str(out_written_fp),
         "runtime_s": float(runtime_s),
@@ -769,12 +489,17 @@ def infer_geotiff(
             "tile_size_lr": model_lr_tile,
             "tile_size_hr": contract_hr_tile,
             "model_scale": model_scale,
-            "tile_cache_size": len(tile_cache),
+            "tile_cache_size": tile_cache_size,
             "input_shape": {
-                "crop_height": int(crop_h),
-                "crop_width": int(crop_w),
-                "aligned_depth_shape": [int(x) for x in depth_lr_raw.shape],
-                "aligned_dem_shape": [int(x) for x in dem_hr_raw.shape],
+                "crop_height": int(prediction_m.shape[0]),
+                "crop_width": int(prediction_m.shape[1]),
+                "aligned_depth_shape": [int(x) for x in prepped["depth_lr_shape"]],
+                "aligned_dem_shape": [int(x) for x in prepped["dem_hr_shape"]],
+            },
+            "prepared_inputs": {
+                "depth_lr_prepared_fp": str(prepped["depth_lr_prepared_fp"]),
+                "dem_hr_prepared_fp": str(prepped["dem_hr_prepared_fp"]),
+                "prepped_depth_was_resampled": bool(prepped["resampled"]),
             },
         },
     }
