@@ -134,24 +134,42 @@ def test_main_doctor_reports_runtime_diagnostics(capsys: pytest.CaptureFixture[s
     assert "onnxruntime_installed=" in stdout
 
 
+_INFERENCE_CASES = [
+    pytest.param("2407_FHIMP_tile", id="2407_FHIMP_tile"),
+    pytest.param("rss_mersch_A", id="rss_mersch_A"),
+]
+
+_INFERENCE_RUN_CASES = [
+    pytest.param("2407_FHIMP_tile", id="2407_FHIMP_tile"),
+]
+
+_CLI_TILE_CASES = [
+    pytest.param("2407_FHIMP_tile", id="2407_FHIMP_tile"),
+    pytest.param("rss_mersch_A", id="rss_mersch_A"),
+]
+
+
+@pytest.mark.parametrize("tile_case", _INFERENCE_CASES, indirect=True)
 def test_main_infer_runs_geotiff_prediction(
     inference_model_fp: Path,
     tmp_path: Path,
+    tile_case: dict,
     capsys: pytest.CaptureFixture[str],
 ):
     """Ensure infer command produces an output raster for a model/tile pair."""
     pytest.importorskip("onnxruntime")
     pytest.importorskip("rasterio")
-    tile_dir = Path("tests/data/2407_FHIMP_tile")
-    output_fp = tmp_path / "pred_cli.tif"
+    artifact = tile_case["artifact"]
+    tile_dir = tile_case["tile_dir"]
+    output_fp = tmp_path / f"{tile_case['case_name']}_pred_cli.tif"
 
     exit_code = main(
         [
             "infer",
             "--in",
-            str(tile_dir / "lowres032.tif"),
+            str(tile_dir / artifact["lowres_fp"]),
             "--dem",
-            str(tile_dir / "hires002_dem.tif"),
+            str(tile_dir / artifact["dem_fp"]),
             "--out",
             str(output_fp),
             "--model-path",
@@ -160,12 +178,58 @@ def test_main_infer_runs_geotiff_prediction(
     )
     _stdout = capsys.readouterr().out
     assert exit_code == 0
+    if tile_case["case_name"] == "rss_mersch_A":
+        # This case contains valid zero-border tiles in the source DEM clip.
+        # Keep explicit coverage of CLI wiring without asserting full output shape.
+        assert output_fp.exists()
+    else:
+        assert output_fp.exists()
+
+
+@pytest.mark.parametrize("tile_case", _INFERENCE_RUN_CASES, indirect=True)
+def test_main_infer_uses_tiling_flags(
+    inference_model_fp: Path,
+    tmp_path: Path,
+    tile_case: dict,
+) -> None:
+    """Ensure tiling controls are accepted by CLI and forwarded to inference."""
+    pytest.importorskip("onnxruntime")
+    pytest.importorskip("rasterio")
+    artifact = tile_case["artifact"]
+    tile_dir = tile_case["tile_dir"]
+    output_fp = tmp_path / f"{tile_case['case_name']}_pred_cli_tiled.tif"
+
+    exit_code = main(
+        [
+            "infer",
+            "--in",
+            str(tile_dir / artifact["lowres_fp"]),
+            "--dem",
+            str(tile_dir / artifact["dem_fp"]),
+            "--out",
+            str(output_fp),
+            "--model-path",
+            str(inference_model_fp),
+            "--window-method",
+            "hard",
+            "--tile-overlap",
+            "0",
+        ]
+    )
+    assert exit_code == 0
     assert output_fp.exists()
 
 
-def test_default_output_path_uses_cwd_and_input_stem(tmp_path: Path):
+@pytest.mark.parametrize(
+    "tile_case",
+    _CLI_TILE_CASES,
+    indirect=True,
+)
+def test_default_output_path_uses_cwd_and_input_stem(tmp_path: Path, tile_case: dict):
     """Ensure infer default output path is generated in cwd with _sr suffix."""
-    input_fp = Path("nested") / "lowres032.tif"
+    artifact = tile_case["artifact"]
+    tile_dir = tile_case["tile_dir"]
+    input_fp = tile_dir / artifact["lowres_fp"]
     cwd = os.getcwd()
     try:
         os.chdir(tmp_path)
@@ -173,17 +237,23 @@ def test_default_output_path_uses_cwd_and_input_stem(tmp_path: Path):
     finally:
         os.chdir(cwd)
     assert isinstance(output_fp, Path)
-    assert output_fp == (tmp_path / "lowres032_sr.tif").resolve()
+    expected_output = f"{Path(input_fp).stem}_sr.tif"
+    assert output_fp == (tmp_path / expected_output).resolve()
 
 
+@pytest.mark.parametrize("tile_case", _INFERENCE_RUN_CASES, indirect=True)
 def test_main_infer_defaults_output_when_out_not_provided(
     inference_model_fp: Path,
     tmp_path: Path,
+    tile_case: dict,
 ):
     """Ensure infer writes to cwd default output when --out is omitted."""
     pytest.importorskip("onnxruntime")
     pytest.importorskip("rasterio")
-    tile_dir = Path("tests/data/2407_FHIMP_tile").resolve()
+    artifact = tile_case["artifact"]
+    tile_dir = tile_case["tile_dir"]
+    input_fp = str((tile_dir / artifact["lowres_fp"]).resolve())
+    dem_fp = str((tile_dir / artifact["dem_fp"]).resolve())
     cwd = os.getcwd()
     try:
         os.chdir(tmp_path)
@@ -191,9 +261,9 @@ def test_main_infer_defaults_output_when_out_not_provided(
             [
                 "infer",
                 "--in",
-                str(tile_dir / "lowres032.tif"),
+                input_fp,
                 "--dem",
-                str(tile_dir / "hires002_dem.tif"),
+                dem_fp,
                 "--model-path",
                 str(inference_model_fp),
             ]
@@ -201,12 +271,19 @@ def test_main_infer_defaults_output_when_out_not_provided(
     finally:
         os.chdir(cwd)
     assert exit_code == 0
-    assert (tmp_path / "lowres032_sr.tif").exists()
+    default_output = f"{tile_case['artifact']['lowres_fp'].replace('.tif', '')}_sr.tif"
+    assert (tmp_path / default_output).exists()
 
 
+@pytest.mark.parametrize(
+    "tile_case",
+    _INFERENCE_RUN_CASES,
+    indirect=True,
+)
 def test_resolve_infer_model_path_uses_cached_manifest_default(
     models_manifest_fp: Path,
     tmp_path: Path,
+    tile_case: dict,
 ):
     """Ensure infer default model resolution uses cached first manifest model."""
     cache_dir = tmp_path / "cache"
@@ -227,9 +304,9 @@ def test_resolve_infer_model_path_uses_cached_manifest_default(
         [
             "infer",
             "--in",
-            "tests/data/2407_FHIMP_tile/lowres032.tif",
+            str(tile_case["tile_dir"] / tile_case["artifact"]["lowres_fp"]),
             "--dem",
-            "tests/data/2407_FHIMP_tile/hires002_dem.tif",
+            str(tile_case["tile_dir"] / tile_case["artifact"]["dem_fp"]),
             "--manifest",
             str(models_manifest_fp),
             "--cache-dir",
