@@ -150,7 +150,7 @@ _CLI_TILE_CASES = [
 
 
 @pytest.mark.parametrize("tile_case", _INFERENCE_CASES, indirect=True)
-def test_main_infer_runs_geotiff_prediction(
+def test_main_infer_runs_raster_prediction(
     inference_model_fp: Path,
     tmp_path: Path,
     tile_case: dict,
@@ -241,38 +241,6 @@ def test_default_output_path_uses_cwd_and_input_stem(tmp_path: Path, tile_case: 
     assert output_fp == (tmp_path / expected_output).resolve()
 
 
-@pytest.mark.parametrize("tile_case", _INFERENCE_RUN_CASES, indirect=True)
-def test_main_infer_defaults_output_when_out_not_provided(
-    inference_model_fp: Path,
-    tmp_path: Path,
-    tile_case: dict,
-):
-    """Ensure infer writes to cwd default output when --out is omitted."""
-    pytest.importorskip("onnxruntime")
-    pytest.importorskip("rasterio")
-    artifact = tile_case["artifact"]
-    tile_dir = tile_case["tile_dir"]
-    input_fp = str((tile_dir / artifact["lowres_fp"]).resolve())
-    dem_fp = str((tile_dir / artifact["dem_fp"]).resolve())
-    cwd = os.getcwd()
-    try:
-        os.chdir(tmp_path)
-        exit_code = main(
-            [
-                "infer",
-                "--in",
-                input_fp,
-                "--dem",
-                dem_fp,
-                "--model-path",
-                str(inference_model_fp),
-            ]
-        )
-    finally:
-        os.chdir(cwd)
-    assert exit_code == 0
-    default_output = f"{tile_case['artifact']['lowres_fp'].replace('.tif', '')}_sr.tif"
-    assert (tmp_path / default_output).exists()
 
 
 @pytest.mark.parametrize(

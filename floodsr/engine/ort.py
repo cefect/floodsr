@@ -9,7 +9,7 @@ import numpy as np
 import onnxruntime as ort
 
 from floodsr.engine.base import EngineBase
-from floodsr.inference import invert_depth_log1p_np, normalize_dem, replace_nodata_with_zero, scale_depth_log1p_np
+from floodsr.preprocessing import invert_depth_log1p_np, normalize_dem, replace_nodata_with_zero, scale_depth_log1p_np
 
 
 @dataclass(frozen=True)
@@ -26,7 +26,7 @@ class ModelIOContract:
 
 
 class EngineORT(EngineBase):
-    """CPU ONNX Runtime engine with notebook-compatible model I/O wiring."""
+    """CPU ONNX Runtime engine with aligned tensor preprocessing and output handling."""
 
     def __init__(
         self,
@@ -129,30 +129,51 @@ class EngineORT(EngineBase):
         dem_ref_stats: dict[str, float] | None = None,
         depth_lr_nodata: float | None = None,
         dem_hr_nodata: float | None = None,
+        normalize_inputs: bool = True,
         logger=None,
     ) -> dict[str, Any]:
-        """Run one inference pass from raw depth/DEM arrays to predicted depth."""
-        log = logger or self.log
+        """Run one inference pass from prepared depth/DEM arrays to predicted depth.
+
+        Set `normalize_inputs=False` when inputs were normalized once upstream.
+        """
         assert self.session is not None, "session must be loaded before inference"
         assert self.contract is not None, "model contract must be available before inference"
         start = time.perf_counter()
-        log.debug(
-            f"run_tile start: depth_lr_shape={np.shape(depth_lr_m)}, dem_hr_shape={np.shape(dem_hr_m)}, "
-            f"max_depth={max_depth}, dem_pct_clip={dem_pct_clip}"
-        )
 
-        # Match notebook nodata policy before normalization.
-        depth_lr_raw = replace_nodata_with_zero(depth_lr_m, depth_lr_nodata)
-        dem_hr_raw = replace_nodata_with_zero(dem_hr_m, dem_hr_nodata)
-        assert np.isfinite(depth_lr_raw).all(), "low-res depth contains non-finite values after nodata replacement"
-        assert np.isfinite(dem_hr_raw).all(), "DEM contains non-finite values after nodata replacement"
+        depth_lr_np = np.asarray(depth_lr_m)
+        dem_hr_np = np.asarray(dem_hr_m)
 
-        # Match notebook preprocessing and NHWC tensor formatting.
-        depth_lr_norm = scale_depth_log1p_np(depth_lr_raw, max_depth=float(max_depth))
-        dem_hr_norm, dem_stats_used = normalize_dem(dem_hr_raw, pct_clip=float(dem_pct_clip), ref_stats=dem_ref_stats)
-        assert depth_lr_norm is not None, "depth normalization returned None"
-        assert dem_hr_norm is not None, "DEM normalization returned None"
-        assert dem_stats_used is not None, "DEM normalization did not return stats"
+        if normalize_inputs:
+            # Match shared preprocessing nodata policy before normalization.
+            depth_lr_np = replace_nodata_with_zero(depth_lr_np, depth_lr_nodata)
+            dem_hr_np = replace_nodata_with_zero(dem_hr_np, dem_hr_nodata)
+            assert np.isfinite(depth_lr_np).all(), "low-res depth contains non-finite values after nodata replacement"
+            assert np.isfinite(dem_hr_np).all(), "DEM contains non-finite values after nodata replacement"
+
+            depth_lr_norm = scale_depth_log1p_np(depth_lr_np, max_depth=float(max_depth))
+            dem_hr_norm, dem_stats_used = normalize_dem(dem_hr_np, pct_clip=float(dem_pct_clip), ref_stats=dem_ref_stats)
+            assert depth_lr_norm is not None, "depth normalization returned None"
+            assert dem_hr_norm is not None, "DEM normalization returned None"
+            assert dem_stats_used is not None, "DEM normalization did not return stats"
+        else:
+            # Inputs are already normalized upstream (notebook path).
+            depth_lr_norm = depth_lr_np.astype(np.float32, copy=False)
+            dem_hr_norm = dem_hr_np.astype(np.float32, copy=False)
+            assert np.isfinite(depth_lr_norm).all(), "low-res depth contains non-finite values"
+            assert np.isfinite(dem_hr_norm).all(), "DEM contains non-finite values"
+            assert float(np.min(depth_lr_norm)) >= 0.0 and float(np.max(depth_lr_norm)) <= 1.0, (
+                "depth tile must be normalized to [0, 1]"
+            )
+            assert float(np.min(dem_hr_norm)) >= 0.0 and float(np.max(dem_hr_norm)) <= 1.0, (
+                "DEM tile must be normalized to [0, 1]"
+            )
+            if dem_ref_stats is not None and isinstance(dem_ref_stats, dict):
+                dem_stats_used = {
+                    k: float(v) for k, v in dem_ref_stats.items() if k in {"p_clip", "dem_min", "dem_max"}
+                }
+            else:
+                dem_stats_used = {"p_clip": float(dem_pct_clip), "dem_min": 0.0, "dem_max": 1.0}
+
         depth_lr_nhwc = depth_lr_norm[np.newaxis, :, :, np.newaxis].astype(np.float32, copy=False)
         dem_hr_nhwc = dem_hr_norm[np.newaxis, :, :, np.newaxis].astype(np.float32, copy=False)
         assert depth_lr_nhwc.shape[1:] == self.contract.depth_lr_hwc, (
@@ -174,14 +195,9 @@ class EngineORT(EngineBase):
         )
 
         runtime_s = time.perf_counter() - start
-        log.info(
-            f"run_tile complete in {runtime_s:.3f}s; "
-            f"pred_min={float(depth_hr_pred_m.min()):.6f}, pred_max={float(depth_hr_pred_m.max()):.6f}"
-        )
         return {
             "prediction_m": depth_hr_pred_m.astype(np.float32, copy=False),
             "prediction_norm": depth_hr_pred_norm.astype(np.float32, copy=False),
             "dem_stats_used": dem_stats_used,
             "runtime_s": float(runtime_s),
         }
-

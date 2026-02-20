@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 
 from floodsr.engine import get_onnxruntime_info, get_rasterio_info
-from floodsr.inference import infer_geotiff
+from floodsr.inference import infer
 from floodsr.model_registry import fetch_model, list_models, load_models_manifest
 from floodsr.cache_paths import get_model_cache_path
 from floodsr.checksums import verify_sha256
@@ -70,7 +70,8 @@ def _resolve_infer_model_path(args: argparse.Namespace) -> Path:
 def _resolve_default_output_path(in_fp: Path) -> Path:
     """Resolve default output in cwd from input filename."""
     in_path = Path(in_fp).expanduser()
-    return (Path.cwd() / f"{in_path.stem}_sr.tif").resolve()
+    suffix = in_path.suffix or ".tif"
+    return (Path.cwd() / f"{in_path.stem}_sr{suffix}").resolve()
 
 
 def main_cli(args: argparse.Namespace) -> int:
@@ -97,7 +98,7 @@ def main_cli(args: argparse.Namespace) -> int:
     if args.command == "infer":
         model_fp = _resolve_infer_model_path(args)
         output_fp = args.out if args.out is not None else _resolve_default_output_path(args.in_fp)
-        result = infer_geotiff(
+        result = infer(
             model_fp=model_fp,
             depth_lr_fp=args.in_fp,
             dem_hr_fp=args.dem,
@@ -203,14 +204,14 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
     )
 
     # Register inference command.
-    infer_parser = subparsers.add_parser("infer", help="Run one GeoTIFF inference pass.")
+    infer_parser = subparsers.add_parser("infer", help="Run one raster inference pass.")
     infer_parser.add_argument("--in", dest="in_fp", type=Path, required=True, help="Low-res depth raster path.")
     infer_parser.add_argument("--dem", type=Path, required=True, help="High-res DEM raster path.")
     infer_parser.add_argument(
         "--out",
         type=Path,
         default=None,
-        help="Output high-res depth raster path. Defaults to ./<input_stem>_sr.tif",
+        help="Output high-res depth raster path. Defaults to ./<input_stem>_sr with input extension",
     )
     infer_parser.add_argument(
         "--model-version",
