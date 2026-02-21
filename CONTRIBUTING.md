@@ -102,4 +102,18 @@ python -m floodsr.cli models fetch 4690176_0_1770580046_train_base_16
 pytest -q tests/test_model_registry.py::test_default_manifest_http_links_resolve
 ```
 
- 
+# PIPX local install
+
+```bash
+pipx uninstall floodsr || true
+pipx install --force .
+
+floodsr --help
+floodsr doctor
+floodsr models list
+
+floodsr infer \
+  --in tests/data/2407_FHIMP_tile/lowres032.tif \
+  --dem tests/data/2407_FHIMP_tile/hires002_dem.tif
+
+```

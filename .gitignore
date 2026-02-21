@@ -43,4 +43,9 @@ docs/_build/
  
 
 _inputs/
-lowres032_sr.tif
+ 
+
+
+# pip
+build/
+*.egg-info
