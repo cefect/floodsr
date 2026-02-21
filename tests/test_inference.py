@@ -15,13 +15,14 @@ from tests.conftest import fhimp_tile_case, inference_model_fp, synthetic_infere
 _ARTIFACT_TILE_CASES = [
     pytest.param("2407_FHIMP_tile", id="2407_FHIMP_tile"),
     pytest.param("rss_mersch_A", id="rss_mersch_A"),
+    pytest.param("rss_dudelange_A", id="rss_dudelange_A"),
 ]
 
  
 
 
 @pytest.mark.parametrize("tile_case", _ARTIFACT_TILE_CASES, indirect=True)
-def test_inference_metrics_match_artifact_at_3dp(
+def test_inference_metrics_and_validate(
     inference_model_fp: Path, tile_case: dict, tmp_path: Path,
     logger):
     """Validate end-to-end metrics for the known model tile artifact."""

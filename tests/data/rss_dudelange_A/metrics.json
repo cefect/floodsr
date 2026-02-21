@@ -1,0 +1,30 @@
+{
+  "model_version": "4690176_0_1770580046_train_base_16",
+  "model_file_name": "model_infer.onnx",
+  "model_compatible": false,
+  "compatibility_reason": "input raster ratio is 30m:3m (10x); inference rescales LR depth to model SCALE=16.",
+  "lowres_fp": "lowres030.tif",
+  "dem_fp": "hires003_dem.tif",
+  "truth_fp": "hires003.tif",
+  "precision": 3,
+  "tile_spec": {
+    "epsg": 2169,
+    "lowres_shape": [
+      256,
+      256
+    ],
+    "hires_shape": [
+      2560,
+      2560
+    ],
+    "lowres_resolution_m": 30,
+    "hires_resolution_m": 3,
+    "scale_factor": 10
+  },
+  "metrics": {
+    "mase_m": 0.023574588918075876,
+    "rmse_m": 0.15197193425675726,
+    "ssim": 0.5585159828628262
+  },
+  "source": "dev/inference.ipynb method rerun on rss_dudelange_A with floodsr.inference + ONNX model"
+}
