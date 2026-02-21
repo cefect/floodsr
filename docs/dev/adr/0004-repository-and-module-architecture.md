@@ -3,6 +3,9 @@
  
 The codebase should keep the CLI thin, isolate engine/runtime concerns, and preserve a swappable execution backend boundary.
 
+see also:
+- ADR-0011: Parameters and Configuration
+
 ## Decision
 
 Use a structure centered on these modules:
@@ -24,7 +27,6 @@ Use a structure centered on these modules:
   - `tiling/stitch.py`
 - I/O layer:
   - `io/rasterio_io.py`
-  - `io/npy_io.py`
   - `io/metadata.py`
 - Tests and docs:
   - `tests/`
