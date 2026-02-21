@@ -4,6 +4,7 @@
 		"**/.pytest_cache": true,
 		"LICENSE": true,
 		"*.egg-info": true,
+		"**/build": true,
 	},
 	
 	"search.exclude": {
@@ -11,7 +12,8 @@
 		"**/.pytest_cache": true,
 		"**/env": true,
 		"**/.snakemake": true,
-		"LICENSE": true
+		"LICENSE": true,
+		"**/build": true,
 	},
 "jupyter.notebookFileRoot": "${workspaceFolder}",
 	"python-envs.pythonProjects": [
