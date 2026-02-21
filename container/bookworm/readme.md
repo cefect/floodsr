@@ -37,14 +37,17 @@ upstream=mcr.microsoft.com/devcontainers/python:3.12-bookworm
 docker pull "$upstream"
 
  
-
+#dump pip
 docker run --rm --entrypoint /bin/bash "$upstream" -lc "python -m pip freeze" \
   > container/pip-freeze.upstream.txt
+
+#explore with bash terminal
+docker run --rm -it --entrypoint /bin/bash "$upstream"
 
 ```
 ## build base
 ```bash
-export IMAGE_NAME='cefect/floodsr:base-v0.1'
+export IMAGE_NAME='cefect/floodsr:base-v0.3'
 
 docker buildx build --load -t $IMAGE_NAME -f container/Dockerfile --target base .
 
