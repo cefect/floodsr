@@ -1,8 +1,6 @@
 """Pytest fixtures for FloodSR tests."""
 
-import json
-import logging
-import pathlib
+import hashlib, json, logging, pathlib
 
 import numpy as np
 import pytest
@@ -12,16 +10,27 @@ TEST_TILE_CASES = ("2407_FHIMP_tile", "rss_mersch_A", "rss_dudelange_A")
 
 
 def _read_tile_case(case_name: str) -> dict:
-    """Load tile case metadata from tests/data for a named fixture."""
+    """Load one data-driven test case from tests/data."""
     tile_dir = pathlib.Path("tests/data") / case_name
-    metrics_fp = tile_dir / "metrics.json"
+    case_spec_fp = tile_dir / "case_spec.json"
     assert tile_dir.exists(), f"missing tile directory: {tile_dir}"
-    assert metrics_fp.exists(), f"missing metrics artifact: {metrics_fp}"
+    assert case_spec_fp.exists(), f"missing case spec artifact: {case_spec_fp}"
+    case_spec = json.loads(case_spec_fp.read_text(encoding="utf-8"))
+    assert "model" in case_spec and "inputs" in case_spec and "expected" in case_spec and "flags" in case_spec, (
+        f"invalid case spec shape for {case_name}: missing top-level keys"
+    )
+    assert (
+        "lowres_fp" in case_spec["inputs"]
+        and "dem_fp" in case_spec["inputs"]
+        and "truth_fp" in case_spec["inputs"]
+    ), f"invalid case inputs for {case_name}"
+    assert "metrics" in case_spec["expected"], f"invalid expected block for {case_name}"
+    assert "in_hrdem" in case_spec["flags"], f"missing required flags.in_hrdem for {case_name}"
     return {
         "case_name": case_name,
         "tile_dir": tile_dir,
-        "metrics_fp": metrics_fp,
-        "artifact": json.loads(metrics_fp.read_text(encoding="utf-8")),
+        "case_spec_fp": case_spec_fp,
+        "case_spec": case_spec,
     }
 
 
@@ -79,6 +88,27 @@ def logger():
     return log
 
 
+@pytest.fixture(scope="function")
+def models_manifest_fp(tmp_path: pathlib.Path) -> pathlib.Path:
+    """Create a local one-model manifest fixture for model/CLI tests."""
+    source_fp = tmp_path / "source_model.onnx"
+    source_fp.write_bytes(b"cli-test-model")
+    sha256 = hashlib.sha256(source_fp.read_bytes()).hexdigest()
+    manifest = {
+        "models": {
+            "v-cli": {
+                "file_name": "model.onnx",
+                "url": source_fp.as_uri(),
+                "sha256": sha256,
+                "description": "Local CLI test model.",
+            }
+        }
+    }
+    manifest_fp = tmp_path / "models.json"
+    manifest_fp.write_text(json.dumps(manifest), encoding="utf-8")
+    return manifest_fp
+
+
 @pytest.fixture(scope="session")
 def tile_case_catalog():
     """Return metadata for all explicitly tracked tile fixtures."""
@@ -91,18 +121,6 @@ def tile_case(request, tile_case_catalog):
     case_name = request.param
     assert case_name in tile_case_catalog, f"missing tile case in catalog: {case_name}"
     return tile_case_catalog[case_name]
-
-
-@pytest.fixture(scope="session")
-def fhimp_tile_case(tile_case_catalog):
-    """Return the default FHIMP chip fixture."""
-    return tile_case_catalog["2407_FHIMP_tile"]
-
-
-@pytest.fixture(scope="session")
-def rss_mersch_a_case(tile_case_catalog):
-    """Return the RSS Mersch A chip fixture."""
-    return tile_case_catalog["rss_mersch_A"]
 
 
 @pytest.fixture(scope="session")

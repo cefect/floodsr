@@ -1,0 +1,25 @@
+{
+  "model": {
+    "version": "4690176_0_1770580046_train_base_16",
+    "file_name": "model_infer.onnx",
+    "compatible": false
+  },
+  "inputs": {
+    "lowres_fp": "lowres030.tif",
+    "dem_fp": "hires002_dem.tif",
+    "truth_fp": "hires002.tif"
+  },
+  "expected": {
+    "precision": 3,
+    "metrics": {
+      "mase_m": 0.041421936914116685,
+      "rmse_m": 0.2904962102605051,
+      "ssim": 0.29785980636968223
+    }
+  },
+  "flags": {
+    "in_hrdem": false,
+    "non_native_scale": true,
+    "allow_zero_border": true
+  }
+}
