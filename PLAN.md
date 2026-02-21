@@ -30,10 +30,10 @@ ADR refs: `docs/dev/adr/0005-model-registry-and-artifact-validation.md`, `docs/d
 - [x] add integration checks for corrupted downloads
 
 ### Phase 5 - GeoTIFF I/O + tiling + stitching
-ADR refs: `docs/dev/adr/0004-repository-and-module-architecture.md`
+ADR refs: `docs/dev/adr/0008-tiling.md`
 
-- [ ] windowed reads, tile batching, overlap/blend stitching
-- [ ] preserve georeferencing metadata
+- [x] windowed reads, tile batching, overlap/blend stitching
+- [x] preserve georeferencing metadata
 
 ### Phase 6 - Packaging and install story
 ADR refs: `docs/dev/adr/0002-packaging-and-installation-strategy.md`
@@ -41,12 +41,17 @@ ADR refs: `docs/dev/adr/0002-packaging-and-installation-strategy.md`
 - [ ] CPU extras first, CUDA deferred
 - [ ] document `pipx` and fallback `venv` install paths
 
+### CI/CD tests
+
 ### Phase 7 - Docs and release
 ADR refs: `docs/dev/adr/0002-packaging-and-installation-strategy.md`, `docs/dev/adr/0005-model-registry-and-artifact-validation.md`
 
 - [ ] publish install/usage/cache-location/offline-use docs
 
-### Phase 8 - GPU extension planning (deferred)
+
+
+
+###  GPU extension planning (deferred)
 ADR refs: `docs/dev/adr/0001-mvp-runtime-and-cli-contract.md`, `docs/dev/adr/0002-packaging-and-installation-strategy.md`
 
 - [ ] keep hooks for future provider-specific extensions
