@@ -13,8 +13,12 @@ Use a structure centered on these modules:
 - CLI surface:
   - `cli.py`
   - `model_registry.py`
-  - `cache_paths.py`
   - `checksums.py`
+- Cache subsystem:
+  - `cache/paths.py`
+  - `cache/policy.py`
+  - `cache/lifecycle.py`
+  - `cache/reporting.py`
 - Engine abstraction:
   - `engine/base.py`
   - `engine/ort.py`
@@ -38,7 +42,11 @@ Use a structure centered on these modules:
 
 Module interaction for model resolution and loading:
 
-`CLI -> model_registry.resolve_model(...) -> cache_paths.model_path(...) -> download -> checksums.verify_sha256(...) -> engine.load(model_path)`
+`CLI -> model_registry.resolve_model(...) -> cache/paths.model_path(...) -> download -> checksums.verify_sha256(...) -> engine.load(model_path)`
+
+Module interaction for cache lifecycle and controls:
+
+`CLI (cache commands) -> cache/reporting + cache/lifecycle -> cache/paths + cache/policy`
 
 Module interaction for DEM fetch (current + planned):
 
@@ -51,3 +59,4 @@ Module interaction for DEM fetch (current + planned):
 - Runtime backend and CLI contract are decoupled.
 - Testing boundaries are clearer by module responsibility.
 - Future execution provider work stays isolated to engine components.
+- Cache policy and lifecycle are centralized in a reusable subsystem rather than CLI-adjacent utilities.

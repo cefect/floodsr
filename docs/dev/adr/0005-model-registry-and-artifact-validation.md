@@ -2,12 +2,12 @@
 
  
 
-Model artifacts need versioned discovery, cache management, and integrity guarantees prior to inference.
+Model artifacts need versioned discovery and integrity guarantees prior to inference.
 
 ## Decision
 
 - Maintain a `models.json` manifest mapping `version -> {url, sha256, metadata}`.
-- Download model files into OS-specific cache directories.
+- Store fetched artifacts in the shared FloodSR cache policy defined in `ADR-0012`.
 - Enforce checksum validation (`sha256`) before model use.
 - Provide CLI commands:
   - `floodsr models list`
@@ -26,5 +26,4 @@ Current reference model:
 
 - Model resolution is explicit and auditable.
 - Integrity checks prevent silent model corruption.
-- CLI supports offline reuse via cached artifacts.
-
+- CLI supports offline reuse via cached artifacts managed by the shared cache policy.
