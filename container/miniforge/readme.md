@@ -18,7 +18,7 @@ from WSL:
 ```bash
 
 #set the image name
-IMAGE_NAME="cefect/floodsr:miniforge-deploy-v0.1"
+IMAGE_NAME="cefect/floodsr:miniforge-deploy-v0.2"
 
 # build the container
 docker buildx build --load -f container/miniforge/Dockerfile -t "${IMAGE_NAME}" --target deploy .
@@ -50,7 +50,7 @@ docker push $IMAGE_NAME
 ## Build Images: analysis
 from WSL
 ```bash
-IMAGE_NAME="cefect/floodsr:miniforge-dev-v0.1"
+IMAGE_NAME="cefect/floodsr:miniforge-dev-v0.2"
 docker buildx build --load -f container/miniforge/Dockerfile -t "${IMAGE_NAME}" --target dev .
 ```
 
