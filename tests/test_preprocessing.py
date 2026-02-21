@@ -11,6 +11,7 @@ from floodsr.preprocessing import write_prepared_rasters
 def test_write_prepared_rasters_creates_disk_outputs(
     synthetic_inference_tiles: dict,
     tmp_path: Path,
+    logger,
 ) -> None:
     """Prepared outputs should be written to disk when preprocessing runs."""
     pytest.importorskip("rasterio")
@@ -20,6 +21,7 @@ def test_write_prepared_rasters_creates_disk_outputs(
         dem_hr_fp=synthetic_inference_tiles["dem_fp"],
         scale=16,
         out_dir=tmp_path,
+        logger=logger,
     )
 
     assert prepared["depth_lr_prepared_fp"].exists()
@@ -29,6 +31,7 @@ def test_write_prepared_rasters_creates_disk_outputs(
 def test_write_prepared_rasters_write_float32_arrays(
     synthetic_inference_tiles: dict,
     tmp_path: Path,
+    logger,
 ) -> None:
     """Prepared rasters should retain float32 arrays for inference."""
     rasterio = pytest.importorskip("rasterio")
@@ -37,6 +40,7 @@ def test_write_prepared_rasters_write_float32_arrays(
         dem_hr_fp=synthetic_inference_tiles["dem_fp"],
         scale=16,
         out_dir=tmp_path,
+        logger=logger,
     )
 
     with rasterio.open(prepared["dem_hr_prepared_fp"]) as ds:

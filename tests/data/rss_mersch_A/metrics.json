@@ -16,9 +16,9 @@
     "scale_factor": 15
   },
   "metrics": {
-    "mase_m": null,
-    "rmse_m": null,
-    "ssim": null
+    "mase_m": 0.04367,
+    "rmse_m": 0.29015,
+    "ssim": 0.30848
   },
   "source": "bin/clip_test_grids.sh"
 }
