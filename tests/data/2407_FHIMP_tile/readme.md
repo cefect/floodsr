@@ -1,6 +1,8 @@
 # example chip from 2407_FHIMP
 
-extracted from `/home/cefect/LS/09_REPOS/02_JOBS/2407_FHIMP/misc/chip_extractor.py`
+## Provenance
+
+Extracted from `/home/cefect/LS/09_REPOS/02_JOBS/2407_FHIMP/misc/chip_extractor.py`:
 
 ```python
 python misc/chip_extractor.py \
@@ -10,7 +12,7 @@ python misc/chip_extractor.py \
     
 ```
 
-yielding two layers:
+Yielding two layers:
 
 
 

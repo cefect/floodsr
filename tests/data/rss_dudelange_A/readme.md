@@ -1,5 +1,9 @@
 # RSS Dudelange test case
 
-cropped and prepped w/ bin/clip_test_grids.sh
+## Provenance
 
-set CRS to 2169
+Cropped and prepped with `bin/clip_test_grids.sh`.
+
+## Notes
+
+- CRS is set to EPSG:2169.
