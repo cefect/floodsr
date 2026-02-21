@@ -38,22 +38,21 @@ ADR refs: `docs/dev/adr/0008-tiling.md`
 ### Phase 6 - Packaging and install story
 ADR refs: `docs/dev/adr/0002-packaging-and-installation-strategy.md`
 
-- [ ] CPU extras first, CUDA deferred
+ 
 - [ ] document `pipx` and fallback `venv` install paths
+
+
+
+### Documentation
+ 
+
 
 ### CI/CD tests
 
-### Phase 7 - Docs and release
-ADR refs: `docs/dev/adr/0002-packaging-and-installation-strategy.md`, `docs/dev/adr/0005-model-registry-and-artifact-validation.md`
-
-- [ ] publish install/usage/cache-location/offline-use docs
-
-
-
-
-###  GPU extension planning (deferred)
-ADR refs: `docs/dev/adr/0001-mvp-runtime-and-cli-contract.md`, `docs/dev/adr/0002-packaging-and-installation-strategy.md`
-
-- [ ] keep hooks for future provider-specific extensions
-
+### cache behavior
+see `docs/dev/adr/0012-cache-policy-and-lifecycle.md`
+- [ ] build out modules
+- [ ] update CLI
+- [ ] add tests
+- [ ] udpate documentation
  
