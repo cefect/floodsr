@@ -8,7 +8,7 @@ depth_hires_fp="_inputs/RSSHydro/${study}/002/ResultA.tif"
 depth_lores_fp="_inputs/RSSHydro/${study}/032/ResultA.tif"
 out_dir="tests/data/rss_${study}_A"
 
-# Output driver options mirrored from parameters.py: GEOTIF_OPTIONS.
+# Output driver options mirrored from floodsr/io/rasterio_io.py: GEOTIF_OPTIONS.
 gdal_driver="GTiff"
 gdal_dtype="Float32"
 gdal_compress="LZW"

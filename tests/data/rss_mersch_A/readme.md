@@ -13,5 +13,5 @@ Prepared by `bin/clip_test_grids.sh` from:
 ## Notes
 - Lowres CRS is explicitly set from the DEM CRS.
 - Hires depth and DEM are clipped to the lowres bbox using nearest-neighbor resampling at fixed 2m resolution for pixel alignment.
-- GeoTIFF driver options are set from `parameters.py`: `GTiff`, `Float32`, `LZW`, `NoData=-9999`.
+- GeoTIFF driver options are set from `floodsr/io/rasterio_io.py`: `GTiff`, `Float32`, `LZW`, `NoData=-9999`.
 - This case is not directly compatible with current model inference tests because the current ONNX model contract expects a `32x32` lowres input tile.
