@@ -1,4 +1,5 @@
 # platform and provider support
+CPU-first officially supported. GPU experimental but tested.
 
 ## platforms
 In order of priority, we plan to support:
