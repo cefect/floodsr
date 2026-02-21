@@ -2,10 +2,11 @@
 set -euo pipefail
 
 # Input rasters.
-dem_hires_fp="_inputs/RSSHydro/mersch/002/DEM.tif"
-depth_hires_fp="_inputs/RSSHydro/mersch/002/ResultA.tif"
-depth_lores_fp="_inputs/RSSHydro/mersch/032/ResultA.tif"
-out_dir="tests/data/rss_mersch_A"
+study='dudelange'
+dem_hires_fp="_inputs/RSSHydro/${study}/002/DEM.tif"
+depth_hires_fp="_inputs/RSSHydro/${study}/002/ResultA.tif"
+depth_lores_fp="_inputs/RSSHydro/${study}/032/ResultA.tif"
+out_dir="tests/data/rss_${study}_A"
 
 # Output driver options mirrored from parameters.py: GEOTIF_OPTIONS.
 gdal_driver="GTiff"
