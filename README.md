@@ -1,15 +1,14 @@
 # floodsr
 
 Super-Resolution for flood hazard rasters.
-Ingests lores water grid and hires DEM and infers a hires water grid using the specifeid model and backend.
+Ingests lores water grid and hires DEM and infers a hires water grid using the specified model.
 
 Implemented models (see `floodsr/models.json`):
 - **4690176_0_1770580046_train_base_16**: 16x DEM-conditioned ResUNet
 - **CostGrow** (future)
 
 Implemented backend:
-- **ONNX Runtime** (CPU)
-- **CUDA** (future)
+- **ONNX Runtime**
 
 
 ## Installation

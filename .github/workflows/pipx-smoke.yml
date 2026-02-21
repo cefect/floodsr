@@ -1,0 +1,50 @@
+name: CI - pipx smoke
+
+on:
+  # Run on pull requests to validate packaging + CLI entrypoint before merge.
+  pull_request:
+  # Run on pushes to keep default branch healthy.
+  push:
+    branches:
+      - main
+  # Allow manual reruns from the Actions UI.
+  workflow_dispatch:
+
+permissions:
+  # Read-only is sufficient for checkout and tests.
+  contents: read
+
+jobs:
+  pipx-smoke:
+    name: pipx install smoke (ubuntu-latest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      # Fetch repository contents.
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Install a consistent Python runtime.
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Install pipx and expose the default local bin path for this job.
+      - name: Install pipx
+        run: |
+          python -m pip install --upgrade pip pipx
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      # Install this project into an isolated pipx venv.
+      - name: pipx install floodsr
+        run: |
+          python -m pipx install --force .
+
+      # Verify console entrypoint and basic no-input CLI paths.
+      - name: Smoke test CLI
+        run: |
+          floodsr --help
+          floodsr doctor
+          floodsr models list
