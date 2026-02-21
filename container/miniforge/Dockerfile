@@ -238,7 +238,7 @@ USER ${USER_UID}:${USER_GID}
   
 # set default conda environment  
 #NOTE: because the user already existed, the base-stage changes to their .bashrc need to be propagated
-RUN echo ". ${CONDA_DIR}/etc/profile.d/conda.sh && conda activate analysis" >> ~/.bashrc
+RUN echo ". ${CONDA_DIR}/etc/profile.d/conda.sh && conda activate deploy" >> ~/.bashrc
 
 ENTRYPOINT ["/bin/bash", "-lc"]
 
