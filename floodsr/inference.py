@@ -16,6 +16,7 @@ except ImportError:  # pragma: no cover - optional dependency fallback
 
 from floodsr.preprocessing import (
     _build_tile_starts,
+    invert_depth_log1p_np,
     normalize_dem,
     _read_single_band_raster,
     _write_single_band_raster,
@@ -100,6 +101,19 @@ def _pixel_size_m(profile: dict) -> tuple[float, float]:
     return (abs(float(transform[0])), abs(float(transform[4])))
 
 
+def _profile_bounds(profile: dict) -> tuple[float, float, float, float]:
+    """Compute raster bounds from profile height/width/transform."""
+    from rasterio.transform import array_bounds
+
+    height = int(profile.get("height"))
+    width = int(profile.get("width"))
+    transform = profile.get("transform")
+    assert height > 0 and width > 0, f"profile height/width must be > 0; got {(height, width)}"
+    assert transform is not None, "profile transform is required to compute bounds"
+    left, bottom, right, top = array_bounds(height, width, transform)
+    return (float(left), float(bottom), float(right), float(top))
+
+
 def _iter_windows(y_starts: list[int], x_starts: list[int], use_progress: bool):
     """Build iterable of window origins with optional tqdm progress."""
     total = len(y_starts) * len(x_starts)
@@ -122,7 +136,7 @@ def infer_from_prepared_inputs(
     overlap_lr: int,
     logger=None,
 ) -> tuple[np.ndarray, int]:
-    """Run tiled inference against prepared depth/DEM rasters."""
+    """Run tiled inference against prepared depth/DEM rasters and return normalized SR."""
     log = logger or logging.getLogger(__name__)
     assert window_method in {"hard", "feather"}, f"unsupported window_method={window_method}"
 
@@ -176,14 +190,22 @@ def infer_from_prepared_inputs(
         mode="constant",
         constant_values=0.0,
     )
+    hr_pad_h, hr_pad_w = dem_pad.shape
+    # Pad LR depth to exactly match the padded HR grid under integer model_scale indexing.
+    target_depth_pad_h = hr_pad_h // model_scale
+    target_depth_pad_w = hr_pad_w // model_scale
+    depth_pad_extra_h = target_depth_pad_h - depth_lr_norm.shape[0]
+    depth_pad_extra_w = target_depth_pad_w - depth_lr_norm.shape[1]
+    assert depth_pad_extra_h >= 0 and depth_pad_extra_w >= 0, (
+        f"computed LR padding must be >= 0; got {(depth_pad_extra_h, depth_pad_extra_w)}"
+    )
     depth_pad = np.pad(
         depth_lr_norm,
-        ((0, pad_h // model_scale), (0, pad_w // model_scale)),
+        ((0, depth_pad_extra_h), (0, depth_pad_extra_w)),
         mode="constant",
         constant_values=0.0,
     )
 
-    hr_pad_h, hr_pad_w = dem_pad.shape
     depth_pad_h, depth_pad_w = depth_pad.shape
     assert depth_pad_h == hr_pad_h // model_scale and depth_pad_w == hr_pad_w // model_scale, (
         f"depth pad shape {(depth_pad_h, depth_pad_w)} incompatible with HR pad {(hr_pad_h, hr_pad_w)}"
@@ -230,7 +252,7 @@ def infer_from_prepared_inputs(
             dem_hr_nodata=None,
             logger=log,
         )
-        pred = run_result["prediction_m"]
+        pred = run_result["prediction_norm"]
         assert pred.shape == (contract_hr_tile, contract_hr_tile), (
             f"prediction shape {pred.shape} != {(contract_hr_tile, contract_hr_tile)}"
         )
@@ -303,9 +325,9 @@ def infer_from_prepared_inputs(
     else:
         raise AssertionError(f"unsupported window_method={window_method}")
 
-    prediction_m = np.clip(sr_pad[:crop_h, :crop_w], 0.0, float(preprocess_cfg["max_depth"]))
-    assert prediction_m.ndim == 2, f"prediction must be 2D; got {prediction_m.shape}"
-    return prediction_m, len(tile_cache)
+    prediction_norm = np.clip(sr_pad[:crop_h, :crop_w], 0.0, 1.0).astype(np.float32, copy=False)
+    assert prediction_norm.ndim == 2, f"prediction must be 2D; got {prediction_norm.shape}"
+    return prediction_norm, len(tile_cache)
 
 
 def infer(
@@ -371,6 +393,7 @@ def infer(
     )
     depth_lr_raw, _, depth_lr_raw_profile = _read_single_band_raster(depth_lr_path)
     dem_hr_raw, _, dem_hr_raw_profile = _read_single_band_raster(dem_hr_path)
+    depth_lr_bounds = _profile_bounds(depth_lr_raw_profile)
     log.info(
         "raw inputs\n"
         f"  depth_lr shape={depth_lr_raw.shape} res={_pixel_size_m(depth_lr_raw_profile)} m/pix\n"
@@ -443,11 +466,12 @@ def infer(
             f"  scale={model_scale} (HR/LR ratio)\n"
             f"  aligned depth shape={prepped['depth_lr_shape']} "
             f"resampled={prepped['resampled']}\n"
-            f"  aligned dem shape={prepped['dem_hr_shape']}\n"
+            f"  aligned dem shape={prepped['dem_hr_shape']} "
+            f"raw_dem_shape={prepped['dem_raw_shape']}\n"
             f"  max_depth={float(preprocess_cfg['max_depth'])} "
             f"dem_pct_clip={float(preprocess_cfg['dem_pct_clip'])}"
         )
-        prediction_m, tile_cache_size = infer_from_prepared_inputs(
+        prediction_norm, tile_cache_size = infer_from_prepared_inputs(
             engine=engine,
             depth_lr_fp=prepped["depth_lr_prepared_fp"],
             dem_hr_fp=prepped["dem_hr_prepared_fp"],
@@ -459,14 +483,64 @@ def infer(
             overlap_lr=overlap_lr,
             logger=log,
         )
+        # Model-space prediction grid must remain identical to prepared DEM grid.
+        assert prediction_norm.shape == tuple(prepped["dem_hr_shape"]), (
+            f"prediction shape {prediction_norm.shape} must match preprocessed DEM shape {prepped['dem_hr_shape']}"
+        )
 
-        _, _, dem_prepared_profile = _read_single_band_raster(prepped["dem_hr_prepared_fp"])
-        output_profile = dem_prepared_profile.copy()
+        # Resample model-space SR output back to the clipped raw DEM grid when needed.
+        output_profile = prepped["dem_raw_profile"].copy()
         output_profile.update(dtype="float32", count=1)
         output_profile.pop("blockxsize", None)
         output_profile.pop("blockysize", None)
+        prediction_out_norm = prediction_norm.astype(np.float32, copy=False)
+        post_resampled = tuple(prepped["dem_raw_shape"]) != tuple(prediction_norm.shape)
+        if post_resampled:
+            from rasterio.warp import Resampling, reproject
 
-        out_written_fp = _write_single_band_raster(out_path, prediction_m, output_profile)
+            log.info(
+                f"post-resampling model output from {prediction_norm.shape} to {tuple(prepped['dem_raw_shape'])} "
+                "on raw DEM grid with bilinear interpolation."
+            )
+            prediction_out_norm = np.empty(tuple(prepped["dem_raw_shape"]), dtype=np.float32)
+            reproject(
+                source=prediction_norm.astype(np.float32, copy=False),
+                destination=prediction_out_norm,
+                src_transform=prepped["dem_profile"]["transform"],
+                src_crs=prepped["dem_profile"]["crs"],
+                dst_transform=prepped["dem_raw_profile"]["transform"],
+                dst_crs=prepped["dem_raw_profile"]["crs"],
+                resampling=Resampling.bilinear,
+                num_threads=1,
+            )
+        prediction_out_norm = np.clip(prediction_out_norm, 0.0, 1.0).astype(np.float32, copy=False)
+        low_depth_mask_m = 1e-2
+        low_depth_mask_norm = float(np.log1p(low_depth_mask_m) / np.log1p(float(preprocess_cfg["max_depth"])))
+        prediction_out_norm = np.where(
+            prediction_out_norm < low_depth_mask_norm,
+            0.0,
+            prediction_out_norm,
+        ).astype(np.float32, copy=False)
+        prediction_out_m = invert_depth_log1p_np(prediction_out_norm, max_depth=float(preprocess_cfg["max_depth"]))
+        assert prediction_out_m is not None, "prediction inversion returned None"
+        prediction_out_m = prediction_out_m.astype(np.float32, copy=False)
+
+        prepared_dem_bounds = _profile_bounds(prepped["dem_raw_profile"])
+        # Output georeferencing must stay on the incoming low-res depth bbox.
+        assert all(np.isclose(a, b, atol=1e-6, rtol=0.0) for a, b in zip(prepared_dem_bounds, depth_lr_bounds)), (
+            f"output profile bounds {prepared_dem_bounds} do not match incoming low-res bounds {depth_lr_bounds}"
+        )
+
+        out_written_fp = _write_single_band_raster(out_path, prediction_out_m, output_profile)
+        _, _, written_profile = _read_single_band_raster(out_written_fp)
+        written_shape = (int(written_profile["height"]), int(written_profile["width"]))
+        assert written_shape == tuple(prepped["dem_raw_shape"]), (
+            f"written output shape {written_shape} must match raw DEM shape {prepped['dem_raw_shape']}"
+        )
+        written_bounds = _profile_bounds(written_profile)
+        assert all(np.isclose(a, b, atol=1e-6, rtol=0.0) for a, b in zip(written_bounds, depth_lr_bounds)), (
+            f"written output bounds {written_bounds} must match incoming low-res bounds {depth_lr_bounds}"
+        )
 
     runtime_s = time.perf_counter() - start
     log.info(f"finished raster inference in {runtime_s:.3f}s; wrote output to\n    {out_written_fp}")
@@ -491,15 +565,20 @@ def infer(
             "model_scale": model_scale,
             "tile_cache_size": tile_cache_size,
             "input_shape": {
-                "crop_height": int(prediction_m.shape[0]),
-                "crop_width": int(prediction_m.shape[1]),
+                "crop_height": int(prediction_out_m.shape[0]),
+                "crop_width": int(prediction_out_m.shape[1]),
+                "model_space_crop_height": int(prediction_norm.shape[0]),
+                "model_space_crop_width": int(prediction_norm.shape[1]),
                 "aligned_depth_shape": [int(x) for x in prepped["depth_lr_shape"]],
                 "aligned_dem_shape": [int(x) for x in prepped["dem_hr_shape"]],
+                "output_shape": [int(x) for x in prepped["dem_raw_shape"]],
             },
             "prepared_inputs": {
                 "depth_lr_prepared_fp": str(prepped["depth_lr_prepared_fp"]),
                 "dem_hr_prepared_fp": str(prepped["dem_hr_prepared_fp"]),
                 "prepped_depth_was_resampled": bool(prepped["resampled"]),
+                "prepped_dem_was_resampled": bool(prepped["resampled"]),
+                "post_sr_was_resampled": bool(post_resampled),
             },
         },
     }

@@ -49,3 +49,6 @@ _inputs/
 # pip
 build/
 *.egg-info
+
+# docker buildx local cache
+.buildx-cache/

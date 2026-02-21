@@ -2,7 +2,7 @@
   "model_version": "4690176_0_1770580046_train_base_16",
   "model_file_name": "model_infer.onnx",
   "model_compatible": false,
-  "compatibility_reason": "lowres input is 256x256 at 30m; current ONNX model contract expects 32x32 at 32m.",
+  "compatibility_reason": "input raster ratio is 30m:2m (15x); inference keeps LR native and resamples DEM/SR around model SCALE=16.",
   "lowres_fp": "lowres030.tif",
   "dem_fp": "hires002_dem.tif",
   "truth_fp": "hires002.tif",
@@ -16,9 +16,9 @@
     "scale_factor": 15
   },
   "metrics": {
-    "mase_m": 0.04367,
-    "rmse_m": 0.29015,
-    "ssim": 0.30848
+    "mase_m": 0.041421936914116685,
+    "rmse_m": 0.2904962102605051,
+    "ssim": 0.29785980636968223
   },
-  "source": "bin/clip_test_grids.sh"
+  "source": "bin/clip_test_grids.sh + floodsr.inference notebook-aligned preprocessing/inference rerun"
 }
