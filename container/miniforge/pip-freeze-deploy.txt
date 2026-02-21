@@ -2,7 +2,10 @@ affine @ file:///home/conda/feedstock_root/build_artifacts/affine_1733762038348/
 annotated-doc @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_annotated-doc_1762868213/work
 annotated-types @ file:///home/conda/feedstock_root/build_artifacts/annotated-types_1733247046149/work
 attrs @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_attrs_1764875182/work
+backports.zstd @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_backports.zstd_1767045004/work
+Brotli @ file:///home/conda/feedstock_root/build_artifacts/brotli-split_1764016952863/work
 certifi @ file:///home/conda/feedstock_root/build_artifacts/certifi_1767500808759/work/certifi
+charset-normalizer @ file:///home/conda/feedstock_root/build_artifacts/charset-normalizer_1760437218288/work
 click @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_click_1764518652/work
 click-plugins @ file:///home/conda/feedstock_root/build_artifacts/click-plugins_1750848229740/work
 cligj @ file:///home/conda/feedstock_root/build_artifacts/cligj_1733749956636/work
@@ -11,7 +14,11 @@ coloredlogs @ file:///home/conda/feedstock_root/build_artifacts/coloredlogs_1733
 exceptiongroup @ file:///home/conda/feedstock_root/build_artifacts/exceptiongroup_1763918002538/work
 flatbuffers @ file:///home/conda/feedstock_root/build_artifacts/python-flatbuffers_1758880282135/work
 gmpy2 @ file:///home/conda/feedstock_root/build_artifacts/gmpy2_1762946764387/work
+h2 @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_h2_1756364871/work
+hpack @ file:///home/conda/feedstock_root/build_artifacts/hpack_1737618293087/work
 humanfriendly @ file:///home/conda/feedstock_root/build_artifacts/humanfriendly_1733927922002/work
+hyperframe @ file:///home/conda/feedstock_root/build_artifacts/hyperframe_1737618333194/work
+idna @ file:///home/conda/feedstock_root/build_artifacts/idna_1760286409563/work
 iniconfig @ file:///home/conda/feedstock_root/build_artifacts/iniconfig_1760831328738/work
 markdown-it-py @ file:///home/conda/feedstock_root/build_artifacts/markdown-it-py_1754951200865/work
 mdurl @ file:///home/conda/feedstock_root/build_artifacts/mdurl_1733255585584/work
@@ -26,16 +33,23 @@ pydantic @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_p
 pydantic_core @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_pydantic-core_1762989004/work
 Pygments @ file:///home/conda/feedstock_root/build_artifacts/pygments_1750615794071/work
 pyparsing @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_pyparsing_1769003998/work
+PySocks @ file:///home/conda/feedstock_root/build_artifacts/pysocks_1733217236728/work
+pystac @ file:///home/conda/feedstock_root/build_artifacts/pystac_1768070072920/work
+pystac-client @ file:///home/conda/feedstock_root/build_artifacts/pystac-client_1752925287736/work
 pytest @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_pytest_1765062031/work
+python-dateutil @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_python-dateutil_1751104122/work
 rasterio @ file:///home/conda/feedstock_root/build_artifacts/rasterio_1767632444542/work
+requests @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_requests_1766926974/work
 rich @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_rich_1771572730/work/dist
 setuptools==82.0.0
 shellingham @ file:///home/conda/feedstock_root/build_artifacts/shellingham_1762858192781/work
+six @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_six_1753199211/work
 snuggs @ file:///home/conda/feedstock_root/build_artifacts/snuggs_1733818638588/work
 sympy @ file:///home/conda/feedstock_root/build_artifacts/sympy_1745946051654/work
 tomli @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_tomli_1768146676/work
 typer==0.24.0
 typing-inspection @ file:///home/conda/feedstock_root/build_artifacts/typing-inspection_1764158251755/work
 typing_extensions @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_typing_extensions_1756220668/work
+urllib3 @ file:///home/conda/feedstock_root/build_artifacts/urllib3_1767817748113/work
 wheel==0.46.3
 
