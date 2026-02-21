@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 
-TEST_TILE_CASES = ("2407_FHIMP_tile", "rss_mersch_A")
+TEST_TILE_CASES = ("2407_FHIMP_tile", "rss_mersch_A", "rss_dudelange_A")
 
 
 def _read_tile_case(case_name: str) -> dict:

@@ -62,6 +62,14 @@ infer the `MODEL_DEM_RES` from `train_config.json`:
 
 if `INPUT_DEM_RES != MODEL_DEM_RES`, throw a warning that this is not tested and may produce suboptimal results, but proceed with inference  
 
+for legacy train configs where `MODEL_DEM_RES` cannot be inferred, fallback to:
+- `MODEL_DEM_RES = 2.0`
+
+#### output geospatial assertions
+post-inference, assert:
+- output bbox == incoming lores depth bbox
+- output shape == preprocessed DEM shape
+
 #### validating input value ranges
 input depths:
 - if max>15: 'warning: input depth values exceed 15. ensure this is a depths not a water surface raster'

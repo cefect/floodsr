@@ -222,7 +222,11 @@ def resolve_preprocess_config(
             dem_fp = str(train_cfg.get("dem_fp"))
             match = re.search(r"(?:^|[_/])([0-9]{2,})_?dem", dem_fp)
             if match is not None:
-                resolved_dem_resolution = int(match.group(1))
+                resolved_dem_resolution = float(int(match.group(1)))
+
+    # Default model DEM resolution for legacy train configs with no parsable dem_fp hint.
+    if resolved_dem_resolution is None:
+        resolved_dem_resolution = 2.0
 
     log.debug(
         f"resolved preprocessing config: max_depth={resolved_max_depth}, "
@@ -296,11 +300,11 @@ def _align_depth_and_dem_inputs(
     scale: int,
     logger=None,
 ) -> dict[str, Any]:
-    """Align raster inputs for model scale, clipping and resampling where needed."""
+    """Align raster inputs for model scale by preserving LR depth and resampling DEM."""
     import rasterio
-    from rasterio.warp import Resampling, reproject
-    from rasterio.windows import from_bounds
     from rasterio.transform import from_bounds as bounds_to_transform
+    from rasterio.windows import from_bounds
+    from rasterio.warp import Resampling, reproject
 
     log = logger or logging.getLogger(__name__)
     assert scale > 0, f"scale must be > 0; got {scale}"
@@ -347,16 +351,25 @@ def _align_depth_and_dem_inputs(
                 f"    dem={dem_bounds}"
             )
 
+        # Read LR depth once on its native grid; notebook strategy keeps this unchanged.
+        depth_nodata = depth_ds.nodata
+        depth_lr = replace_nodata_with_zero(
+            depth_ds.read(1).astype(np.float32, copy=False),
+            depth_nodata,
+        )
+        depth_profile = depth_ds.profile.copy()
+        depth_bounds = tuple(float(v) for v in lr_bounds)
+        depth_transform = depth_ds.transform
+
+        # Clip DEM to LR bounds on the source DEM grid for later raw-grid export.
         dem_window = from_bounds(*lr_bounds, dem_ds.transform).round_offsets().round_lengths()
-        dem_crop = dem_ds.read(1, window=dem_window).astype(np.float32, copy=False)
+        dem_nodata = dem_ds.nodata
+        dem_crop = replace_nodata_with_zero(
+            dem_ds.read(1, window=dem_window).astype(np.float32, copy=False),
+            dem_nodata,
+        )
         assert dem_crop.size > 0, f"clipped DEM is empty for bounds {lr_bounds}"
         dem_crop_transform = dem_ds.window_transform(dem_window)
-        dem_nodata = dem_ds.nodata
-        depth_nodata = depth_ds.nodata
-        depth_lr = depth_ds.read(1).astype(np.float32, copy=False)
-        depth_bounds = lr_bounds
-        depth_transform = depth_ds.transform
-        depth_profile = depth_ds.profile.copy()
         dem_profile = dem_ds.profile.copy()
 
     if not np.isfinite(dem_crop).all():
@@ -366,53 +379,43 @@ def _align_depth_and_dem_inputs(
     if depth_lr.min() < 0.0:
         raise AssertionError(f"low-res depth has negative values: min={float(depth_lr.min())}")
 
-    dem_h, dem_w = dem_crop.shape
-    crop_h = dem_h - (dem_h % scale)
-    crop_w = dem_w - (dem_w % scale)
-    assert crop_h > 0 and crop_w > 0, f"cropped DEM has invalid size {(crop_h, crop_w)}"
-    if (crop_h, crop_w) != (dem_h, dem_w):
-        log.debug(f"cropping DEM from {(dem_h, dem_w)} to {(crop_h, crop_w)} for scale alignment")
-    dem_crop = dem_crop[:crop_h, :crop_w]
-
-    target_lr_h = crop_h // scale
-    target_lr_w = crop_w // scale
-    assert target_lr_h > 0 and target_lr_w > 0, f"target LR shape invalid {(target_lr_h, target_lr_w)}"
-    was_resampled = (target_lr_h != depth_lr.shape[0] or target_lr_w != depth_lr.shape[1])
-    depth_lr_transform = depth_transform
-    if was_resampled:
-        log.debug(
-            f"resampling low-res depth from {depth_lr.shape} to {(target_lr_h, target_lr_w)} "
-            f"to enforce model-scale={scale}"
-        )
-        depth_lr_aligned = np.empty((target_lr_h, target_lr_w), dtype=np.float32)
-        depth_lr_transform = bounds_to_transform(
-            *depth_bounds,
-            width=target_lr_w,
-            height=target_lr_h,
-        )
-        reproject(
-            source=depth_lr,
-            destination=depth_lr_aligned,
-            src_transform=depth_transform,
-            src_crs=depth_crs,
-            src_nodata=depth_nodata,
-            dst_transform=depth_lr_transform,
-            dst_crs=depth_crs,
-            dst_nodata=depth_nodata,
-            resampling=Resampling.bilinear,
-            num_threads=1,
-        )
-        depth_lr = depth_lr_aligned
+    # Derive model-space HR grid directly from native LR shape and model scale.
+    target_hr_h = int(depth_lr.shape[0] * scale)
+    target_hr_w = int(depth_lr.shape[1] * scale)
+    assert target_hr_h > 0 and target_hr_w > 0, f"target HR shape invalid {(target_hr_h, target_hr_w)}"
+    dem_model_transform = bounds_to_transform(*depth_bounds, width=target_hr_w, height=target_hr_h)
+    dem_model = np.empty((target_hr_h, target_hr_w), dtype=np.float32)
+    reproject(
+        source=dem_crop,
+        destination=dem_model,
+        src_transform=dem_crop_transform,
+        src_crs=depth_crs,
+        src_nodata=dem_nodata,
+        dst_transform=dem_model_transform,
+        dst_crs=depth_crs,
+        dst_nodata=dem_nodata,
+        resampling=Resampling.bilinear,
+        num_threads=1,
+    )
+    dem_model = replace_nodata_with_zero(dem_model, dem_nodata)
+    if not np.isfinite(dem_model).all():
+        raise AssertionError("resampled DEM contains non-finite values")
+    was_resampled = bool(
+        dem_model.shape != dem_crop.shape
+        or not all(np.isclose((dem_model_transform.a, dem_model_transform.e), (dem_crop_transform.a, dem_crop_transform.e)))
+    )
     return {
         "depth_lr": depth_lr,
         "depth_lr_nodata": depth_nodata,
-        "depth_lr_transform": depth_lr_transform,
+        "depth_lr_transform": depth_transform,
         "depth_lr_profile": depth_profile,
-        "dem_hr": dem_crop,
+        "dem_hr": dem_model,
         "dem_hr_nodata": dem_nodata,
-        "dem_crop_transform": dem_crop_transform,
+        "dem_hr_transform": dem_model_transform,
+        "dem_raw_shape": tuple(int(v) for v in dem_crop.shape),
+        "dem_raw_transform": dem_crop_transform,
         "dem_profile": dem_profile,
-        "crop_shape": (crop_h, crop_w),
+        "crop_shape": (target_hr_h, target_hr_w),
         "resampled": was_resampled,
     }
 
@@ -450,9 +453,17 @@ def write_prepared_rasters(
     dem_profile = aligned["dem_profile"].copy()
     dem_profile.update(
         {
-            "height": int(aligned["crop_shape"][0]),
-            "width": int(aligned["crop_shape"][1]),
-            "transform": aligned["dem_crop_transform"],
+            "height": int(aligned["dem_hr"].shape[0]),
+            "width": int(aligned["dem_hr"].shape[1]),
+            "transform": aligned["dem_hr_transform"],
+        }
+    )
+    dem_raw_profile = aligned["dem_profile"].copy()
+    dem_raw_profile.update(
+        {
+            "height": int(aligned["dem_raw_shape"][0]),
+            "width": int(aligned["dem_raw_shape"][1]),
+            "transform": aligned["dem_raw_transform"],
         }
     )
 
@@ -469,4 +480,6 @@ def write_prepared_rasters(
         "resampled": aligned["resampled"],
         "depth_lr_shape": tuple(aligned["depth_lr"].shape),
         "dem_hr_shape": tuple(aligned["dem_hr"].shape),
+        "dem_raw_shape": tuple(aligned["dem_raw_shape"]),
+        "dem_raw_profile": dem_raw_profile,
     }

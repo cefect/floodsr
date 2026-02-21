@@ -6,10 +6,9 @@
   "truth_fp": "hires002.tif",
   "precision": 3,
   "metrics": {
-    "mase_m": 0.058874,
-    "rmse_m": 0.105933,
-    "ssim": 0.666199
+    "mase_m": 0.05887134354153778,
+    "rmse_m": 0.10600513309324994,
+    "ssim": 0.6653909712992819
   },
-  "source": "dev/infer_test_tiles.ipynb sr_* metrics (model only, no bilinear)"
+  "source": "floodsr.inference notebook-aligned preprocessing/inference rerun (LR native + model-space HR + bilinear post-resample)"
 }
-
