@@ -1,8 +1,10 @@
 # ADR: HRDEM fetching
 Rather than rely on the user specifying the DEM, this new `floodsr` feature will optionally fetch an equivalent tile from the [HRDEM mosaic](https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b).
 
+Quote on HRDEM mosaic:
+```
 Unlike the HRDEM product in the same series, which is distributed by acquisition project without integration between projects, the mosaic is created to provide a single, continuous representation of strategy data. The most recent datasets for a given territory are used to generate the mosaic. 
-
+```
 
 STAC entry point:
 ```python
@@ -18,11 +20,29 @@ DEFAULT_ASSET = "dtm"
 - either `--dem` or `--fetch-HRDEM` must be provided, but not both.
 - add optional `--fetch-out` (or just `-fo`) flag to specify output path for fetched HRDEM tile. If not provided, the fetched tile will be cached in a temp directory (e.g. using `tempfile` module). so if `floodsr` with `--fetch-hrdem` is run multiple times with the same tile, it will reuse the cached version instead of fetching again.
 
+### implementation strategy (agnostic internals, explicit CLI)
+- keep CLI explicit and hard-coded to HRDEM for now (`--fetch-hrdem`).
+- implement HRDEM as one backend under a backend-agnostic namespace:
+  - `floodsr/dem_sources/base.py`
+  - `floodsr/dem_sources/hrdem_stac.py`
+  - `floodsr/dem_sources/catalog.py` (optional registry for future backends)
+- this allows future  alternate backends without restructuring CLI flow.
+
+### STAC entry point parameter placement
+- store HRDEM STAC defaults in `floodsr/dem_sources/hrdem_stac.py` as module-scoped constants.
+- keep these transparent by logging resolved source config at fetch start:
+  - source id
+  - STAC URL
+  - collection
+  - asset key
+ 
+
 
 ### proposed implementation
 - retrieve bbox and crs from lores depth
 - query STAC to identify intersection. if no intersection found, throw an error.
 - if intersection found, fetch the corresponding HRDEM tile(s) and mosaic if multiple tiles intersect
+- STAC entrypoint info should live in source-module constants (`dem_sources/hrdem_stac.py`)
 
 
 #### post and pre processing changes
@@ -52,7 +72,7 @@ from rasterio.merge import merge
 from rasterio.transform import array_bounds
 from rasterio.warp import calculate_default_transform, reproject, Resampling
  
-from parameters import epsg_id, GEOTIF_OPTIONS
+from floodsr.io.rasterio_io import GEOTIF_OPTIONS
 
 
 
