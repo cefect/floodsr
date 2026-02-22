@@ -13,7 +13,7 @@ FloodSR needs a stable model layer that:
 - Keep `floodsr/models.json` as the source of available model versions.
 - Keep model artifact retrieval/checksum policy in `model_registry.py`.
 - Add a project-wide base class `Model` and implement each model as a subclass in its own module.
-- Route `infer()` through model workers and make `infer()` responsible for worker creation/teardown.
+- Route `tohr` execution through model workers and make the pipeline function responsible for worker creation/teardown.
 
 ## Model Registry Contract
 
@@ -52,14 +52,16 @@ FloodSR needs a stable model layer that:
     - core inference at model-engine boundary
     - mosaicking/stitching
     - model specific post-processing
+  - call shared tiling/windowing/mosaicking helpers from `tiling.py` (do not duplicate tiling implementations inside workers)
+  - tiling method is fixed by implementation (not a user-facing toggle); only tiling parameters are configurable
 
-## Infer Lifecycle Contract
+## ToHR Lifecycle Contract
 
-- `infer()` resolves model version/artifact and instantiates the matching model worker.
-- `infer()` executes the worker under context management:
+- `tohr` pipeline resolves model version/artifact and instantiates the matching model worker.
+- `tohr` executes the worker under context management:
   - `with model_worker as worker:`
   - `worker.run(...)`
-- `infer()` is responsible for teardown and returning final diagnostics/output metadata.
+- `tohr` pipeline is responsible for teardown and returning final diagnostics/output metadata.
 
 ## Model Types
 
