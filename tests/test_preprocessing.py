@@ -9,6 +9,9 @@ from floodsr.dem_sources.hrdem_stac import write_dem_from_asset_hrefs
 from floodsr.preprocessing import write_prepared_rasters
 
 
+pytestmark = pytest.mark.unit
+
+
 def test_write_prepared_rasters_outputs_exist_and_are_float32(
     synthetic_inference_tiles: dict,
     tmp_path,

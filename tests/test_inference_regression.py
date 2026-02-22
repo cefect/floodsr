@@ -5,16 +5,15 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from conftest import TEST_TILE_CASES
 from floodsr.preprocessing import replace_nodata_with_zero
 from floodsr.tohr import tohr
 from misc.eval import compute_depth_error_metrics
 
 
-_DATA_DRIVEN_CASES = [
-    pytest.param("2407_FHIMP_tile", id="data_case_2407_fhimp_tile"),
-    pytest.param("rss_mersch_A", id="data_case_rss_mersch_a"),
-    pytest.param("rss_dudelange_A", id="data_case_rss_dudelange_a"),
-]
+pytestmark = pytest.mark.e2e
+
+_DATA_DRIVEN_CASES = [pytest.param(case_name, id=f"data_case_{case_name.lower()}") for case_name in TEST_TILE_CASES]
 
 _ON_THE_FLY_SYNTH_CASES = [
     pytest.param("hard", 0, id="on_the_fly_synth_hard"),
@@ -74,6 +73,7 @@ def test_inference_regression_matches_case_spec_metrics(
 @pytest.mark.parametrize("window_method, tile_overlap", _ON_THE_FLY_SYNTH_CASES)
 def test_tohr_on_the_fly_synthetic_tiles(
     inference_model_fp: Path,
+    default_model_version: str,
     synthetic_inference_tiles: dict,
     window_method: str,
     tile_overlap: int,
@@ -83,7 +83,7 @@ def test_tohr_on_the_fly_synthetic_tiles(
     pytest.importorskip("onnxruntime")
     rasterio = pytest.importorskip("rasterio")
     result = tohr(
-        model_version="4690176_0_1770580046_train_base_16",
+        model_version=default_model_version,
         model_fp=inference_model_fp,
         depth_lr_fp=synthetic_inference_tiles["depth_lr_fp"],
         dem_hr_fp=synthetic_inference_tiles["dem_fp"],

@@ -1,7 +1,7 @@
 Models
 ======
 
-Model: 4690176_0_1770580046_train_base_16
+Model: ResUNet_16x_DEM
 -----------------------------------------
 
 This model reconstructs high-resolution flood depth from lower-resolution depth

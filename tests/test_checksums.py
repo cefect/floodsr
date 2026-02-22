@@ -7,6 +7,9 @@ import pytest
 from floodsr.checksums import compute_sha256, verify_sha256
 
 
+pytestmark = pytest.mark.unit
+
+
 @pytest.fixture(scope="function")
 def payload_fp(tmp_path: Path) -> Path:
     """Create a deterministic payload for checksum tests."""
@@ -40,4 +43,3 @@ def test_verify_sha256_returns_expected_flag(
     result = verify_sha256(payload_fp, expected_sha256)
     assert isinstance(result, bool)
     assert result == expected_match
-

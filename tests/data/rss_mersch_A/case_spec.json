@@ -1,6 +1,6 @@
 {
   "model": {
-    "version": "4690176_0_1770580046_train_base_16",
+    "version": "ResUNet_16x_DEM",
     "file_name": "model_infer.onnx",
     "compatible": false
   },

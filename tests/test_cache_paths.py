@@ -7,6 +7,9 @@ import pytest
 from floodsr.cache_paths import get_cache_dir
 
 
+pytestmark = pytest.mark.unit
+
+
 @pytest.mark.parametrize(
     "cache_dir",
     [
@@ -20,4 +23,3 @@ def test_get_cache_dir_returns_created_path(tmp_path: Path, cache_dir: str | Pat
     result = get_cache_dir(cache_arg)
     assert isinstance(result, Path)
     assert result.exists()
-

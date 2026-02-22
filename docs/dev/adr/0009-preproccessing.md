@@ -63,7 +63,7 @@ input dem:
 ## nodata normalization/handling
 Requirements:
 - models can differ on how they treat/handle nodata.
-  - e.g., 4690176_0_1770580046_train_base_16 expects all real at the 
+  - e.g., ResUNet_16x_DEM expects all real at the 
 
 ## pre-processing to obtain the platform-model boundary contract
 

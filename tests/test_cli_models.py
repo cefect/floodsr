@@ -8,6 +8,9 @@ import pytest
 from floodsr.cli import _parse_arguments, _resolve_log_level, main
 
 
+pytestmark = pytest.mark.unit
+
+
 def test_main_models_list_outputs_model_version(models_manifest_fp: Path, capsys: pytest.CaptureFixture[str]):
     """Ensure models list prints version rows."""
     exit_code = main(["models", "list", "--manifest", str(models_manifest_fp)])

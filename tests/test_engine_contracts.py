@@ -11,6 +11,9 @@ from floodsr.engine.base import EngineBase
 from floodsr.engine.providers import get_onnxruntime_info, get_rasterio_info
 
 
+pytestmark = pytest.mark.unit
+
+
 def test_engine_package_exports_have_expected_symbols():
     """Ensure engine package exports ORT engine and provider helpers."""
     assert hasattr(engine, "EngineORT")

@@ -1,12 +1,11 @@
 """Tests for model registry and fetch workflow."""
 
-import hashlib, json, logging
+import json, logging
 from pathlib import Path
 
 import pytest
 
 from floodsr.model_registry import (
-    DEFAULT_MANIFEST_FP,
     fetch_model,
     get_retrieval_backend,
     list_models,
@@ -14,32 +13,9 @@ from floodsr.model_registry import (
     model_worker_exists,
     resolve_model_worker_class,
 )
-from floodsr.checksums import verify_sha256
 
 
-@pytest.fixture(scope="function")
-def models_manifest_fp(tmp_path: Path) -> Path:
-    """Create a local manifest that points to a local model file."""
-    source_fp = tmp_path / "source_model.onnx"
-    source_fp.write_bytes(b"test-model")
-    sha256 = hashlib.sha256(source_fp.read_bytes()).hexdigest()
-
-    # Build a one-model manifest that exercises the file backend.
-    manifest = {
-        "models": {
-            "v-test": {
-                "file_name": "model.onnx",
-                "url": source_fp.as_uri(),
-                "sha256": sha256,
-                "description": "Local test model.",
-            }
-        }
-    }
-    manifest_fp = tmp_path / "models.json"
-    manifest_fp.write_text(json.dumps(manifest), encoding="utf-8")
-    return manifest_fp
-
-
+@pytest.mark.unit
 def test_list_models_returns_non_empty_records(models_manifest_fp: Path):
     """Ensure model listing returns records from manifest."""
     records = list_models(manifest_fp=models_manifest_fp)
@@ -47,10 +23,11 @@ def test_list_models_returns_non_empty_records(models_manifest_fp: Path):
     assert len(records) > 0
 
 
+@pytest.mark.unit
 def test_fetch_model_returns_cached_path(tmp_path: Path, models_manifest_fp: Path):
     """Ensure model fetch stores the artifact in cache."""
     model_fp = fetch_model(
-        "v-test",
+        "v-cli",
         cache_dir=tmp_path / "cache",
         manifest_fp=models_manifest_fp,
     )
@@ -58,6 +35,7 @@ def test_fetch_model_returns_cached_path(tmp_path: Path, models_manifest_fp: Pat
     assert model_fp.exists()
 
 
+@pytest.mark.unit
 def test_fetch_model_fails_on_checksum_mismatch(tmp_path: Path):
     """Ensure fetch fails when downloaded bytes do not match manifest digest."""
     source_fp = tmp_path / "source_model.onnx"
@@ -85,27 +63,30 @@ def test_fetch_model_fails_on_checksum_mismatch(tmp_path: Path):
     assert "checksum mismatch" in str(exc_info.value)
 
 
-def test_default_manifest_dummy_entry_fetch_and_checksum(tmp_path: Path):
-    """Ensure default-manifest dummy entry runs full fetch and checksum validation."""
-    model_version = "dummy_local_test_model"
-    model_fp = fetch_model(model_version, cache_dir=tmp_path / "cache")
-    expected_sha256 = next(record.sha256 for record in list_models() if record.version == model_version)
-    is_match = verify_sha256(model_fp, expected_sha256)
-    assert isinstance(model_fp, Path)
-    assert is_match
+@pytest.mark.unit
+def test_default_manifest_records_include_required_fields():
+    """Ensure packaged manifest records expose required registry fields."""
+    records = list_models()
+    assert isinstance(records, list)
+    assert len(records) > 0
+    for record in records:
+        assert record.version and record.file_name and record.url and record.sha256
 
 
-def test_list_runnable_model_versions_contains_worker_backed_default_version():
-    """Ensure runnable manifest versions include the production worker-backed model."""
+@pytest.mark.unit
+def test_list_runnable_model_versions_match_worker_backed_manifest():
+    """Ensure runnable versions are exactly manifest entries with worker modules."""
     runnable_versions = list_runnable_model_versions()
+    expected_versions = [record.version for record in list_models() if model_worker_exists(record.version)]
     assert isinstance(runnable_versions, list)
-    assert "4690176_0_1770580046_train_base_16" in runnable_versions
+    assert runnable_versions == expected_versions
 
 
-def test_resolve_model_worker_class_returns_model_worker_type():
+@pytest.mark.unit
+def test_resolve_model_worker_class_returns_model_worker_type(default_model_version: str):
     """Ensure worker resolution loads a concrete worker class from model version."""
-    worker_class = resolve_model_worker_class("4690176_0_1770580046_train_base_16")
-    assert model_worker_exists("4690176_0_1770580046_train_base_16") is True
+    worker_class = resolve_model_worker_class(default_model_version)
+    assert model_worker_exists(default_model_version) is True
     assert worker_class.__name__ == "ModelWorker"
 
 
@@ -128,19 +109,21 @@ def test_resolve_model_worker_class_returns_model_worker_type():
         ),
     ],
 )
-def test_default_manifest_injected_bad_values_fail_fetch(
+@pytest.mark.unit
+def test_manifest_injected_bad_values_fail_fetch(
     tmp_path: Path,
+    models_manifest_fp: Path,
     field_name: str,
     bad_value: str,
     expected_exception: type[Exception],
     expected_message: str,
 ):
-    """Ensure bad model entries injected into manifest fail end-to-end fetch validation."""
-    model_version = "dummy_local_test_model"
-    manifest = json.loads(DEFAULT_MANIFEST_FP.read_text(encoding="utf-8"))
-    assert model_version in manifest["models"], f"missing required test model '{model_version}' in default manifest"
+    """Ensure bad model entries injected into a local manifest fail fetch validation."""
+    model_version = "v-cli"
+    manifest = json.loads(models_manifest_fp.read_text(encoding="utf-8"))
+    assert model_version in manifest["models"], f"missing required test model '{model_version}' in local manifest"
 
-    # Inject one bad value into a temporary copy of the default manifest.
+    # Inject one bad value into a temporary copy of the local test manifest.
     manifest["models"][model_version][field_name] = bad_value
     bad_manifest_fp = tmp_path / "models_bad.json"
     bad_manifest_fp.write_text(json.dumps(manifest), encoding="utf-8")
@@ -156,6 +139,7 @@ def test_default_manifest_injected_bad_values_fail_fetch(
     assert expected_message in str(exc_info.value)
 
 
+@pytest.mark.network
 def test_default_manifest_http_links_resolve(tmp_path: Path):
     """Ensure HTTP model URLs in the default manifest resolve with project fetch logic."""
     log = logging.getLogger(__name__)

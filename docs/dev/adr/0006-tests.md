@@ -18,7 +18,7 @@
 ```json
 {
   "model": {
-    "version": "4690176_0_1770580046_train_base_16",
+    "version": "ResUNet_16x_DEM",
     "file_name": "model_infer.onnx",
     "compatible": true
   },
@@ -81,6 +81,10 @@ We also want to keep tests organized by *module* (mirroring the package layout),
    - **Pull Requests:** run unit + e2e (no network).
    - **Releases:** run the full test suite: unit + e2e + network.
 
+**modularization and paramterization**:
+test parameterization should mirror the available models (`floodsr/models.json`) and test data (`tests/data/*/case_spec.json`), with fixtures to load and validate.
+
+
 ## Rationale
 
 - Mirroring module layout keeps ownership and navigation clear as the codebase grows.
@@ -97,7 +101,7 @@ We also want to keep tests organized by *module* (mirroring the package layout),
 ## Implementation Notes
 
 ### Markers
-Add to `pyproject.toml` (or `pytest.ini`) marker registration:
+Add to  `pytest.ini`  marker registration:
 - `unit`: fast, deterministic tests (default local run)
 - `e2e`: end-to-end CLI/system tests
 - `network`: requires network access for pinned artifacts

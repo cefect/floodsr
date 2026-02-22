@@ -107,9 +107,9 @@ def _profile_bounds(profile: dict) -> tuple[float, float, float, float]:
 
 
 class ModelWorker(Model):
-    """Model worker implementing notebook-parity ToHR flow for version `4690176_0_1770580046_train_base_16`."""
+    """Model worker implementing notebook-parity ToHR flow for version `ResUNet_16x_DEM`."""
 
-    model_version = "4690176_0_1770580046_train_base_16"
+    model_version = "ResUNet_16x_DEM"
     low_depth_mask_m = 1e-3
 
     def __init__(

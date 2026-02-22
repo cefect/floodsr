@@ -6,29 +6,29 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from conftest import TEST_TILE_CASES
 from floodsr.cli import _parse_arguments, _resolve_default_output_path, _resolve_tohr_model_spec, main
 
 
+pytestmark = pytest.mark.e2e
+
+_CASE_SPEC_BY_NAME = {
+    case_name: json.loads((Path("tests/data") / case_name / "case_spec.json").read_text(encoding="utf-8"))
+    for case_name in TEST_TILE_CASES
+}
 _BASELINE_TOHR_CASES = [
-    pytest.param("rss_mersch_A", id="data_case_rss_mersch_a_non_hrdem"),
+    pytest.param(case_name, id=f"data_case_{case_name.lower()}_non_hrdem")
+    for case_name, case_spec in _CASE_SPEC_BY_NAME.items()
+    if not bool(case_spec["flags"]["in_hrdem"])
 ]
-
 _SPECIAL_TOHR_CASES = [
-    pytest.param("2407_FHIMP_tile", id="data_case_2407_fhimp_tile_in_hrdem"),
+    pytest.param(case_name, id=f"data_case_{case_name.lower()}_in_hrdem")
+    for case_name, case_spec in _CASE_SPEC_BY_NAME.items()
+    if bool(case_spec["flags"]["in_hrdem"])
 ]
-
-_DEFAULT_OUTPUT_CASES = [
-    pytest.param("2407_FHIMP_tile", id="data_case_output_name_2407_fhimp_tile"),
-    pytest.param("rss_mersch_A", id="data_case_output_name_rss_mersch_a"),
-]
-
-_RESOLVE_MODEL_CASES = [
-    pytest.param("2407_FHIMP_tile", id="data_case_resolve_model_2407_fhimp_tile"),
-]
-
-_FETCH_PARSE_CASES = [
-    pytest.param("2407_FHIMP_tile", id="data_case_fetch_parse_2407_fhimp_tile"),
-]
+_DEFAULT_OUTPUT_CASES = [pytest.param(case_name, id=f"data_case_output_name_{case_name.lower()}") for case_name in TEST_TILE_CASES]
+_RESOLVE_MODEL_CASES = [pytest.param(TEST_TILE_CASES[0], id=f"data_case_resolve_model_{TEST_TILE_CASES[0].lower()}")]
+_FETCH_PARSE_CASES = [pytest.param(TEST_TILE_CASES[0], id=f"data_case_fetch_parse_{TEST_TILE_CASES[0].lower()}")]
 
 
 @pytest.mark.parametrize("tile_case", _BASELINE_TOHR_CASES, indirect=True)
@@ -119,9 +119,13 @@ def test_default_output_path_uses_cwd_and_input_stem(tmp_path: Path, tile_case: 
 
 
 @pytest.mark.parametrize("tile_case", _RESOLVE_MODEL_CASES, indirect=True)
-def test_resolve_tohr_model_spec_uses_cached_manifest_default(tmp_path: Path, tile_case: dict):
+def test_resolve_tohr_model_spec_uses_cached_manifest_default(
+    tmp_path: Path,
+    tile_case: dict,
+    default_model_version: str,
+):
     """Ensure ToHR default model resolution uses cached first runnable manifest model."""
-    model_version = "4690176_0_1770580046_train_base_16"
+    model_version = default_model_version
     source_fp = tmp_path / "source_model.onnx"
     source_fp.write_bytes(b"cli-test-model")
     source_sha256 = hashlib.sha256(source_fp.read_bytes()).hexdigest()

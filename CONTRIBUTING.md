@@ -98,7 +98,7 @@ container.
 
 ```bash
 python -m floodsr.cli models list
-python -m floodsr.cli models fetch 4690176_0_1770580046_train_base_16
+python -m floodsr.cli models fetch ResUNet_16x_DEM
 pytest -q tests/test_model_registry.py::test_default_manifest_http_links_resolve
 ```
 

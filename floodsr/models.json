@@ -1,17 +1,10 @@
- 
 {
-  "models": { 
-    "4690176_0_1770580046_train_base_16": {
+  "models": {
+    "ResUNet_16x_DEM": {
       "file_name": "model_infer.onnx",
       "url": "https://github.com/cefect/floodsr/releases/download/v2026.02.19/model_infer.onnx",
       "sha256": "ea907c0f3bd482f436b26b4d28df64a471af51e0779203a50125e773eeda9c4a",
       "description": "16x DEM-conditioned ResUNet"
-    },
-    "dummy_local_test_model": {
-      "file_name": "model_infer_dummy.onnx",
-      "url": "tests/data/model_infer_dummy.onnx",
-      "sha256": "703e7d90ad70927a4982b895685ade63e55010691208f4352cbbb83b6049c9e1",
-      "description": "Local dummy model entry used for fetch/checksum tests."
     }
   }
 }
