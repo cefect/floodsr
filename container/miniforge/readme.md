@@ -47,10 +47,10 @@ docker push $IMAGE_NAME
 ```
 
  
-## Build Images: analysis
+## Build Images: dev
 from WSL
 ```bash
-IMAGE_NAME="cefect/floodsr:miniforge-dev-v0.2"
+export IMAGE_NAME="cefect/floodsr:miniforge-dev-v0.3"
 docker buildx build --load -f container/miniforge/Dockerfile -t "${IMAGE_NAME}" --target dev .
 ```
 

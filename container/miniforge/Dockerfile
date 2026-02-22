@@ -31,6 +31,7 @@ RUN --mount=type=cache,id=miniforge-apt-cache,target=/var/cache/apt,sharing=lock
         acl \
         ca-certificates \
         curl \
+        gh \
         bzip2 \
         xz-utils \
         tar \
@@ -68,6 +69,11 @@ RUN --mount=type=cache,id=miniforge-conda-pkgs,target=/opt/conda/pkgs,sharing=lo
     conda config --set channel_priority strict && \
     mamba env create -yv --strict-channel-priority --name ${env_name} --file /tmp/environment.yml && \
     rm -f /tmp/environment.yml
+
+# Smoke test GitHub CLI auth commands are available in the deploy target.
+RUN gh --version && \
+    gh auth --help >/dev/null && \
+    gh auth status --help >/dev/null
 
 
 # activate the environment by default for all users
