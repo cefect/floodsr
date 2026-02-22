@@ -26,6 +26,10 @@ _RESOLVE_MODEL_CASES = [
     pytest.param("2407_FHIMP_tile", id="data_case_resolve_model_2407_fhimp_tile"),
 ]
 
+_FETCH_PARSE_CASES = [
+    pytest.param("2407_FHIMP_tile", id="data_case_fetch_parse_2407_fhimp_tile"),
+]
+
 
 @pytest.mark.parametrize("tile_case", _BASELINE_INFER_CASES, indirect=True)
 def test_main_infer_runs_data_driven_baseline_case(
@@ -151,3 +155,55 @@ def test_resolve_infer_model_path_uses_cached_manifest_default(
     assert fetch_exit == 0
     assert isinstance(model_fp, Path)
     assert model_fp.exists()
+
+
+@pytest.mark.parametrize("tile_case", _FETCH_PARSE_CASES, indirect=True)
+def test_parse_infer_allows_fetch_hrdem_without_dem(tile_case: dict):
+    """Ensure infer parser accepts --fetch-hrdem without requiring --dem."""
+    case_spec = tile_case["case_spec"]
+    parsed_args = _parse_arguments(
+        [
+            "infer",
+            "--in",
+            str(tile_case["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
+            "--fetch-hrdem",
+        ]
+    )
+    assert parsed_args.fetch_hrdem is True
+    assert parsed_args.dem is None
+
+
+@pytest.mark.parametrize("tile_case", _FETCH_PARSE_CASES, indirect=True)
+def test_parse_infer_rejects_dem_and_fetch_hrdem_together(tile_case: dict):
+    """Ensure infer parser rejects simultaneous --dem and --fetch-hrdem."""
+    case_spec = tile_case["case_spec"]
+    with pytest.raises(SystemExit):
+        _parse_arguments(
+            [
+                "infer",
+                "--in",
+                str(tile_case["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
+                "--dem",
+                str(tile_case["tile_dir"] / case_spec["inputs"]["dem_fp"]),
+                "--fetch-hrdem",
+            ]
+        )
+
+
+@pytest.mark.parametrize("tile_case", _FETCH_PARSE_CASES, indirect=True)
+def test_main_infer_fetch_out_requires_fetch_hrdem(tile_case: dict, tmp_path: Path):
+    """Ensure infer runtime rejects --fetch-out unless --fetch-hrdem is enabled."""
+    case_spec = tile_case["case_spec"]
+    exit_code = main(
+        [
+            "infer",
+            "--in",
+            str(tile_case["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
+            "--dem",
+            str(tile_case["tile_dir"] / case_spec["inputs"]["dem_fp"]),
+            "--fetch-out",
+            str(tmp_path / "fetched_dem.tif"),
+        ]
+    )
+    assert isinstance(exit_code, int)
+    assert exit_code == 1
