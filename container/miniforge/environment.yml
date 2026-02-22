@@ -13,4 +13,5 @@ dependencies:
   - rasterio=1.5.0
   - typer=0.24.0
   - pytest=9.0.2
+  - tqdm
   

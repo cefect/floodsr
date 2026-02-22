@@ -6,6 +6,7 @@ from pathlib import Path
 
 from floodsr.engine import get_onnxruntime_info, get_rasterio_info
 from floodsr.inference import infer
+from floodsr.dem_sources import fetch_dem
 from floodsr.model_registry import fetch_model, list_models, load_models_manifest
 from floodsr.cache_paths import get_model_cache_path
 from floodsr.checksums import verify_sha256
@@ -96,12 +97,25 @@ def main_cli(args: argparse.Namespace) -> int:
 
     # Route infer command.
     if args.command == "infer":
+        if args.fetch_out is not None and not args.fetch_hrdem:
+            raise ValueError("--fetch-out requires --fetch-hrdem")
+
         model_fp = _resolve_infer_model_path(args)
         output_fp = args.out if args.out is not None else _resolve_default_output_path(args.in_fp)
+        dem_fp = args.dem
+        if args.fetch_hrdem:
+            fetch_result = fetch_dem(
+                source_id="hrdem",
+                depth_lr_fp=args.in_fp,
+                output_fp=args.fetch_out,
+                logger=log,
+            )
+            dem_fp = fetch_result.dem_fp
+
         result = infer(
             model_fp=model_fp,
             depth_lr_fp=args.in_fp,
-            dem_hr_fp=args.dem,
+            dem_hr_fp=dem_fp,
             output_fp=output_fp,
             max_depth=args.max_depth,
             dem_pct_clip=args.dem_pct_clip,
@@ -206,7 +220,20 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
     # Register inference command.
     infer_parser = subparsers.add_parser("infer", help="Run one raster inference pass.")
     infer_parser.add_argument("--in", dest="in_fp", type=Path, required=True, help="Low-res depth raster path.")
-    infer_parser.add_argument("--dem", type=Path, required=True, help="High-res DEM raster path.")
+    dem_group = infer_parser.add_mutually_exclusive_group(required=True)
+    dem_group.add_argument("--dem", type=Path, default=None, help="High-res DEM raster path.")
+    dem_group.add_argument(
+        "-f",
+        "--fetch-hrdem",
+        action="store_true",
+        help="Fetch HRDEM from STAC using the low-res raster footprint.",
+    )
+    infer_parser.add_argument(
+        "--fetch-out",
+        type=Path,
+        default=None,
+        help="Optional output path for fetched HRDEM tile. Defaults to temp directory.",
+    )
     infer_parser.add_argument(
         "--out",
         type=Path,
