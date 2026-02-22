@@ -9,7 +9,7 @@ and model details are formalized.
 Quick Start
 -----------
 
-1. Build and open the docs container from ``docs/user/container``.
+1. Build and open the docs container from ``container/docs``.
 2. Edit this file: ``docs/user/index.rst``.
 3. Build HTML:
 
