@@ -35,7 +35,7 @@ pip install -e ".[dev]"
 
 ## Use
 
-Current CLI surface includes model registry, single-tile raster inference, and runtime diagnostics.
+Current CLI surface includes model registry, `tohr` raster execution, and runtime diagnostics.
 
 List available model versions:
 
@@ -52,31 +52,31 @@ Fetch a model by version into the default cache:
 floodsr models fetch 4690176_0_1770580046_train_base_16 --force
 ```
 
-inference using HRDEM as DEM
+tohr using HRDEM as DEM
 ```bash
-floodsr infer -f --in tests/data/2407_FHIMP_tile/lowres032.tif 
+floodsr tohr -f --in tests/data/2407_FHIMP_tile/lowres032.tif 
 ```
 
-Run one inference pass from raster inputs:
+Run one ToHR pass from raster inputs:
 
 ```bash
 # simple tile
-floodsr infer \
+floodsr tohr \
   --in tests/data/2407_FHIMP_tile/lowres032.tif \
   --dem tests/data/2407_FHIMP_tile/hires002_dem.tif  
 
 # larger raster w/ windowing and tiling and rescaling
-floodsr infer \
+floodsr tohr \
   --in tests/data/rss_mersch_A/lowres030.tif \
   --dem tests/data/rss_mersch_A/hires002_dem.tif \
   --out pred_sr.tif
  
 ```
 
-Run inference with explicit local model path:
+Run ToHR with explicit local model path:
 
 ```bash
-floodsr infer \
+floodsr tohr \
   --in tests/data/2407_FHIMP_tile/lowres032.tif \
   --dem tests/data/2407_FHIMP_tile/hires002_dem.tif \
   --out ./tmp/pred_sr.tif \

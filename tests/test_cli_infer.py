@@ -1,19 +1,19 @@
-"""Tests for infer CLI behavior."""
+"""Tests for ToHR CLI behavior."""
 
-import os
+import hashlib, json, os
 from pathlib import Path
 
 import numpy as np
 import pytest
 
-from floodsr.cli import _parse_arguments, _resolve_default_output_path, _resolve_infer_model_path, main
+from floodsr.cli import _parse_arguments, _resolve_default_output_path, _resolve_tohr_model_spec, main
 
 
-_BASELINE_INFER_CASES = [
+_BASELINE_TOHR_CASES = [
     pytest.param("rss_mersch_A", id="data_case_rss_mersch_a_non_hrdem"),
 ]
 
-_SPECIAL_INFER_CASES = [
+_SPECIAL_TOHR_CASES = [
     pytest.param("2407_FHIMP_tile", id="data_case_2407_fhimp_tile_in_hrdem"),
 ]
 
@@ -31,13 +31,13 @@ _FETCH_PARSE_CASES = [
 ]
 
 
-@pytest.mark.parametrize("tile_case", _BASELINE_INFER_CASES, indirect=True)
-def test_main_infer_runs_data_driven_baseline_case(
+@pytest.mark.parametrize("tile_case", _BASELINE_TOHR_CASES, indirect=True)
+def test_main_tohr_runs_data_driven_baseline_case(
     inference_model_fp: Path,
     tmp_path: Path,
     tile_case: dict,
 ) -> None:
-    """Ensure infer command runs for a non-HRDEM data-driven case."""
+    """Ensure tohr command runs for a non-HRDEM data-driven case."""
     pytest.importorskip("onnxruntime")
     rasterio = pytest.importorskip("rasterio")
     case_spec = tile_case["case_spec"]
@@ -47,7 +47,7 @@ def test_main_infer_runs_data_driven_baseline_case(
     assert not case_spec["flags"]["in_hrdem"]
     exit_code = main(
         [
-            "infer",
+            "tohr",
             "--in",
             str(tile_dir / case_spec["inputs"]["lowres_fp"]),
             "--dem",
@@ -66,13 +66,13 @@ def test_main_infer_runs_data_driven_baseline_case(
     assert pred.size > 0
 
 
-@pytest.mark.parametrize("tile_case", _SPECIAL_INFER_CASES, indirect=True)
-def test_main_infer_runs_in_hrdem_flagged_case(
+@pytest.mark.parametrize("tile_case", _SPECIAL_TOHR_CASES, indirect=True)
+def test_main_tohr_runs_in_hrdem_flagged_case(
     inference_model_fp: Path,
     tmp_path: Path,
     tile_case: dict,
 ) -> None:
-    """Ensure infer command runs for in_hrdem-flagged cases."""
+    """Ensure tohr command runs for in_hrdem-flagged cases."""
     pytest.importorskip("onnxruntime")
     pytest.importorskip("rasterio")
     case_spec = tile_case["case_spec"]
@@ -82,7 +82,7 @@ def test_main_infer_runs_in_hrdem_flagged_case(
     assert case_spec["flags"]["in_hrdem"]
     exit_code = main(
         [
-            "infer",
+            "tohr",
             "--in",
             str(tile_dir / case_spec["inputs"]["lowres_fp"]),
             "--dem",
@@ -104,7 +104,7 @@ def test_main_infer_runs_in_hrdem_flagged_case(
 
 @pytest.mark.parametrize("tile_case", _DEFAULT_OUTPUT_CASES, indirect=True)
 def test_default_output_path_uses_cwd_and_input_stem(tmp_path: Path, tile_case: dict):
-    """Ensure infer default output path is generated in cwd with _sr suffix."""
+    """Ensure ToHR default output path is generated in cwd with _sr suffix."""
     case_spec = tile_case["case_spec"]
     tile_dir = tile_case["tile_dir"]
     input_fp = tile_dir / case_spec["inputs"]["lowres_fp"]
@@ -119,20 +119,33 @@ def test_default_output_path_uses_cwd_and_input_stem(tmp_path: Path, tile_case: 
 
 
 @pytest.mark.parametrize("tile_case", _RESOLVE_MODEL_CASES, indirect=True)
-def test_resolve_infer_model_path_uses_cached_manifest_default(
-    models_manifest_fp: Path,
-    tmp_path: Path,
-    tile_case: dict,
-):
-    """Ensure infer default model resolution uses cached first manifest model."""
+def test_resolve_tohr_model_spec_uses_cached_manifest_default(tmp_path: Path, tile_case: dict):
+    """Ensure ToHR default model resolution uses cached first runnable manifest model."""
+    model_version = "4690176_0_1770580046_train_base_16"
+    source_fp = tmp_path / "source_model.onnx"
+    source_fp.write_bytes(b"cli-test-model")
+    source_sha256 = hashlib.sha256(source_fp.read_bytes()).hexdigest()
+    manifest_payload = {
+        "models": {
+            model_version: {
+                "file_name": "model_infer.onnx",
+                "url": source_fp.as_uri(),
+                "sha256": source_sha256,
+                "description": "Runnable local model for ToHR CLI model resolution tests.",
+            }
+        }
+    }
+    manifest_fp = tmp_path / "models_tohr.json"
+    manifest_fp.write_text(json.dumps(manifest_payload), encoding="utf-8")
+
     cache_dir = tmp_path / "cache"
     fetch_exit = main(
         [
             "models",
             "fetch",
-            "v-cli",
+            model_version,
             "--manifest",
-            str(models_manifest_fp),
+            str(manifest_fp),
             "--cache-dir",
             str(cache_dir),
         ]
@@ -140,30 +153,30 @@ def test_resolve_infer_model_path_uses_cached_manifest_default(
     case_spec = tile_case["case_spec"]
     args = _parse_arguments(
         [
-            "infer",
+            "tohr",
             "--in",
             str(tile_case["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
             "--dem",
             str(tile_case["tile_dir"] / case_spec["inputs"]["dem_fp"]),
             "--manifest",
-            str(models_manifest_fp),
+            str(manifest_fp),
             "--cache-dir",
             str(cache_dir),
         ]
     )
-    model_fp = _resolve_infer_model_path(args)
+    resolved_version, model_fp = _resolve_tohr_model_spec(args)
     assert fetch_exit == 0
-    assert isinstance(model_fp, Path)
+    assert resolved_version == model_version
     assert model_fp.exists()
 
 
 @pytest.mark.parametrize("tile_case", _FETCH_PARSE_CASES, indirect=True)
-def test_parse_infer_allows_fetch_hrdem_without_dem(tile_case: dict):
-    """Ensure infer parser accepts --fetch-hrdem without requiring --dem."""
+def test_parse_tohr_allows_fetch_hrdem_without_dem(tile_case: dict):
+    """Ensure tohr parser accepts --fetch-hrdem without requiring --dem."""
     case_spec = tile_case["case_spec"]
     parsed_args = _parse_arguments(
         [
-            "infer",
+            "tohr",
             "--in",
             str(tile_case["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
             "--fetch-hrdem",
@@ -174,13 +187,13 @@ def test_parse_infer_allows_fetch_hrdem_without_dem(tile_case: dict):
 
 
 @pytest.mark.parametrize("tile_case", _FETCH_PARSE_CASES, indirect=True)
-def test_parse_infer_rejects_dem_and_fetch_hrdem_together(tile_case: dict):
-    """Ensure infer parser rejects simultaneous --dem and --fetch-hrdem."""
+def test_parse_tohr_rejects_dem_and_fetch_hrdem_together(tile_case: dict):
+    """Ensure tohr parser rejects simultaneous --dem and --fetch-hrdem."""
     case_spec = tile_case["case_spec"]
     with pytest.raises(SystemExit):
         _parse_arguments(
             [
-                "infer",
+                "tohr",
                 "--in",
                 str(tile_case["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
                 "--dem",
@@ -191,12 +204,12 @@ def test_parse_infer_rejects_dem_and_fetch_hrdem_together(tile_case: dict):
 
 
 @pytest.mark.parametrize("tile_case", _FETCH_PARSE_CASES, indirect=True)
-def test_main_infer_fetch_out_requires_fetch_hrdem(tile_case: dict, tmp_path: Path):
-    """Ensure infer runtime rejects --fetch-out unless --fetch-hrdem is enabled."""
+def test_main_tohr_fetch_out_requires_fetch_hrdem(tile_case: dict, tmp_path: Path):
+    """Ensure tohr runtime rejects --fetch-out unless --fetch-hrdem is enabled."""
     case_spec = tile_case["case_spec"]
     exit_code = main(
         [
-            "infer",
+            "tohr",
             "--in",
             str(tile_case["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
             "--dem",

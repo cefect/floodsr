@@ -282,18 +282,6 @@ def _write_single_band_raster(fp: str | Path, arr: np.ndarray, profile: dict, dr
     return path
 
 
-def _build_tile_starts(total_size: int, tile_size: int, stride: int) -> list[int]:
-    """Build overlap-aware tile starts for raster coverage."""
-    assert total_size > 0, f"total_size must be > 0; got {total_size}"
-    assert tile_size > 0, f"tile_size must be > 0; got {tile_size}"
-    assert stride > 0, f"stride must be > 0; got {stride}"
-    starts = list(range(0, max(total_size - tile_size + 1, 1), stride))
-    last_start = total_size - tile_size
-    if starts[-1] != last_start:
-        starts.append(last_start)
-    return starts
-
-
 def _align_depth_and_dem_inputs(
     depth_lr_fp: str | Path,
     dem_hr_fp: str | Path,
