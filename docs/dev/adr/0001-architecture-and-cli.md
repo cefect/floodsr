@@ -23,6 +23,8 @@ see also:
 - Model subsystem:
   - `model_registry.py`
   - `models.json`
+  - `models/base.py` (`class Model`)
+  - `models/<model_version>.py` (e.g., `models/4690176_0_1770580046_train_base_16.py`)
   - model contracts per `0005-model-registry.md`
 - Engine subsystem:
   - `engine/base.py`
@@ -57,6 +59,7 @@ with some global kwargs (mostly logging?)
 ## inference
 requirements:
 - needs to support multiple models with different I/O contracts, but the same CLI entrypoint and engine abstraction. see `0005-model-registry.md` and `0015-engine-runtime.md`
+- `infer()` should create and teardown model workers via context management (`with ...`).
 - needs to be **just push go** ready with a single command, but also support more advanced use cases (e.g., custom output path, custom model version, etc.)
 - no `truth` or `metrics`. just inference
 - provide progress bar and final diagnostics on completion (runtime, shape in, shape out, model version used, file size out)
@@ -65,9 +68,10 @@ requirements:
 
 ### inference workflow
 Under the hood, should implement a workflow like:
-- resolve model artifact and engine backend
+- resolve model artifact and model worker
   - if `--model-version` not specified, use first listed in `models.json` if found in cache, otherwise fallback to first in cache.  if nothing in cache, error with instructions to fetch a model.
-- select engine runtime/provider policy per `0015-engine-runtime.md`
+- instantiate model worker from the resolved version (subclass of `Model`) and run it under context management.
+- select engine runtime/provider policy per `0015-engine-runtime.md` (owned by model worker internals)
 - platform pre-processing: general data conformance checks and corrections (e.g., reprojection, nodata handling, bbox, etc.). see `0009-preproccessing.md`
 - **platform-model boundary**
 - model super resolution: not all models will require all these. 
@@ -80,4 +84,4 @@ Under the hood, should implement a workflow like:
 - final diagnostics, reporting, output writing, and cleanup.
 
 In summary:
-fetch model -> pre-process -> tile -> infer -> stitch -> post-process -> output
+fetch model -> create model worker -> `with model_worker: model_worker.run(...)` -> output
