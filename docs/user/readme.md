@@ -4,7 +4,7 @@
 
 ## Read the Docs config
 
-- `docs/user/.readthedocs.yaml`
+- `.readthedocs.yaml`
 
 ## local build with sphinx
 
