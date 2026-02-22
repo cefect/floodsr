@@ -10,4 +10,4 @@ sphinx:
 
 python:
   install:
-    - requirements: docs/user/container/requirements.overlay.txt
+    - requirements: container/docs/requirements.overlay.txt

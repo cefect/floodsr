@@ -12,7 +12,7 @@ This folder contains user documentation and developer architecture records.
 1. Build the docs image (dev target):
 
 ```bash
-docker buildx build --load -t floodsr-docs:dev -f docs/user/container/Dockerfile --target dev .
+docker buildx build --load -t floodsr-docs:dev -f container/docs/Dockerfile --target dev .
 ```
 
 2. Build HTML:

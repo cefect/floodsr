@@ -9,7 +9,7 @@ needs to be run from the project pygis venv. eg:
     start cmd.exe /k python -m pytest --maxfail=10 %TEST_DIR% -c %SRC_DIR%\tests\pytest.ini
 
 """
-
+raise IOError('old example template')
 
 import pytest
 import os

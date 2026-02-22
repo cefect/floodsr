@@ -19,7 +19,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 RUN python -m pip freeze --all > /tmp/requirements.base.txt
 
 # Copy overlay-only dependencies.
-COPY docs/user/container/requirements.overlay.txt /tmp/requirements.overlay.txt
+COPY container/docs/requirements.overlay.txt /tmp/requirements.overlay.txt
 
 # Install docs packages while constraining base versions.
 RUN --mount=type=cache,target=/root/.cache/pip \
@@ -43,7 +43,7 @@ ARG USER_GID
 ARG OLD_USERNAME=vscode
 
 # Docs authoring layer: keep base package versions pinned via freeze constraints.
-COPY docs/user/container/requirements.overlay.dev.txt /tmp/requirements.overlay.dev.txt
+COPY container/docs/requirements.overlay.dev.txt /tmp/requirements.overlay.dev.txt
 RUN python -m pip freeze --all > /tmp/requirements.base-dev.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
     python -m pip install \
