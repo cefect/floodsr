@@ -1,7 +1,7 @@
-# ADR-0004: Repository and Module Architecture
+# ADR-0001: Repository and Module Architecture
 
  
-The codebase should keep the CLI thin, isolate engine/runtime concerns, and preserve a swappable execution backend boundary.
+The codebase should keep the CLI thin, isolate model concerns from engine/runtime concerns, and preserve a swappable execution backend boundary.
 
  
 
@@ -14,14 +14,17 @@ see also:
 
 - CLI surface:
   - `cli.py`
-  - `model_registry.py`
-  - `checksums.py`
+  - command routing for `infer`, `models`, `doctor`, `cache`
 - Cache subsystem:
   - `cache/paths.py`
   - `cache/policy.py`
   - `cache/lifecycle.py`
   - `cache/reporting.py`
-- Engine abstraction:
+- Model subsystem:
+  - `model_registry.py`
+  - `models.json`
+  - model contracts per `0005-model-registry.md`
+- Engine subsystem:
   - `engine/base.py`
   - `engine/ort.py`
   - `engine/providers.py`
@@ -53,22 +56,24 @@ with some global kwargs (mostly logging?)
 
 ## inference
 requirements:
-- needs to support multiple models with different I/O contracts, but the same CLI entrypoint and runtime abstraction.  see `0014-model-io.md`
+- needs to support multiple models with different I/O contracts, but the same CLI entrypoint and engine abstraction. see `0005-model-registry.md` and `0015-engine-runtime.md`
 - needs to be **just push go** ready with a single command, but also support more advanced use cases (e.g., custom output path, custom model version, etc.)
 - no `truth` or `metrics`. just inference
 - provide progress bar and final diagnostics on completion (runtime, shape in, shape out, model version used, file size out)
 - default output should be in cwd with the same name (and filetype and properties... other than shape) as the input but with `_sr.tif` suffix. allow `--out` to specify a different path.
  
 
+### inference workflow
 Under the hood, should implement a workflow like:
-- check/fetch backend model/engine
+- resolve model artifact and engine backend
   - if `--model-version` not specified, use first listed in `models.json` if found in cache, otherwise fallback to first in cache.  if nothing in cache, error with instructions to fetch a model.
+- select engine runtime/provider policy per `0015-engine-runtime.md`
 - platform pre-processing: general data conformance checks and corrections (e.g., reprojection, nodata handling, bbox, etc.). see `0009-preproccessing.md`
 - **platform-model boundary**
 - model super resolution: not all models will require all these. 
   - model specific pre-processing  (nice for interpolation work that can be applied raster wide efficnetly). 
   - tiling/windowing
-  - **inference-engine boundary**. see`docs/dev/adr/0014-model-io.md`
+  - **model-engine boundary**. see `0005-model-registry.md`
   - core inference
   - mosaicking/stitching
   - model specific post-processing  (e.g., de-normalization)
