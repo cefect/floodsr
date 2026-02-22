@@ -2,3 +2,4 @@
 sphinx-autobuild>=2024.10.3
 rstcheck>=6,<7
 doc8>=1.1,<2
+pytest
