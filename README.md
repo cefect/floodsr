@@ -7,7 +7,7 @@ Ingests lores water grid and hires DEM and infers a hires water grid using the s
 Documentation: https://floodsr.readthedocs.io/en/latest/
 
 Implemented models (see `floodsr/models.json`):
-- **4690176_0_1770580046_train_base_16**: 16x DEM-conditioned ResUNet
+- **ResUNet_16x_DEM**: 16x DEM-conditioned ResUNet
 - **CostGrow** (future)
 
 Implemented backend:
@@ -52,7 +52,7 @@ floodsr models list
 Fetch a model by version into the default cache:
 
 ```bash
-floodsr models fetch 4690176_0_1770580046_train_base_16 --force
+floodsr models fetch ResUNet_16x_DEM --force
 ```
 
 tohr using HRDEM as DEM
@@ -83,7 +83,7 @@ floodsr tohr \
   --in tests/data/2407_FHIMP_tile/lowres032.tif \
   --dem tests/data/2407_FHIMP_tile/hires002_dem.tif \
   --out ./tmp/pred_sr.tif \
-  --model-path _inputs/4690176_0_1770580046_train_base_16/model_infer.onnx
+  --model-path _inputs/ResUNet_16x_DEM/model_infer.onnx
 ```
 
 

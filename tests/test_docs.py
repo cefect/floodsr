@@ -7,6 +7,7 @@ import pytest
 
 
 DOCS_SOURCE_DIR = Path("docs/user")
+pytestmark = pytest.mark.network
 
 
 def test_docs_linkcheck_builds(tmp_path: Path) -> None:

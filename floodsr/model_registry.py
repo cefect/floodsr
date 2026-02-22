@@ -336,10 +336,24 @@ def fetch_model(
     return model_fp
 
 
+def _model_version_to_worker_stem(model_version: str) -> str:
+    """Normalize a model version into a filesystem-safe worker stem."""
+    assert model_version, "model_version cannot be empty"
+    return "".join(ch if (ch.isalnum() or ch == "_") else "_" for ch in model_version)
+
+
 def get_model_worker_path(model_version: str) -> Path:
     """Return the expected worker module path for a model version."""
     assert model_version, "model_version cannot be empty"
-    return Path(__file__).with_name("models") / f"{model_version}.py"
+    models_dir = Path(__file__).with_name("models")
+
+    # Prefer normalized worker stems so manifest versions can include dots/hyphens.
+    normalized_fp = models_dir / f"{_model_version_to_worker_stem(model_version)}.py"
+    if normalized_fp.exists():
+        return normalized_fp
+
+    # Fall back to the raw version stem for backward compatibility.
+    return models_dir / f"{model_version}.py"
 
 
 def model_worker_exists(model_version: str) -> bool:
@@ -362,7 +376,7 @@ def resolve_model_worker_class(model_version: str):
     if not worker_fp.exists():
         raise FileNotFoundError(f"missing model worker module for '{model_version}': {worker_fp}")
 
-    module_name = f"floodsr.models._worker_{model_version}"
+    module_name = f"floodsr.models._worker_{_model_version_to_worker_stem(model_version)}"
     spec = importlib.util.spec_from_file_location(module_name, worker_fp)
     if spec is None or spec.loader is None:
         raise ImportError(f"unable to load worker module spec from: {worker_fp}")

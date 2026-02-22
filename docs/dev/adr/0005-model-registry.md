@@ -42,8 +42,9 @@ FloodSR needs a stable model layer that:
   - context manager lifecycle (`__enter__`, `__exit__`) for clean resource management
 - Per-model modules:
   - one module per model version
-  - naming pattern: `floodsr/models/<model_version>.py`
-  - example: `floodsr/models/4690176_0_1770580046_train_base_16.py`
+  - naming pattern: `floodsr/models/<normalized_model_version>.py`
+  - normalize non-alphanumeric characters in `<model_version>` to `_`
+  - example: `floodsr/models/ResUNet_16x_DEM.py`
 - Subclass behavior:
   - override `run(...)`
   - organize model-specific flow into submethods:
@@ -65,7 +66,7 @@ FloodSR needs a stable model layer that:
 
 ## Model Types
 
-### 16x DEM-conditioned ResUNet (`4690176_0_1770580046_train_base_16`)
+### 16x DEM-conditioned ResUNet (`ResUNet_16x_DEM`)
 
 #### Artifact
 
@@ -73,7 +74,7 @@ FloodSR needs a stable model layer that:
 - Current release reference: `v2026.02.19`
 - Related training metadata (when packaged): `train_config.json`
 - Model worker module:
-  - `floodsr/models/4690176_0_1770580046_train_base_16.py`
+  - `floodsr/models/ResUNet_16x_DEM.py`
 
 #### Model-Engine Boundary Contract
 

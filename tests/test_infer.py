@@ -5,15 +5,22 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from conftest import TEST_TILE_CASES
 from floodsr.dem_sources import fetch_dem
 from floodsr.tohr import tohr
 
 
+pytestmark = pytest.mark.e2e
+
 _TOHR_E2E_CASES = [
-    pytest.param("2407_FHIMP_tile", False, id="tohr_data_case_2407_fhimp_tile_with_dem"),
-    pytest.param("rss_mersch_A", False, id="tohr_data_case_rss_mersch_a_with_dem"),
-    pytest.param("rss_dudelange_A", False, id="tohr_data_case_rss_dudelange_a_with_dem"),
-    pytest.param("2407_FHIMP_tile", True, id="tohr_data_case_2407_fhimp_tile_fetch_hrdem"),
+    pytest.param(case_name, False, id=f"tohr_data_case_{case_name.lower()}_with_dem") for case_name in TEST_TILE_CASES
+] + [
+    pytest.param(
+        "2407_FHIMP_tile",
+        True,
+        marks=pytest.mark.network,
+        id="tohr_data_case_2407_fhimp_tile_fetch_hrdem",
+    )
 ]
 
 

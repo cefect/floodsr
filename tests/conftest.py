@@ -6,7 +6,11 @@ import numpy as np
 import pytest
 
 
-TEST_TILE_CASES = ("2407_FHIMP_tile", "rss_mersch_A", "rss_dudelange_A")
+# Keep case parameterization synced with tests/data/*/case_spec.json.
+TEST_TILE_CASES = tuple(
+    sorted(case_spec.parent.name for case_spec in pathlib.Path("tests/data").glob("*/case_spec.json"))
+)
+assert TEST_TILE_CASES, "no data-driven test cases found in tests/data/*/case_spec.json"
 
 
 def _read_tile_case(case_name: str) -> dict:
@@ -73,7 +77,7 @@ def pytest_report_header(config):
 # -------------------
 # ----- Fixtures -----
 # -------------------
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def logger():
     """Simple logger fixture for the function under test."""
     log = logging.getLogger("pytest")
@@ -113,6 +117,16 @@ def models_manifest_fp(tmp_path: pathlib.Path) -> pathlib.Path:
 def tile_case_catalog():
     """Return metadata for all explicitly tracked tile fixtures."""
     return {case_name: _read_tile_case(case_name) for case_name in TEST_TILE_CASES}
+
+
+@pytest.fixture(scope="session")
+def default_model_version():
+    """Return the default runnable model version from the packaged manifest."""
+    from floodsr.model_registry import list_runnable_model_versions
+
+    runnable_versions = list_runnable_model_versions()
+    assert runnable_versions, "manifest has no runnable model versions"
+    return runnable_versions[0]
 
 
 @pytest.fixture
@@ -176,9 +190,9 @@ def synthetic_inference_tiles(tmp_path_factory):
 
 
 @pytest.fixture(scope="function")
-def inference_model_fp(tmp_path):
+def inference_model_fp(tmp_path, default_model_version):
     """Resolve local model path used by engine and CLI inference tests."""
-    model_version = "4690176_0_1770580046_train_base_16"
+    model_version = default_model_version
     local_fp = pathlib.Path("_inputs") / model_version / "model_infer.onnx"
     if local_fp.exists():
         return local_fp.resolve()

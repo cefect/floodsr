@@ -24,7 +24,7 @@ see also:
   - `model_registry.py`
   - `models.json`
   - `models/base.py` (`class Model`)
-  - `models/<model_version>.py` (e.g., `models/4690176_0_1770580046_train_base_16.py`)
+  - `models/<normalized_model_version>.py` (e.g., `models/ResUNet_16x_DEM.py`)
   - model contracts per `0005-model-registry.md`
 - Pre-processing subsystem:
   - `preprocessing.py` (shared helpers)
