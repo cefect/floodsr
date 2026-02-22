@@ -5,14 +5,7 @@ import importlib.metadata as md
 
 def get_onnxruntime_info() -> dict[str, object]:
     """Return ORT installation and provider diagnostics."""
-    try:
-        import onnxruntime as ort
-    except ImportError:
-        return {
-            "installed": False,
-            "version": None,
-            "available_providers": [],
-        }
+    import onnxruntime as ort
 
     return {
         "installed": True,
@@ -34,4 +27,3 @@ def get_rasterio_info() -> dict[str, object]:
         "installed": True,
         "version": version,
     }
-

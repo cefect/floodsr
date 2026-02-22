@@ -5,7 +5,15 @@ from pathlib import Path
 
 import pytest
 
-from floodsr.model_registry import DEFAULT_MANIFEST_FP, fetch_model, get_retrieval_backend, list_models
+from floodsr.model_registry import (
+    DEFAULT_MANIFEST_FP,
+    fetch_model,
+    get_retrieval_backend,
+    list_models,
+    list_runnable_model_versions,
+    model_worker_exists,
+    resolve_model_worker_class,
+)
 from floodsr.checksums import verify_sha256
 
 
@@ -87,6 +95,20 @@ def test_default_manifest_dummy_entry_fetch_and_checksum(tmp_path: Path):
     assert is_match
 
 
+def test_list_runnable_model_versions_contains_worker_backed_default_version():
+    """Ensure runnable manifest versions include the production worker-backed model."""
+    runnable_versions = list_runnable_model_versions()
+    assert isinstance(runnable_versions, list)
+    assert "4690176_0_1770580046_train_base_16" in runnable_versions
+
+
+def test_resolve_model_worker_class_returns_model_worker_type():
+    """Ensure worker resolution loads a concrete worker class from model version."""
+    worker_class = resolve_model_worker_class("4690176_0_1770580046_train_base_16")
+    assert model_worker_exists("4690176_0_1770580046_train_base_16") is True
+    assert worker_class.__name__ == "ModelWorker"
+
+
 @pytest.mark.parametrize(
     "field_name, bad_value, expected_exception, expected_message",
     [
@@ -159,4 +181,3 @@ def test_default_manifest_http_links_resolve(tmp_path: Path):
 
         assert isinstance(model_fp, Path)
         assert model_fp.exists()
-

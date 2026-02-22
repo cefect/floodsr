@@ -1,12 +1,13 @@
-"""Tests for inference regression and synthetic tiling behavior."""
+"""Tests for ToHR regression and synthetic tiling behavior."""
 
 from pathlib import Path
 
 import numpy as np
 import pytest
 
-from floodsr.inference import compute_depth_error_metrics, infer
 from floodsr.preprocessing import replace_nodata_with_zero
+from floodsr.tohr import tohr
+from misc.eval import compute_depth_error_metrics
 
 
 _DATA_DRIVEN_CASES = [
@@ -28,14 +29,15 @@ def test_inference_regression_matches_case_spec_metrics(
     tmp_path: Path,
     logger,
 ) -> None:
-    """Validate inference metrics for all data-driven case specs."""
+    """Validate ToHR metrics for all data-driven case specs."""
     pytest.importorskip("onnxruntime")
     rasterio = pytest.importorskip("rasterio")
     case_spec = tile_case["case_spec"]
     tile_dir = tile_case["tile_dir"]
     output_fp = tmp_path / f"{tile_case['case_name']}_pred_sr.tif"
 
-    infer(
+    tohr(
+        model_version=case_spec["model"]["version"],
         model_fp=inference_model_fp,
         depth_lr_fp=tile_dir / case_spec["inputs"]["lowres_fp"],
         dem_hr_fp=tile_dir / case_spec["inputs"]["dem_fp"],
@@ -70,17 +72,18 @@ def test_inference_regression_matches_case_spec_metrics(
 
 
 @pytest.mark.parametrize("window_method, tile_overlap", _ON_THE_FLY_SYNTH_CASES)
-def test_infer_on_the_fly_synthetic_tiles(
+def test_tohr_on_the_fly_synthetic_tiles(
     inference_model_fp: Path,
     synthetic_inference_tiles: dict,
     window_method: str,
     tile_overlap: int,
     logger,
 ) -> None:
-    """Run tiled inference on on-the-fly synthetic rasters for both window methods."""
+    """Run tiled ToHR on on-the-fly synthetic rasters for both window methods."""
     pytest.importorskip("onnxruntime")
     rasterio = pytest.importorskip("rasterio")
-    result = infer(
+    result = tohr(
+        model_version="4690176_0_1770580046_train_base_16",
         model_fp=inference_model_fp,
         depth_lr_fp=synthetic_inference_tiles["depth_lr_fp"],
         dem_hr_fp=synthetic_inference_tiles["dem_fp"],

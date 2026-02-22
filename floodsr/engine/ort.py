@@ -58,6 +58,11 @@ class EngineORT(EngineBase):
             f"and scale={self.contract.scale}"
         )
 
+    def close(self) -> None:
+        """Release runtime resources held by this engine instance."""
+        self.session = None
+        self.contract = None
+
     def _resolve_hwc(self, dims: list[Any], tensor_name: str) -> tuple[int, int, int]:
         """Resolve fixed HWC dimensions from a rank-4 NHWC tensor shape."""
         assert len(dims) == 4, f"{tensor_name} must be rank-4 NHWC; got {dims}"

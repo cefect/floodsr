@@ -1,15 +1,20 @@
-"""Command line interface for model operations."""
+"""Command line interface for FloodSR operations."""
 
-import argparse
-import logging
+import argparse, logging
 from pathlib import Path
 
-from floodsr.engine import get_onnxruntime_info, get_rasterio_info
-from floodsr.inference import infer
-from floodsr.dem_sources import fetch_dem
-from floodsr.model_registry import fetch_model, list_models, load_models_manifest
 from floodsr.cache_paths import get_model_cache_path
 from floodsr.checksums import verify_sha256
+from floodsr.dem_sources import fetch_dem
+from floodsr.engine import get_onnxruntime_info, get_rasterio_info
+from floodsr.model_registry import (
+    fetch_model,
+    list_models,
+    list_runnable_model_versions,
+    load_models_manifest,
+    model_worker_exists,
+)
+from floodsr.tohr import tohr
 
 
 log = logging.getLogger(__name__)
@@ -34,32 +39,47 @@ def _configure_logging(args: argparse.Namespace) -> None:
         logging.basicConfig(level=effective_level)
 
 
-def _resolve_infer_model_path(args: argparse.Namespace) -> Path:
-    """Resolve infer model path from explicit file path or manifest version."""
+def _resolve_tohr_model_spec(args: argparse.Namespace) -> tuple[str, Path]:
+    """Resolve ToHR model version/path from explicit file path or manifest/cache policy."""
     if args.model_path is not None:
         model_fp = Path(args.model_path).expanduser().resolve()
         assert model_fp.exists(), f"model path does not exist: {model_fp}"
-        return model_fp
-    if args.model_version is None:
-        models = load_models_manifest(manifest_fp=args.manifest)
-        assert models, "manifest has no model entries"
+        if args.model_version is not None:
+            if not model_worker_exists(args.model_version):
+                raise ValueError(f"no model worker found for --model-version={args.model_version}")
+            return args.model_version, model_fp
 
-        first_version = next(iter(models))
+        runnable_versions = list_runnable_model_versions(manifest_fp=args.manifest)
+        assert runnable_versions, "manifest has no runnable model entries"
+        return runnable_versions[0], model_fp
+
+    models = load_models_manifest(manifest_fp=args.manifest)
+    assert models, "manifest has no model entries"
+    runnable_versions = [version for version in models if model_worker_exists(version)]
+    assert runnable_versions, "manifest has no runnable model entries (worker module missing)"
+
+    if args.model_version is None:
+        # Try first listed runnable model first, then fallback to first valid cached runnable model.
+        first_version = runnable_versions[0]
         first_payload = models[first_version]
         first_fp = get_model_cache_path(first_version, first_payload["file_name"], cache_dir=args.cache_dir)
         if first_fp.exists() and verify_sha256(first_fp, first_payload["sha256"]):
-            return first_fp
+            return first_version, first_fp
 
-        for version, payload in models.items():
+        for version in runnable_versions:
+            payload = models[version]
             cached_fp = get_model_cache_path(version, payload["file_name"], cache_dir=args.cache_dir)
             if cached_fp.exists() and verify_sha256(cached_fp, payload["sha256"]):
-                return cached_fp
+                return version, cached_fp
 
         raise FileNotFoundError(
-            "no cached model found and --model-version was not provided. "
+            "no cached runnable model found and --model-version was not provided. "
             "run `floodsr models fetch <model_version>` or pass --model-path."
         )
-    return fetch_model(
+
+    if not model_worker_exists(args.model_version):
+        raise ValueError(f"no model worker found for --model-version={args.model_version}")
+    return args.model_version, fetch_model(
         args.model_version,
         cache_dir=args.cache_dir,
         manifest_fp=args.manifest,
@@ -95,12 +115,12 @@ def main_cli(args: argparse.Namespace) -> int:
         print(model_fp)
         return 0
 
-    # Route infer command.
-    if args.command == "infer":
+    # Route main ToHR command.
+    if args.command == "tohr":
         if args.fetch_out is not None and not args.fetch_hrdem:
             raise ValueError("--fetch-out requires --fetch-hrdem")
 
-        model_fp = _resolve_infer_model_path(args)
+        model_version, model_fp = _resolve_tohr_model_spec(args)
         output_fp = args.out if args.out is not None else _resolve_default_output_path(args.in_fp)
         dem_fp = args.dem
         if args.fetch_hrdem:
@@ -112,7 +132,8 @@ def main_cli(args: argparse.Namespace) -> int:
             )
             dem_fp = fetch_result.dem_fp
 
-        result = infer(
+        result = tohr(
+            model_version=model_version,
             model_fp=model_fp,
             depth_lr_fp=args.in_fp,
             dem_hr_fp=dem_fp,
@@ -124,7 +145,6 @@ def main_cli(args: argparse.Namespace) -> int:
             tile_size=args.tile_size,
             logger=log,
         )
-
         print(result["output_fp"])
         return 0
 
@@ -217,10 +237,10 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
         help="Force redownload even when a valid cache file exists.",
     )
 
-    # Register inference command.
-    infer_parser = subparsers.add_parser("infer", help="Run one raster inference pass.")
-    infer_parser.add_argument("--in", dest="in_fp", type=Path, required=True, help="Low-res depth raster path.")
-    dem_group = infer_parser.add_mutually_exclusive_group(required=True)
+    # Register ToHR command.
+    tohr_parser = subparsers.add_parser("tohr", help="Run one raster ToHR pass.")
+    tohr_parser.add_argument("--in", dest="in_fp", type=Path, required=True, help="Low-res depth raster path.")
+    dem_group = tohr_parser.add_mutually_exclusive_group(required=True)
     dem_group.add_argument("--dem", type=Path, default=None, help="High-res DEM raster path.")
     dem_group.add_argument(
         "-f",
@@ -228,77 +248,77 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Fetch HRDEM from STAC using the low-res raster footprint.",
     )
-    infer_parser.add_argument(
+    tohr_parser.add_argument(
         "--fetch-out",
         type=Path,
         default=None,
         help="Optional output path for fetched HRDEM tile. Defaults to temp directory.",
     )
-    infer_parser.add_argument(
+    tohr_parser.add_argument(
         "--out",
         type=Path,
         default=None,
         help="Output high-res depth raster path. Defaults to ./<input_stem>_sr with input extension",
     )
-    infer_parser.add_argument(
+    tohr_parser.add_argument(
         "--model-version",
         default=None,
         help="Model version key from manifest when --model-path is not provided.",
     )
-    infer_parser.add_argument(
+    tohr_parser.add_argument(
         "--model-path",
         type=Path,
         default=None,
         help="Explicit local ONNX model path.",
     )
-    infer_parser.add_argument(
+    tohr_parser.add_argument(
         "--manifest",
         type=Path,
         default=None,
         help="Optional path to an alternate models.json manifest.",
     )
-    infer_parser.add_argument(
+    tohr_parser.add_argument(
         "--cache-dir",
         type=Path,
         default=None,
         help="Optional cache directory for downloaded weights.",
     )
-    infer_parser.add_argument(
+    tohr_parser.add_argument(
         "--backend",
         choices=("http", "file"),
         default=None,
         help="Override retrieval backend selection for model fetch.",
     )
-    infer_parser.add_argument(
+    tohr_parser.add_argument(
         "--force",
         action="store_true",
         help="Force redownload when fetching a versioned model.",
     )
-    infer_parser.add_argument(
+    tohr_parser.add_argument(
         "--max-depth",
         type=float,
         default=None,
         help="Optional max depth override for log-space scaling.",
     )
-    infer_parser.add_argument(
+    tohr_parser.add_argument(
         "--dem-pct-clip",
         type=float,
         default=None,
         help="Optional DEM percentile clip override when train stats are incomplete.",
     )
-    infer_parser.add_argument(
+    tohr_parser.add_argument(
         "--window-method",
         choices=("hard", "feather"),
         default="feather",
-        help="Tile mosaicing method for inference.",
+        help="Tile mosaicing method for ToHR.",
     )
-    infer_parser.add_argument(
+    tohr_parser.add_argument(
         "--tile-overlap",
         type=int,
         default=None,
         help="Feather overlap in low-res pixels. Ignored unless --window-method=feather.",
     )
-    infer_parser.add_argument(
+    tohr_parser.add_argument(
         "--tile-size",
         type=int,
         default=None,

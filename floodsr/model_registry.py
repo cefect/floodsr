@@ -1,6 +1,6 @@
-"""Model manifest resolution and retrieval backends."""
+"""Model manifest resolution, worker discovery, and retrieval backends."""
 
-import json, logging, os, shutil, subprocess, sys
+import importlib.util, json, logging, os, shutil, subprocess, sys
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.error import HTTPError, URLError
@@ -334,3 +334,47 @@ def fetch_model(
         if part_fp.exists():
             part_fp.unlink()
     return model_fp
+
+
+def get_model_worker_path(model_version: str) -> Path:
+    """Return the expected worker module path for a model version."""
+    assert model_version, "model_version cannot be empty"
+    return Path(__file__).with_name("models") / f"{model_version}.py"
+
+
+def model_worker_exists(model_version: str) -> bool:
+    """Return whether a worker module file exists for this model version."""
+    return get_model_worker_path(model_version).exists()
+
+
+def list_runnable_model_versions(manifest_fp: str | Path | None = None) -> list[str]:
+    """Return manifest model versions that have matching worker modules."""
+    runnable_versions: list[str] = []
+    for version in load_models_manifest(manifest_fp):
+        if model_worker_exists(version):
+            runnable_versions.append(version)
+    return runnable_versions
+
+
+def resolve_model_worker_class(model_version: str):
+    """Load and return `ModelWorker` class for a model version."""
+    worker_fp = get_model_worker_path(model_version)
+    if not worker_fp.exists():
+        raise FileNotFoundError(f"missing model worker module for '{model_version}': {worker_fp}")
+
+    module_name = f"floodsr.models._worker_{model_version}"
+    spec = importlib.util.spec_from_file_location(module_name, worker_fp)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"unable to load worker module spec from: {worker_fp}")
+
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    worker_class = getattr(module, "ModelWorker", None)
+    if worker_class is None:
+        raise AttributeError(f"worker module '{worker_fp}' must define `ModelWorker`")
+
+    from floodsr.models.base import Model
+
+    if not isinstance(worker_class, type) or not issubclass(worker_class, Model):
+        raise TypeError(f"`ModelWorker` in '{worker_fp}' must subclass floodsr.models.base.Model")
+    return worker_class

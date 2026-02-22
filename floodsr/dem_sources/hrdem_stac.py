@@ -82,10 +82,7 @@ def _query_hrdem_assets(
     asset_key: str,
 ) -> tuple[list[str], list[str]]:
     """Query STAC and return intersecting item ids with asset hrefs."""
-    try:
-        from pystac_client import Client
-    except ImportError as err:  # pragma: no cover - guarded by runtime dependency.
-        raise RuntimeError("pystac_client is required for --fetch-hrdem") from err
+    from pystac_client import Client
 
     client = Client.open(stac_url)
     search = client.search(
