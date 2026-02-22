@@ -16,10 +16,4 @@ Out of scope:
 - runtime performance/validation against a known tile
 - plotting/visualization of results (a tiny bit for dev only)
 
-## CLI
-
-### infer
-- no `truth` or `metrics`. just inference
-- if `--model-version` not specified, use first listed in `models.json` if found in cache, otherwise fallback to first in cache.  if nothing in cache, error with instructions to fetch a model.
-- provide progress bar and final diagnostics on completion (runtime, shape in, shape out, model version used, file size out)
-- default output should be in cwd with the same name (and filetype and properties... other than shape) as the input but with `_sr.tif` suffix. allow `--out` to specify a different path.
+ 

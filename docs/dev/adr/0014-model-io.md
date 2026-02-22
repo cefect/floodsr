@@ -1,13 +1,18 @@
 # ADR-0001: inference model I/O
  
-
  
 
 ## Decision
 
 - Artifact format: ONNX model files.
 - Runtime for MVP: ONNX Runtime (CPU).
- 
+
+# model: 16x DEM-conditioned ResUNet [4690176_0_1770580046_train_base_16] 
+
+
+For platform-model boundary pre-processing, see `docs/dev/adr/0009-preproccessing.md`
+
+
 ## inference-engine boundary
 - Model I/O Contract (from `dev/infer_test_tiles.ipynb`) for `4690176_0_1770580046_train_base_16`
 - NOTE: may have other contracts as additional models are added.
@@ -46,6 +51,14 @@
   - ORT session is created with `providers=["CPUExecutionProvider"]`
   - input names and static dimensions are validated against ORT session metadata before `session.run(...)`
 
+## workflow
+see `others/inference_inline.ipynb`
+  - model specific pre-processing  
+  - tiling/windowing
+  - core inference
+  - mosaicking/stitching
+  - model specific post-processing  (e.g., de-normalization)
+
 ## nodata normalization/handling
 read nodata from DEM mask 
 set mask to nodata then replace nodata with:
@@ -64,8 +77,6 @@ do the same for depths (using the DEM mask)
 run inference on the filled rasters (ignore mask)
 re-apply  mask in post-processing (masked pixels should also be set to nodata using the nodata value from the DEM)
 
-### pre-processing
-see `docs/dev/adr/0009-preproccessing.md`
 
 
 

@@ -17,10 +17,12 @@ Model artifacts need versioned discovery and integrity guarantees prior to infer
 
 Current reference model:
 
-- `4690176_0_1770580046_train_base_16`
+-  16x DEM-conditioned ResUNet [4690176_0_1770580046_train_base_16]
   - ONNX inference artifact from release `v2026.02.19`
   - release may include extra files not consumed by inference
   - repository/access may be private
+
+see `docs/dev/adr/0014-model-io.md`
 
 ## Consequences
 

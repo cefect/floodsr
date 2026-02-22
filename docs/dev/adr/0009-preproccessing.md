@@ -1,49 +1,68 @@
-# ADR 0009: Pre-processing and input validation
+# ADR 0009: Pre-processing, input validation, and platform-model boundary
+To support modularization and multiple inference engines, pre-processing has two stages:
+- model-agnostic platform level (see below) to obtain the **platform-model boundary**.
+- model-specific input transformations (e.g., log-scaling, normalization, etc.) that are required to meet the **inference-engine boundary**. see `0014-model-io.md`. these happen after platform level. 
+
+see `docs/dev/adr/0001-architecture-and-cli.md`
 
 
-#### geospatial conformity and nodata handling
-Users may pass inputs that are slightly misaligned from model expectations, which are:
+## platform-model boundary
+Requirements:
+- Tool should support sloppy data from the user... as much as possible. otherwise people won't use it.
+- cleaning and pre-processing should be as shared as possible. i.e., model-specific pre-processing/cleaning should be minimized. 
+
+### contract
+the boundary is defined as:
 - identical bbox  
 - identical crs
 - square pixels
-- consitent nodata metaddata and masks
-  - nodata != 0 (this is a valid depth)
+- all masked pixels are also nodata (and raster has a defined nodata value)
   - nodata value (e.g., -9999) is the same between dem and depths
-  - one “invalid-data signal”. one of the below or throw an error:
+
+
+## input handling
+### inputs that should be rejected:
+
+raise a verbose assertion error telling the user to fix if the following are not met by input rasters:
+- identical crs
+- projected crs
+- nodata != 0 (this is a valid depth)
+- everything is invalid/masked
+- one invalid data-signal criteria:
     - none (i.e., everything valid)
     - all masked pixels are also nodata
     - some nodata and NO masked
     - some masked and NO nodata
 
-
-raise a verbose assertion error telling the user to fix if the following are not met by input rasters:
-- identical crs
-- projected crs
-- one invalid data-signal criteria
-- nodata ==0
-
+### inputs that are accepted and warned:
 raise a warning and correct if the following are not met:
 - square pixels: resample to square
 - identical bbox: take lores depth bbox as ground truth and crop/resample dem to match
 - nodata signal/mask differs between dem and depth: take 'invalid data signal' of DEM as ground truth, and convert to a mask layer.
 
-#### nodata normalization/handling
-read nodata from DEM mask (see above)
-set mask to nodata then replace nodata with:
-```bash
-gdal raster fill-nodata \
-  --overwrite \
-  --strategy invdist \
-  --format GTiff \
-  --co TILED=YES \
-  --co BIGTIFF=IF_SAFER \
-  --smoothing-iterations 0 \
-  "$dem_fp" "$out_fp" \
-  > "$log_fp" 2>&1
-```
-do the same for depths (using the DEM mask)
-run inference on the filled rasters (ignore mask)
-re-apply  mask in post-processing (masked pixels should also be set to nodata using the nodata value from the DEM)
+
+#### validating input value ranges
+input depths:
+- if max>15: 'warning: input depth values exceed 15. ensure this is a depths not a water surface raster'
+- throw an error if not float type
+- assertion error if min<0.01
+- warning if min<0.1 
+- warning if no zeros 
+- error if no valid (after nodata/mask harmonization)
+
+input dem:
+- warn if > 10pct of pixels ==0
+- warn if max> 9000 (unlikely to be a terrestrial DEM)
+- warn if min< -100 (unlikely to be a terrestrial DEM)
+
+
+## nodata normalization/handling
+Requirements:
+- models can differ on how they treat/handle nodata.
+  - e.g., 4690176_0_1770580046_train_base_16 expects all real at the 
+
+## pre-processing to obtain the platform-model boundary contract
+
 
 
 #### resampling and scale
@@ -70,16 +89,3 @@ post-inference, assert:
 - output bbox == incoming lores depth bbox
 - output shape == preprocessed DEM shape
 
-#### validating input value ranges
-input depths:
-- if max>15: 'warning: input depth values exceed 15. ensure this is a depths not a water surface raster'
-- throw an error if not float type
-- assertion error if min<0.01
-- warning if min<0.1 
-- warning if no zeros 
-- error if no valid (after nodata/mask harmonization)
-
-input dem:
-- warn if > 10pct of pixels ==0
-- warn if max> 9000 (unlikely to be a terrestrial DEM)
-- warn if min< -100 (unlikely to be a terrestrial DEM)
