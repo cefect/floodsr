@@ -17,7 +17,7 @@ Install With pipx (Recommended)
 
    pipx install floodsr
 
-Reference: https://pypa.github.io/pipx/
+Reference: https://pipx.pypa.io/
 
 Install With pip (Advanced)
 ---------------------------
