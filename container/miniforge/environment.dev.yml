@@ -1,7 +1,6 @@
 channels:
   - conda-forge
 dependencies:
-
   - jupyterlab=4.5.4
   - notebook=7.5.3
   - ipykernel=7.2.0
@@ -13,6 +12,11 @@ dependencies:
   - pillow=12.1.1
   - matplotlib
   - pytest
+  # PyPI package build + publish tooling.
+  - python-build
+  - twine
+  - setuptools
+  - wheel
   - pyproj
   - pip
   - pip:

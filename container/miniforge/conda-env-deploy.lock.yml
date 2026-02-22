@@ -128,6 +128,7 @@ dependencies:
   - sympy=1.14.0=pyh2585a3b_105
   - tk=8.6.13=noxft_h366c992_103
   - tomli=2.4.0=pyhcf101f3_0
+  - tqdm=4.67.3=pyh8f84b5b_0
   - typer=0.24.0=pyhcf101f3_0
   - typing-extensions=4.15.0=h396c80c_0
   - typing-inspection=0.4.2=pyhd8ed1ab_1

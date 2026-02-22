@@ -37,6 +37,10 @@ Fetch a model by version into the default cache:
 floodsr models fetch 4690176_0_1770580046_train_base_16 --force
 ```
 
+inference using HRDEM as DEM
+```bash
+floodsr infer -f --in tests/data/2407_FHIMP_tile/lowres032.tif 
+```
 
 Run one inference pass from raster inputs:
 
@@ -63,6 +67,8 @@ floodsr infer \
   --out ./tmp/pred_sr.tif \
   --model-path _inputs/4690176_0_1770580046_train_base_16/model_infer.onnx
 ```
+
+
 
 Doctor diagnostics:
 
