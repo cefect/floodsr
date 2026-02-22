@@ -64,22 +64,13 @@ RUN set -eux; \
     usermod -u "${USER_UID}" "${USERNAME}" || true; \
     groupmod -g "${USER_GID}" "${USERNAME}" || true
 
-# Add sudo + common CLI tooling.
+# Add only minimal CLI tooling needed for docs authoring workflows.
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
         sudo \
         git \
-        gh \
-        git-lfs \
-        openssh-client \
-        wget \
-        ca-certificates \
-        tar \
-        curl \
-        rsync \
-        procps \
-        strace
+        ca-certificates
 
 RUN echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-${USERNAME} \
     && chmod 0440 /etc/sudoers.d/90-${USERNAME}

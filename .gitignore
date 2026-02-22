@@ -36,7 +36,7 @@ venv.bak/
 *.aux.xml
 
 # docs
-docs/_build/
+docs/user/_build
 
 #windows shortcuts
 *.lnk
