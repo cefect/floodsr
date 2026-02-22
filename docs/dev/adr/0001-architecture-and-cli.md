@@ -28,7 +28,7 @@ see also:
   - model contracts per `0005-model-registry.md`
 - Pre-processing subsystem:
   - `preprocessing.py` (shared helpers)
-  - `preprocess.py` (single script entrypoint for platform-model boundary preparation)
+  - pre-processing is internal to `tohr` and is not exposed as a standalone CLI entrypoint
 - Engine subsystem:
   - `engine/base.py`
   - `engine/ort.py`
@@ -73,7 +73,7 @@ Under the hood, should implement a workflow like:
 - 1. resolve model artifact and model worker
   - if `--model-version` not specified, use first listed in `models.json` if found in cache, otherwise fallback to first in cache.  if nothing in cache, error with instructions to fetch a model.
 - 2. optional DEM fetch.
-- 3. run platform pre-processing via dedicated preprocess script (`preprocess.py`) to produce platform-model boundary artifacts. see `0009-preproccessing.md`.
+- 3. run platform pre-processing inside the `tohr` workflow via shared helpers in `floodsr/preprocessing.py` to produce platform-model boundary artifacts. see `0009-preproccessing.md`.
 - 4. instantiate model worker from the resolved version (subclass of `Model`) and execute model-specific super-resolution via `with ...: worker.run(...)`.
   - select engine runtime/provider policy per `0015-engine-runtime.md` (owned by model worker internals)
   - model workers must call shared tiling utilities from `tiling.py`.
@@ -81,4 +81,4 @@ Under the hood, should implement a workflow like:
 - 6. diagnostics/reporting/cleanup.
 
 In summary:
-resolve model -> preprocess -> `with model_worker: model_worker.run(...)` -> write output -> diagnostics
+resolve model -> internal preprocess -> `with model_worker: model_worker.run(...)` -> write output -> diagnostics
