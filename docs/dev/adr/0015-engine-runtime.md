@@ -35,10 +35,12 @@ Model concerns are defined in `ADR-0005`.
 - Build/validate feed dictionaries for runtime execution.
 - Execute forward pass and return prediction tensors/results.
 - Report runtime/provider diagnostics.
+- Release runtime resources when model worker context exits.
 
 ## Non-Responsibilities (Handled Outside Engine)
 
 - Model registry, manifest resolution, and checksum validation.
+- Model worker lifecycle (`Model` subclass creation, `run()`, and context ownership).
 - DEM/depth file I/O and geospatial alignment.
 - Global scene tiling and mosaicking strategy.
 - Output raster writing and CLI orchestration.
