@@ -1,4 +1,5 @@
 # releasing/publishing
+see `docs/dev/adr/0013-publishing.md`
 
 ## manual publish to test pypi
 
