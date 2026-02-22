@@ -206,17 +206,17 @@ RUN set -eux; \
 
 
 
-# setup analysis conda environment
-COPY container/miniforge/environment.analysis.yml /tmp/environment.analysis.yml
+# setup dev conda environment
+COPY container/miniforge/environment.dev.yml /tmp/environment.dev.yml
 
 RUN --mount=type=cache,id=miniforge-conda-pkgs,target=/opt/conda/pkgs,sharing=locked \
     --mount=type=cache,id=miniforge-pip-cache,target=/root/.cache/pip,sharing=locked \
-    conda env export --name ${env_name} --no-builds > /tmp/environment.base.lock.yml && \
-    mamba env create -yv --strict-channel-priority --name analysis --file /tmp/environment.base.lock.yml && \
-    mamba env update -yv --name analysis --file /tmp/environment.analysis.yml && \
-    rm -f /tmp/environment.base.lock.yml /tmp/environment.analysis.yml
+    PIP_CACHE_DIR=/root/.cache/pip conda env export --name ${env_name} --no-builds > /tmp/environment.base.lock.yml && \
+    mamba env create -yv --strict-channel-priority --name dev --file /tmp/environment.base.lock.yml && \
+    PIP_CACHE_DIR=/root/.cache/pip PIP_ROOT_USER_ACTION=ignore mamba env update -yv --name dev --file /tmp/environment.dev.yml && \
+    rm -f /tmp/environment.base.lock.yml /tmp/environment.dev.yml
 
-RUN conda env config vars set PYTHONPATH=/workspace --name analysis
+RUN conda env config vars set PYTHONPATH=/workspace --name dev
 
 
 #setup git: ship in a global gitconfig
@@ -224,8 +224,8 @@ COPY container/etc-gitconfig /etc/gitconfig
 RUN chmod 644 /etc/gitconfig
 RUN git lfs install --system
 
-# Register a dedicated Jupyter kernel for the analysis environment.
-RUN conda run -n analysis python -m ipykernel install --sys-prefix --name analysis --display-name "Python (analysis)"
+# Register a dedicated Jupyter kernel for the dev environment.
+RUN conda run -n dev python -m ipykernel install --sys-prefix --name dev --display-name "Python (dev)"
  
 
 # Install pipx system-wide into the base environment

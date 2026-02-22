@@ -47,6 +47,7 @@ six @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_six_17
 snuggs @ file:///home/conda/feedstock_root/build_artifacts/snuggs_1733818638588/work
 sympy @ file:///home/conda/feedstock_root/build_artifacts/sympy_1745946051654/work
 tomli @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_tomli_1768146676/work
+tqdm @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_tqdm_1770153424/work
 typer==0.24.0
 typing-inspection @ file:///home/conda/feedstock_root/build_artifacts/typing-inspection_1764158251755/work
 typing_extensions @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_typing_extensions_1756220668/work
