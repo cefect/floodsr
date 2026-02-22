@@ -1,19 +1,18 @@
-# ADR-0001: Runtime and CLI Contract
+# ADR-0001: inference model I/O
  
 
-The project needs an MVP inference path that works cross-platform and can be called both from shell scripts and a QGIS plugin subprocess.
+ 
 
 ## Decision
 
 - Artifact format: ONNX model files.
 - Runtime for MVP: ONNX Runtime (CPU).
-- User-facing endpoint: CLI.
-- Cross-platform target: Windows and Unix.
-- GPU support is deferred, but architecture must keep a stable CLI contract while allowing future execution provider swaps (CUDA on Linux, DirectML on Windows, etc.).
+ 
+## inference-engine boundary
+- Model I/O Contract (from `dev/infer_test_tiles.ipynb`) for `4690176_0_1770580046_train_base_16`
+- NOTE: may have other contracts as additional models are added.
 
-## Model I/O Contract (from `dev/infer_test_tiles.ipynb`)
-NOTE: may have other contracts as additional models are added.
-
+### contract
 - Model I/O names:
   - inputs: `depth_lr`, `dem_hr`
   - output: `depth_hr_pred`
@@ -47,11 +46,27 @@ NOTE: may have other contracts as additional models are added.
   - ORT session is created with `providers=["CPUExecutionProvider"]`
   - input names and static dimensions are validated against ORT session metadata before `session.run(...)`
 
+## nodata normalization/handling
+read nodata from DEM mask 
+set mask to nodata then replace nodata with:
+```bash
+gdal raster fill-nodata \
+  --overwrite \
+  --strategy invdist \
+  --format GTiff \
+  --co TILED=YES \
+  --co BIGTIFF=IF_SAFER \
+  --smoothing-iterations 0 \
+  "$dem_fp" "$out_fp" \
+  > "$log_fp" 2>&1
+```
+do the same for depths (using the DEM mask)
+run inference on the filled rasters (ignore mask)
+re-apply  mask in post-processing (masked pixels should also be set to nodata using the nodata value from the DEM)
+
 ### pre-processing
 see `docs/dev/adr/0009-preproccessing.md`
 
-## Consequences
 
-- The inference engine implementation can evolve without breaking CLI callers.
-- CPU path is prioritized for reliability and packaging simplicity.
-- Future GPU support should be additive, not a rewrite.
+
+ 
