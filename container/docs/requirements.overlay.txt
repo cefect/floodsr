@@ -1,4 +1,4 @@
 # Overlay-only dependencies for documentation builds.
-sphinx>=7,<8
-sphinx-rtd-theme>=2,<3
-myst-parser>=3,<5
+sphinx==7.4.7
+sphinx-rtd-theme==2.0.0
+myst-parser==4.0.1
