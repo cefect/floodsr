@@ -38,16 +38,17 @@ ADR refs: `docs/dev/adr/0008-tiling.md`
 ### Phase 6 - Packaging and install story
 ADR refs: `docs/dev/adr/0002-packaging-and-installation-strategy.md`
 
- 
-- [ ] document `pipx` and fallback `venv` install paths
+- [ ] publish to PyPi (manually). see `docs/dev/adr/0013-publishing.md`
 
-
+### add CostGrow model  
 
 ### Documentation
  
 
 
-### CI/CD tests
+### CI/CD
+- [ ] nice test coverage with fast feedback loops
+- [ ] automate build/test/publish to PyPi  w/ trusted publishing. see `docs/dev/adr/0013-publishing.md`
 
 ### cache behavior
 see `docs/dev/adr/0012-cache-policy-and-lifecycle.md`

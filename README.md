@@ -14,6 +14,21 @@ Implemented backend:
 ## Installation
 
 ```bash
+# recommended: isolated CLI install for users
+python -m pip install --user pipx
+pipx ensurepath
+pipx install floodsr
+```
+
+TestPyPI install:
+
+```bash
+pipx install --index-url https://test.pypi.org/simple/ --pip-args="--extra-index-url https://pypi.org/simple" floodsr
+```
+
+Developer install:
+
+```bash
 pip install -e ".[dev]"
 ```
 
