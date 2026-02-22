@@ -42,6 +42,9 @@ ADR refs: `docs/dev/adr/0002-packaging-and-installation-strategy.md`
 
 ### add CostGrow model  
 
+### preprocessing
+- [ ] allow ingestion of water surface rasters (with a flaga). and convert these. 
+
 ### Documentation
  
 

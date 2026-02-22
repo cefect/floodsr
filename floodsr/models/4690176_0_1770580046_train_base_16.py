@@ -1,4 +1,75 @@
-"""Model worker for 16x DEM-conditioned ResUNet (`4690176_0_1770580046_train_base_16`)."""
+"""16x DEM-conditioned ResUNet 
+
+ 
+
+Architecture Description:
+This model performs 16x single-channel depth super-resolution with DEM
+conditioning. It consumes two inputs:
+- `depth_lr`: low-resolution depth chip, default shape `(32, 32, 1)`.
+- `dem_hr`: high-resolution DEM chip aligned to the target grid, default shape
+  `(512, 512, 1)` for 16x.
+
+Depth chips are clipped to `[0, max_depth]`, transformed with `log1p`, and
+scaled to `[0, 1]`. DEM chips are clipped at a robust upper percentile
+(`dem_pct_clip`) and min-max normalized per chip. The architecture is a
+dual-scale, DEM-aware ResUNet:
+- `dem_hr` is average-pooled to LR (`dem_lr`) and concatenated with `depth_lr`
+  as encoder input.
+- The encoder/decoder backbone is a 4-level UNet with residual blocks at each
+  scale; channel widths are `f, 2f, 4f, 8f, 16f` (`f=base_filters`).
+- After decoder reconstruction at LR, a transposed convolution upsamples by 16x
+  to HR.
+- The upsampled feature map is fused again with `dem_hr` before the final
+  1-channel linear prediction head (`depth_hr_pred`), so topography informs both
+  coarse and fine prediction stages.
+
+ 
+
+Training run summary:
+Training uses Adam with `clipnorm=1.0` and a piecewise-constant learning-rate
+schedule (`1e-4` then `5e-5` halfway through total steps). Loss is MAE, with
+metrics `PSNR`, `SSIM`, `RMSE`, `RMSE_wet`, and `CSI`. The train pipeline uses
+deterministic index splitting, optional tf.data cache, optional flip/rot90
+augmentation on training only, repeat+batch+prefetch, and configurable
+`steps_per_epoch`.
+
+Inference:
+1. Model specific pre-processing
+- Load `train_config.json` and resolve model parameters (`SCALE`, LR/HR tile geometry, `MAX_DEPTH`, DEM clip settings).
+- Validate input raster compatibility (CRS, bounds, and grid checks).
+- Keep LR depth on raw LR grid.
+- Resample HR depth and DEM to model-space HR grid derived from `raw_lr_shape * SCALE`.
+- Apply depth normalization using `log1p(clip(depth, 0, MAX_DEPTH)) / log1p(MAX_DEPTH)`.
+- Keep DEM normalization as tile-local (computed inside the inference loop), matching notebook behavior.
+
+2. Tiling/windowing
+- Pad model-space arrays so LR/HR windows align exactly with fixed model tile sizes.
+- Build non-overlap HR window origins and map each HR origin to LR origin by integer `SCALE`.
+- Build feathered overlap window grid with fixed overlap/stride and forced trailing-edge coverage.
+- Reuse cached tile predictions by `(y0, x0)` key to avoid duplicate model calls across passes.
+
+3. Core inference at model-engine boundary
+- For each window, slice aligned LR depth and HR DEM tiles.
+- Normalize LR/DEM inputs to `[0, 1]` using tile-local DEM stats.
+- Expand to batched NHWC tensors and execute model forward pass at the boundary contract.
+- Validate/persist per-tile prediction outputs and cache them for downstream stitching/diagnostics.
+
+4. Mosaicking/stitching
+- Run an initial non-overlap chip pass to populate chip outputs and diagnostics arrays.
+- Run feathered mosaicking pass over overlap windows using separable 1D feather ramps.
+- Flatten boundary feather weights on scene edges to avoid dimming at domain boundaries.
+- Accumulate weighted predictions and normalize by accumulated weight sum.
+- Crop stitched output back to valid model-space extent.
+
+5. Model specific post-processing
+- Convert stitched SR output to depth meters and clamp depth range.
+- Resample model-space SR depth back to raw HR grid (post-resample step).
+- Apply low-depth mask in meter domain.
+- Re-normalize to `[0, 1]` where needed for metric helper compatibility.
+- Compute/export full-scene diagnostics (including bilinear baseline comparison) and write output when enabled.
+
+ 
+"""
 
 import logging, math, tempfile, time
 from pathlib import Path
