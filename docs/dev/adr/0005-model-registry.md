@@ -46,12 +46,12 @@ FloodSR needs a stable model layer that:
   - example: `floodsr/models/4690176_0_1770580046_train_base_16.py`
 - Subclass behavior:
   - override `run(...)`
-  - organize model-specific flow into submethods for the five typical SR stages:
-    - model specific pre-processing
-    - tiling/windowing
-    - core inference at model-engine boundary
-    - mosaicking/stitching
-    - model specific post-processing
+  - organize model-specific flow into submethods:
+    - Model specific pre-processing
+    - Tiling/windowing
+    - Core inference at model-engine boundary
+    - Mosaicking/stitching
+    - Model specific post-processing
   - call shared tiling/windowing/mosaicking helpers from `tiling.py` (do not duplicate tiling implementations inside workers)
   - tiling method is fixed by implementation (not a user-facing toggle); only tiling parameters are configurable
 
@@ -91,3 +91,39 @@ FloodSR needs a stable model layer that:
 - Value-domain:
   - entry tensors finite and normalized to `[0, 1]`
   - output tensor normalized/log-space before inverse transform
+
+#### Workflow (from `others/inference_inline_norm_loop.ipynb`)
+
+1. Model specific pre-processing
+- Load `train_config.json` and resolve model parameters (`SCALE`, LR/HR tile geometry, `MAX_DEPTH`, DEM clip settings).
+- Validate input raster compatibility (CRS, bounds, and grid checks).
+- Keep LR depth on raw LR grid.
+- Resample HR depth and DEM to model-space HR grid derived from `raw_lr_shape * SCALE`.
+- Apply depth normalization using `log1p(clip(depth, 0, MAX_DEPTH)) / log1p(MAX_DEPTH)`.
+- Keep DEM normalization as tile-local (computed inside the inference loop), matching notebook behavior.
+
+2. Tiling/windowing
+- Pad model-space arrays so LR/HR windows align exactly with fixed model tile sizes.
+- Build non-overlap HR window origins and map each HR origin to LR origin by integer `SCALE`.
+- Build feathered overlap window grid with fixed overlap/stride and forced trailing-edge coverage.
+- Reuse cached tile predictions by `(y0, x0)` key to avoid duplicate model calls across passes.
+
+3. Core inference at model-engine boundary
+- For each window, slice aligned LR depth and HR DEM tiles.
+- Normalize LR/DEM inputs to `[0, 1]` using tile-local DEM stats.
+- Expand to batched NHWC tensors and execute model forward pass at the boundary contract.
+- Validate/persist per-tile prediction outputs and cache them for downstream stitching/diagnostics.
+
+4. Mosaicking/stitching
+- Run an initial non-overlap chip pass to populate chip outputs and diagnostics arrays.
+- Run feathered mosaicking pass over overlap windows using separable 1D feather ramps.
+- Flatten boundary feather weights on scene edges to avoid dimming at domain boundaries.
+- Accumulate weighted predictions and normalize by accumulated weight sum.
+- Crop stitched output back to valid model-space extent.
+
+5. Model specific post-processing
+- Convert stitched SR output to depth meters and clamp depth range.
+- Resample model-space SR depth back to raw HR grid (post-resample step).
+- Apply low-depth mask in meter domain.
+- Re-normalize to `[0, 1]` where needed for metric helper compatibility.
+- Compute/export full-scene diagnostics (including bilinear baseline comparison) and write output when enabled.
