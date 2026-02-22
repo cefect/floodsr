@@ -22,3 +22,7 @@ docker buildx build --load -t "$IMAGE_NAME" -f docs/user/container/Dockerfile --
 docker run --rm -v "$PWD":/workspace -w /workspace --entrypoint /bin/bash "$IMAGE_NAME" \
   -lc "sphinx-build -b html docs/user docs/user/_build/html"
 ```
+
+
+# .devcontainer
+see `.devcontainer/docs`
