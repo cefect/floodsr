@@ -68,20 +68,21 @@ requirements:
 
 ### inference workflow
 Under the hood, should implement a workflow like:
-- resolve model artifact and model worker
+- 1. resolve model artifact and model worker
   - if `--model-version` not specified, use first listed in `models.json` if found in cache, otherwise fallback to first in cache.  if nothing in cache, error with instructions to fetch a model.
-- instantiate model worker from the resolved version (subclass of `Model`) and run it under context management.
-- select engine runtime/provider policy per `0015-engine-runtime.md` (owned by model worker internals)
-- platform pre-processing: general data conformance checks and corrections (e.g., reprojection, nodata handling, bbox, etc.). see `0009-preproccessing.md`
+- 2. optional DEM fetch. 
+- 3. instantiate model worker from the resolved version (subclass of `Model`) and run it under context management.
+  - select engine runtime/provider policy per `0015-engine-runtime.md` (owned by model worker internals)
+- 4. platform pre-processing: general data conformance checks and corrections (e.g., reprojection, nodata handling, bbox, etc.). see `0009-preproccessing.md`
 - **platform-model boundary**
-- model super resolution: not all models will require all these. 
+- 5. model super resolution: not all models will require all these. 
   - model specific pre-processing  (nice for interpolation work that can be applied raster wide efficnetly). 
   - tiling/windowing
   - **model-engine boundary**. see `0005-model-registry.md`
   - core inference
   - mosaicking/stitching
   - model specific post-processing  (e.g., de-normalization)
-- final diagnostics, reporting, output writing, and cleanup.
+- 6. final diagnostics, reporting, output writing, and cleanup.
 
 In summary:
 fetch model -> create model worker -> `with model_worker: model_worker.run(...)` -> output
