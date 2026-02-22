@@ -1,7 +1,7 @@
 # ADR 0009: Pre-processing, input validation, and platform-model boundary
 To support modularization and multiple inference engines, pre-processing has two stages:
 - model-agnostic platform level (see below) to obtain the **platform-model boundary**.
-- model-specific input transformations (e.g., log-scaling, normalization, etc.) that are required to meet the **inference-engine boundary**. see `0014-model-io.md`. these happen after platform level. 
+- model-specific input transformations (e.g., log-scaling, normalization, etc.) that are required to meet the **model-engine boundary**. see `0005-model-registry.md` and `0015-engine-runtime.md`. these happen after platform level. 
 
 see `docs/dev/adr/0001-architecture-and-cli.md`
 
@@ -88,4 +88,3 @@ for legacy train configs where `MODEL_DEM_RES` cannot be inferred, fallback to:
 post-inference, assert:
 - output bbox == incoming lores depth bbox
 - output shape == preprocessed DEM shape
-
