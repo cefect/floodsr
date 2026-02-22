@@ -5,6 +5,10 @@ To support modularization and multiple inference engines, pre-processing has two
 
 see `docs/dev/adr/0001-architecture-and-cli.md`
 
+Implementation note:
+- platform-level preprocessing is orchestrated by `floodsr tohr` and is not a standalone CLI entrypoint.
+- shared preprocessing logic should live in `floodsr/preprocessing.py`.
+
 
 ## platform-model boundary
 Requirements:
@@ -62,6 +66,9 @@ Requirements:
   - e.g., 4690176_0_1770580046_train_base_16 expects all real at the 
 
 ## pre-processing to obtain the platform-model boundary contract
+
+- This stage is executed as part of `tohr` before model-worker execution.
+- Keep this logic shared/model-agnostic in `floodsr/preprocessing.py` where practical.
 
 
 
