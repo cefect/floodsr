@@ -22,8 +22,8 @@ _ON_THE_FLY_SYNTH_CASES = [
 
 
 @pytest.mark.parametrize("tile_case", _DATA_DRIVEN_CASES, indirect=True)
-def test_inference_regression_matches_case_spec_metrics(
-    inference_model_fp: Path,
+def test_tohr_regression_matches_case_spec_metrics(
+    tohr_model_fp: Path,
     tile_case: dict,
     tmp_path: Path,
     logger,
@@ -37,7 +37,7 @@ def test_inference_regression_matches_case_spec_metrics(
 
     tohr(
         model_version=case_spec["model"]["version"],
-        model_fp=inference_model_fp,
+        model_fp=tohr_model_fp,
         depth_lr_fp=tile_dir / case_spec["inputs"]["lowres_fp"],
         dem_hr_fp=tile_dir / case_spec["inputs"]["dem_fp"],
         output_fp=output_fp,
@@ -72,9 +72,9 @@ def test_inference_regression_matches_case_spec_metrics(
 
 @pytest.mark.parametrize("window_method, tile_overlap", _ON_THE_FLY_SYNTH_CASES)
 def test_tohr_on_the_fly_synthetic_tiles(
-    inference_model_fp: Path,
+    tohr_model_fp: Path,
     default_model_version: str,
-    synthetic_inference_tiles: dict,
+    synthetic_tohr_tiles: dict,
     window_method: str,
     tile_overlap: int,
     logger,
@@ -84,10 +84,10 @@ def test_tohr_on_the_fly_synthetic_tiles(
     rasterio = pytest.importorskip("rasterio")
     result = tohr(
         model_version=default_model_version,
-        model_fp=inference_model_fp,
-        depth_lr_fp=synthetic_inference_tiles["depth_lr_fp"],
-        dem_hr_fp=synthetic_inference_tiles["dem_fp"],
-        output_fp=synthetic_inference_tiles["output_fp"],
+        model_fp=tohr_model_fp,
+        depth_lr_fp=synthetic_tohr_tiles["depth_lr_fp"],
+        dem_hr_fp=synthetic_tohr_tiles["dem_fp"],
+        output_fp=synthetic_tohr_tiles["output_fp"],
         window_method=window_method,
         tile_overlap=tile_overlap,
         logger=logger,
@@ -95,6 +95,6 @@ def test_tohr_on_the_fly_synthetic_tiles(
 
     with rasterio.open(result["output_fp"]) as ds:
         pred = ds.read(1)
-    assert pred.shape == synthetic_inference_tiles["hr_shape"]
+    assert pred.shape == synthetic_tohr_tiles["hr_shape"]
     assert pred.dtype == np.float32
     assert pred.size > 0

@@ -149,12 +149,12 @@ def ort_tile_inputs():
 
 
 @pytest.fixture(scope="session")
-def synthetic_inference_tiles(tmp_path_factory):
-    """Create temporary raster inputs for on-the-fly inference coverage tests."""
+def synthetic_tohr_tiles(tmp_path_factory):
+    """Create temporary raster inputs for on-the-fly ToHR coverage tests."""
     rasterio = pytest.importorskip("rasterio")
     from rasterio.transform import from_origin
 
-    root = tmp_path_factory.mktemp("inference_tiles")
+    root = tmp_path_factory.mktemp("tohr_tiles")
     lr_shape = (64, 64)
     hr_shape = (960, 960)
     crs = "EPSG:32633"
@@ -190,16 +190,18 @@ def synthetic_inference_tiles(tmp_path_factory):
 
 
 @pytest.fixture(scope="function")
-def inference_model_fp(tmp_path, default_model_version):
-    """Resolve local model path used by engine and CLI inference tests."""
+def tohr_model_fp(tmp_path, default_model_version):
+    """Resolve local model path used by engine and CLI ToHR tests."""
     model_version = default_model_version
-    local_fp = pathlib.Path("_inputs") / model_version / "model_infer.onnx"
-    if local_fp.exists():
-        return local_fp.resolve()
+    local_model_dir = pathlib.Path("_inputs") / model_version
+    if local_model_dir.exists():
+        local_model_fp_l = sorted(local_model_dir.glob("*.onnx"))
+        if local_model_fp_l:
+            return local_model_fp_l[0].resolve()
 
     from floodsr.model_registry import fetch_model
 
     try:
         return fetch_model(model_version, cache_dir=tmp_path / "cache")
     except Exception as exc:  # pragma: no cover - exercised by test skip behavior
-        pytest.skip(f"unable to resolve model '{model_version}' for inference tests: {exc}")
+        pytest.skip(f"unable to resolve model '{model_version}' for ToHR tests: {exc}")

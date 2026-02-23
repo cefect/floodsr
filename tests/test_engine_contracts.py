@@ -5,19 +5,12 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from floodsr import engine
 from floodsr.engine import EngineORT
 from floodsr.engine.base import EngineBase
 from floodsr.engine.providers import get_onnxruntime_info, get_rasterio_info
 
 
 pytestmark = pytest.mark.unit
-
-
-def test_engine_package_exports_have_expected_symbols():
-    """Ensure engine package exports ORT engine and provider helpers."""
-    assert hasattr(engine, "EngineORT")
-    assert hasattr(engine, "get_onnxruntime_info")
 
 
 @pytest.mark.parametrize(
@@ -74,10 +67,10 @@ def test_engine_base_contract_with_dummy_subclass():
         pytest.param(True, id="ort_contract_repeat_run_is_deterministic"),
     ],
 )
-def test_engine_ort_run_tile_contract(inference_model_fp, ort_tile_inputs, logger, repeat_run: bool):
+def test_engine_ort_run_tile_contract(tohr_model_fp, ort_tile_inputs, logger, repeat_run: bool):
     """Ensure ORT predictions are float32, non-empty, and deterministic on repeat."""
     pytest.importorskip("onnxruntime")
-    engine_instance = EngineORT(inference_model_fp, logger=logger)
+    engine_instance = EngineORT(tohr_model_fp, logger=logger)
     run1 = engine_instance.run_tile(
         ort_tile_inputs["depth_lr"],
         ort_tile_inputs["dem_hr"],

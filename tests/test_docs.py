@@ -10,6 +10,7 @@ DOCS_SOURCE_DIR = Path("docs/user")
 pytestmark = pytest.mark.network
 
 
+@pytest.mark.sphinx
 def test_docs_linkcheck_builds(tmp_path: Path) -> None:
     """Run a lightweight Sphinx linkcheck build for user docs."""
     # Skip this test when sphinx is not installed in the active environment.
