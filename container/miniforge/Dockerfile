@@ -55,11 +55,14 @@ RUN for dir in $TARGET_DIRS; do \
 RUN echo 'umask 000' >> /etc/bash.bashrc && \
     echo 'umask 000' >> /etc/profile 
 
+# Smoke test GitHub CLI auth commands are available in the deploy target.
+RUN gh --version && \
+    gh auth --help >/dev/null && \
+    gh auth status --help >/dev/null
 
 
-
-# ---- 2) Build environments as root (fast, cacheable)
-FROM base AS deploy
+# ONNX layer -----------------------------
+FROM base AS onnx
 COPY container/miniforge/environment.yml /tmp/environment.yml
 
 ARG env_name=deploy
@@ -70,10 +73,23 @@ RUN --mount=type=cache,id=miniforge-conda-pkgs,target=/opt/conda/pkgs,sharing=lo
     mamba env create -yv --strict-channel-priority --name ${env_name} --file /tmp/environment.yml && \
     rm -f /tmp/environment.yml
 
-# Smoke test GitHub CLI auth commands are available in the deploy target.
-RUN gh --version && \
-    gh auth --help >/dev/null && \
-    gh auth status --help >/dev/null
+
+
+
+# PCRASTER layer -----------------------------
+FROM onnx AS pcraster
+
+ARG CONDA_NAME=deploy
+
+# install pcraster into deploy env while freezing existing deps
+RUN --mount=type=cache,target=/opt/conda/pkgs,sharing=locked \
+    conda install -yv --name "${CONDA_NAME}" --strict-channel-priority --freeze-installed -c conda-forge pcraster && \
+    conda run -n "${CONDA_NAME}" python -c "from pcraster import spreadzone"
+
+
+
+# Deploy layer -----------------------------
+FROM pcraster AS deploy
 
 
 # activate the environment by default for all users
