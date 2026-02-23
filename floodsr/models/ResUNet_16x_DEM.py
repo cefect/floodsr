@@ -293,28 +293,27 @@ class ModelWorker(Model):
             tile_cache[key] = pred_depth_m
             return pred_depth_m
 
-        # Prime cache and diagnostics arrays with a non-overlap pass.
-        nonoverlap_y = list(range(0, hr_pad_h, contract_hr_tile))
-        nonoverlap_x = list(range(0, hr_pad_w, contract_hr_tile))
-        sr_pad_nonoverlap = np.zeros_like(dem_pad, dtype=np.float32)
-        log.info(
-            f"priming tile cache with non-overlap pass over {len(nonoverlap_y) * len(nonoverlap_x)} windows\n"
-            f"  overlap_lr={overlap_lr}\n"
-            f"  overlap_hr={overlap_hr}"
-        )
-        for _, _, y0, x0 in iter_window_origins(
-            nonoverlap_y,
-            nonoverlap_x,
-            use_progress=True,
-            desc="non-overlap pass",
-        ):
-            pred_depth_m = _predict_tile_depth_m(y0, x0)
-            sr_pad_nonoverlap[y0 : y0 + contract_hr_tile, x0 : x0 + contract_hr_tile] = pred_depth_m
-
-        # Blend overlap windows when feather mode is requested.
+        # Route tiling by requested mosaicing method.
         if window_method == "hard":
-            sr_pad = sr_pad_nonoverlap.copy()
+            # Keep hard mode behavior: a single non-overlap inference sweep.
+            nonoverlap_y = list(range(0, hr_pad_h, contract_hr_tile))
+            nonoverlap_x = list(range(0, hr_pad_w, contract_hr_tile))
+            sr_pad = np.zeros_like(dem_pad, dtype=np.float32)
+            log.info(
+                f"running hard tiling over {len(nonoverlap_y)}x{len(nonoverlap_x)} grid\n"
+                f"  overlap_lr={overlap_lr}\n"
+                f"  overlap_hr={overlap_hr}"
+            )
+            for _, _, y0, x0 in iter_window_origins(
+                nonoverlap_y,
+                nonoverlap_x,
+                use_progress=True,
+                desc="non-overlap pass",
+            ):
+                pred_depth_m = _predict_tile_depth_m(y0, x0)
+                sr_pad[y0 : y0 + contract_hr_tile, x0 : x0 + contract_hr_tile] = pred_depth_m
         elif window_method == "feather":
+            # Skip hard-pass priming and run only overlap-aware feather blending.
             stride_hr = contract_hr_tile - overlap_hr
             if overlap_lr <= 0:
                 raise AssertionError("feather windowing requires overlap_lr > 0")
