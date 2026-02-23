@@ -1,6 +1,6 @@
 """Command line interface for FloodSR operations."""
 
-import argparse, logging
+import argparse, json, logging, sys
 from pathlib import Path
 
 from floodsr.cache_paths import get_model_cache_path
@@ -86,6 +86,99 @@ def _resolve_tohr_model_spec(args: argparse.Namespace) -> tuple[str, Path]:
         backend_name=args.backend,
         force=args.force,
     )
+
+
+def _find_flag_value(argv: list[str], flag: str) -> str | None:
+    """Return the raw value for a CLI flag, supporting '--flag value' and '--flag=value'."""
+    for idx, token in enumerate(argv):
+        if token == flag:
+            return argv[idx + 1] if idx + 1 < len(argv) else None
+        if token.startswith(f"{flag}="):
+            return token.split("=", 1)[1]
+    return None
+
+
+def _flag_present(argv: list[str], flag: str) -> bool:
+    """Return True when a CLI flag is already present in argv."""
+    return any(token == flag or token.startswith(f"{flag}=") for token in argv)
+
+
+def _read_tohr_machine_json(machine_json_fp: Path) -> dict[str, object]:
+    """Load ToHR machine-interface JSON payload."""
+    machine_json_path = machine_json_fp.expanduser().resolve()
+    assert machine_json_path.exists(), f"machine json does not exist: {machine_json_path}"
+    payload = json.loads(machine_json_path.read_text(encoding="utf-8"))
+    assert isinstance(payload, dict), f"machine json must be an object: {machine_json_path}"
+    # Allow either a direct payload or a nested `tohr` payload.
+    if "tohr" in payload:
+        nested_payload = payload["tohr"]
+        assert isinstance(nested_payload, dict), f"machine json 'tohr' payload must be an object: {machine_json_path}"
+        return nested_payload
+    return payload
+
+
+def _normalize_machine_key(raw_key: str) -> str:
+    """Normalize machine-interface keys to argparse destination style."""
+    return raw_key.strip().lstrip("-").replace("-", "_")
+
+
+def _build_tohr_machine_cli_tokens(payload: dict[str, object], argv: list[str]) -> list[str]:
+    """Translate machine-interface ToHR payload into CLI tokens that parser already understands."""
+    # Keep this mapping aligned with `_parse_arguments()` ToHR option destinations.
+    machine_key_to_flag = {
+        "in": "--in",
+        "in_fp": "--in",
+        "dem": "--dem",
+        "fetch_hrdem": "--fetch-hrdem",
+        "fetch_out": "--fetch-out",
+        "out": "--out",
+        "model_version": "--model-version",
+        "model_path": "--model-path",
+        "manifest": "--manifest",
+        "cache_dir": "--cache-dir",
+        "backend": "--backend",
+        "force": "--force",
+        "max_depth": "--max-depth",
+        "dem_pct_clip": "--dem-pct-clip",
+        "window_method": "--window-method",
+        "tile_overlap": "--tile-overlap",
+        "tile_size": "--tile-size",
+    }
+    bool_flags = {"fetch_hrdem", "force"}
+    cli_tokens = []
+    for raw_key, value in payload.items():
+        key = _normalize_machine_key(raw_key)
+        if key not in machine_key_to_flag:
+            raise ValueError(f"unsupported tohr machine-json key: {raw_key}")
+        cli_flag = machine_key_to_flag[key]
+        # Preserve explicit CLI args as highest precedence.
+        if _flag_present(argv, cli_flag):
+            continue
+        if key in bool_flags:
+            if not isinstance(value, bool):
+                raise ValueError(f"machine-json key '{raw_key}' must be boolean, got {type(value)!r}")
+            if value:
+                cli_tokens.append(cli_flag)
+            continue
+        if value is None:
+            continue
+        cli_tokens.extend([cli_flag, str(value)])
+    return cli_tokens
+
+
+def _inject_tohr_machine_json_args(argv: list[str] | None) -> list[str] | None:
+    """Inject ToHR args from machine-interface JSON before strict argparse validation."""
+    if argv is None:
+        argv_tokens = list(sys.argv[1:])
+    else:
+        argv_tokens = list(argv)
+    if not argv_tokens or argv_tokens[0] != "tohr":
+        return argv_tokens
+    machine_json_raw = _find_flag_value(argv_tokens, "--machine-json")
+    if machine_json_raw is None:
+        return argv_tokens
+    machine_payload = _read_tohr_machine_json(Path(machine_json_raw))
+    return argv_tokens + _build_tohr_machine_cli_tokens(machine_payload, argv_tokens)
 
 
 def _resolve_default_output_path(in_fp: Path) -> Path:
@@ -239,6 +332,12 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
 
     # Register ToHR command.
     tohr_parser = subparsers.add_parser("tohr", help="Run one raster ToHR pass.")
+    tohr_parser.add_argument(
+        "--machine-json",
+        type=Path,
+        default=None,
+        help="Optional machine-interface JSON with CLI-equivalent ToHR params.",
+    )
     tohr_parser.add_argument("--in", dest="in_fp", type=Path, required=True, help="Low-res depth raster path.")
     dem_group = tohr_parser.add_mutually_exclusive_group(required=True)
     dem_group.add_argument("--dem", type=Path, default=None, help="High-res DEM raster path.")
@@ -327,7 +426,7 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
 
     # Register diagnostic command.
     subparsers.add_parser("doctor", help="Report runtime dependency diagnostics.")
-    return parser.parse_args(argv)
+    return parser.parse_args(_inject_tohr_machine_json_args(argv))
 
 
 if __name__ == "__main__":

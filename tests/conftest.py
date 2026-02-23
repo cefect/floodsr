@@ -20,7 +20,7 @@ def _read_tile_case(case_name: str) -> dict:
     assert tile_dir.exists(), f"missing tile directory: {tile_dir}"
     assert case_spec_fp.exists(), f"missing case spec artifact: {case_spec_fp}"
     case_spec = json.loads(case_spec_fp.read_text(encoding="utf-8"))
-    assert "model" in case_spec and "inputs" in case_spec and "expected" in case_spec and "flags" in case_spec, (
+    assert "inputs" in case_spec and "expected" in case_spec and "flags" in case_spec, (
         f"invalid case spec shape for {case_name}: missing top-level keys"
     )
     assert (
@@ -28,7 +28,15 @@ def _read_tile_case(case_name: str) -> dict:
         and "dem_fp" in case_spec["inputs"]
         and "truth_fp" in case_spec["inputs"]
     ), f"invalid case inputs for {case_name}"
-    assert "metrics" in case_spec["expected"], f"invalid expected block for {case_name}"
+    assert isinstance(case_spec["expected"], dict) and case_spec["expected"], f"invalid expected block for {case_name}"
+    for run_label, run_spec in case_spec["expected"].items():
+        assert "params" in run_spec and "metrics" in run_spec, f"invalid expected run block for {case_name}/{run_label}"
+        assert isinstance(run_spec["params"], dict), f"invalid params block for {case_name}/{run_label}"
+        assert "model_version" in run_spec["params"], f"missing params.model_version for {case_name}/{run_label}"
+        assert isinstance(run_spec["metrics"], dict), f"invalid metrics block for {case_name}/{run_label}"
+        assert (
+            "mase_m" in run_spec["metrics"] and "rmse_m" in run_spec["metrics"] and "ssim" in run_spec["metrics"]
+        ), f"missing expected metrics keys for {case_name}/{run_label}"
     assert "in_hrdem" in case_spec["flags"], f"missing required flags.in_hrdem for {case_name}"
     return {
         "case_name": case_name,
