@@ -59,6 +59,7 @@ ADR refs: `docs/dev/adr/0002-packaging-and-installation-strategy.md`
 ### release v1.0.0
 - [ ] update changelog
 - [ ] tag and release on GitHub
+- [ ] pretty picture on readme.md. maybe from `tests/data/rss_dudelange_A` with a zoom in and the lores on the left and hires on the right. using a nice coloscale and the DEM (as hillshade) as a basemap. should pop and be sexy. 
 
 ### add costgrow_pcraster model  feature
 - [ ] update `container/miniforge/Dockerfile` to be more modular. rename current deploy layer to `onnx`. add a nother layer  for `pcraster` (use same syntax with environment files for each targert). add short/final layer for `deploy` to keep end point resolution the same. 
