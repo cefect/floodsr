@@ -1,7 +1,7 @@
 {
   "model": {
     "version": "ResUNet_16x_DEM",
-    "file_name": "model_infer.onnx",
+    "file_name": "model_tohr.onnx",
     "compatible": true
   },
   "inputs": {

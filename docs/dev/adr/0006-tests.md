@@ -19,7 +19,7 @@
 {
   "model": {
     "version": "ResUNet_16x_DEM",
-    "file_name": "model_infer.onnx",
+    "file_name": "model_tohr.onnx",
     "compatible": true
   },
   "inputs": {
@@ -43,8 +43,8 @@
 
 Test suite should follow this structure:
 
-- `tests/test_inference_regression.py` should contain one parameterized regression test over all `case_spec.json` cases.
-- Inference regression should assert output dtype, non-empty output, and expected metrics.
+- `tests/test_tohr_regression.py` should contain one parameterized regression test over all `case_spec.json` cases.
+- ToHR regression should assert output dtype, non-empty output, and expected metrics.
 - Special-case behavior should branch only on explicit `flags`.
 
 
@@ -68,6 +68,7 @@ We also want to keep tests organized by *module* (mirroring the package layout),
    - `unit`: fast, deterministic, no network, minimal filesystem.
    - `e2e`: CLI-level tests that exercise the pipeline end-to-end.
    - `network`: tests that require network access (e.g., downloading pinned weights/test data).
+   - `sphinx`: local-only docs/linkcheck tests.
 
 2. **Test organization mirrors modules**, not tiers:
    - `tests/<module_path>/test_*.py`
@@ -78,8 +79,8 @@ We also want to keep tests organized by *module* (mirroring the package layout),
    - E2E and network tests are opt-in.
 
 4. **CI/CD policy**:
-   - **Pull Requests:** run unit + e2e (no network).
-   - **Releases:** run the full test suite: unit + e2e + network.
+   - **Pull Requests / Pushes:** run the full test suite excluding `sphinx` tests.
+   - **Releases:** run the full test suite excluding `sphinx` tests.
 
 **modularization and paramterization**:
 test parameterization should mirror the available models (`floodsr/models.json`) and test data (`tests/data/*/case_spec.json`), with fixtures to load and validate.
@@ -105,6 +106,7 @@ Add to  `pytest.ini`  marker registration:
 - `unit`: fast, deterministic tests (default local run)
 - `e2e`: end-to-end CLI/system tests
 - `network`: requires network access for pinned artifacts
+- `sphinx`: local-only docs/linkcheck tests
 
 ### Example structure
  

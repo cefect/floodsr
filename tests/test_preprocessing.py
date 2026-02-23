@@ -13,15 +13,15 @@ pytestmark = pytest.mark.unit
 
 
 def test_write_prepared_rasters_outputs_exist_and_are_float32(
-    synthetic_inference_tiles: dict,
+    synthetic_tohr_tiles: dict,
     tmp_path,
     logger,
 ) -> None:
-    """Prepared outputs should exist on disk and keep float32 inference arrays."""
+    """Prepared outputs should exist on disk and keep float32 ToHR arrays."""
     rasterio = pytest.importorskip("rasterio")
     prepared = write_prepared_rasters(
-        depth_lr_fp=synthetic_inference_tiles["depth_lr_fp"],
-        dem_hr_fp=synthetic_inference_tiles["dem_fp"],
+        depth_lr_fp=synthetic_tohr_tiles["depth_lr_fp"],
+        dem_hr_fp=synthetic_tohr_tiles["dem_fp"],
         scale=16,
         out_dir=tmp_path,
         logger=logger,
@@ -36,7 +36,7 @@ def test_write_prepared_rasters_outputs_exist_and_are_float32(
 
 
 def test_write_dem_from_asset_hrefs_outputs_float32_non_empty(
-    synthetic_inference_tiles: dict,
+    synthetic_tohr_tiles: dict,
     tmp_path: Path,
     logger,
 ) -> None:
@@ -44,8 +44,8 @@ def test_write_dem_from_asset_hrefs_outputs_float32_non_empty(
     rasterio = pytest.importorskip("rasterio")
     output_fp = tmp_path / "fetched_hrdem.tif"
     written_fp = write_dem_from_asset_hrefs(
-        depth_lr_fp=synthetic_inference_tiles["depth_lr_fp"],
-        asset_hrefs=[str(synthetic_inference_tiles["dem_fp"])],
+        depth_lr_fp=synthetic_tohr_tiles["depth_lr_fp"],
+        asset_hrefs=[str(synthetic_tohr_tiles["dem_fp"])],
         output_fp=output_fp,
         logger=logger,
     )

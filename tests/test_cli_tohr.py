@@ -33,7 +33,7 @@ _FETCH_PARSE_CASES = [pytest.param(TEST_TILE_CASES[0], id=f"data_case_fetch_pars
 
 @pytest.mark.parametrize("tile_case", _BASELINE_TOHR_CASES, indirect=True)
 def test_main_tohr_runs_data_driven_baseline_case(
-    inference_model_fp: Path,
+    tohr_model_fp: Path,
     tmp_path: Path,
     tile_case: dict,
 ) -> None:
@@ -55,7 +55,7 @@ def test_main_tohr_runs_data_driven_baseline_case(
             "--out",
             str(output_fp),
             "--model-path",
-            str(inference_model_fp),
+            str(tohr_model_fp),
         ]
     )
     with rasterio.open(output_fp) as ds:
@@ -68,7 +68,7 @@ def test_main_tohr_runs_data_driven_baseline_case(
 
 @pytest.mark.parametrize("tile_case", _SPECIAL_TOHR_CASES, indirect=True)
 def test_main_tohr_runs_in_hrdem_flagged_case(
-    inference_model_fp: Path,
+    tohr_model_fp: Path,
     tmp_path: Path,
     tile_case: dict,
 ) -> None:
@@ -90,7 +90,7 @@ def test_main_tohr_runs_in_hrdem_flagged_case(
             "--out",
             str(output_fp),
             "--model-path",
-            str(inference_model_fp),
+            str(tohr_model_fp),
             "--window-method",
             "hard",
             "--tile-overlap",
@@ -132,7 +132,7 @@ def test_resolve_tohr_model_spec_uses_cached_manifest_default(
     manifest_payload = {
         "models": {
             model_version: {
-                "file_name": "model_infer.onnx",
+                "file_name": "model_tohr.onnx",
                 "url": source_fp.as_uri(),
                 "sha256": source_sha256,
                 "description": "Runnable local model for ToHR CLI model resolution tests.",
