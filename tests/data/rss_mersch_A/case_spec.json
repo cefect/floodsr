@@ -1,20 +1,20 @@
 {
-  "model": {
-    "version": "ResUNet_16x_DEM",
-    "file_name": "model_tohr.onnx",
-    "compatible": false
-  },
   "inputs": {
     "lowres_fp": "lowres030.tif",
     "dem_fp": "hires002_dem.tif",
     "truth_fp": "hires002.tif"
   },
   "expected": {
-    "precision": 3,
-    "metrics": {
-      "mase_m": 0.04416096852376296,
-      "rmse_m": 0.2903624856425355,
-      "ssim": 0.31122690073982445
+    "ResUNet_16x_DEM_default": {
+      "params": {
+        "model_version": "ResUNet_16x_DEM"
+      },
+      "metrics": {
+        "precision": 3,
+        "mase_m": 0.04416096852376296,
+        "rmse_m": 0.2903624856425355,
+        "ssim": 0.31122690073982445
+      }
     }
   },
   "flags": {

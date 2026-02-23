@@ -40,15 +40,7 @@ ADR refs: `docs/dev/adr/0002-packaging-and-installation-strategy.md`
 - [ ] try publish to PyPi (manually). see `docs/dev/adr/0013-publishing.md`
 - [ ] automate build/test/publish to PyPi  w/ trusted publishing. see `docs/dev/adr/0013-publishing.md`
 
-### add costgrow_pcraster model  
-- [ ] update `container/miniforge/Dockerfile` to be more modular. rename current deploy layer to `onnx`. add a nother layer  for `pcraster` (use same syntax with environment files for each targert). add short/final layer for `deploy` to keep end point resolution the same. 
-- [ ] evaluate/test how much heavier the install is now. 
-- [ ] add model to registry, add `floodsr/models/costgrow_pcraster.py` and other implementation work. see `others/CostGrow_pcraster_inline.ipynb`. 
-- [ ] add tests 
-- [ ] documentation.
 
-### preprocessing
-- [ ] allow ingestion of water surface rasters (with a flaga). and convert these. 
 
 ### Documentation
 - [x] publish ENG to ReadTheDocs
@@ -63,13 +55,33 @@ ADR refs: `docs/dev/adr/0002-packaging-and-installation-strategy.md`
 - [ ] add some badges to README
  
 
-### cache behavior
+
+ 
+### release v1.0.0
+- [ ] update changelog
+- [ ] tag and release on GitHub
+
+### add costgrow_pcraster model  feature
+- [ ] update `container/miniforge/Dockerfile` to be more modular. rename current deploy layer to `onnx`. add a nother layer  for `pcraster` (use same syntax with environment files for each targert). add short/final layer for `deploy` to keep end point resolution the same. 
+- [ ] evaluate/test how much heavier the install is now. 
+- [ ] add model to registry, add `floodsr/models/costgrow_pcraster.py` and other implementation work. see `others/CostGrow_pcraster_inline.ipynb`. 
+- [ ] add tests 
+- [ ] documentation.
+
+### preprocessing WSE feature
+- [ ] allow ingestion of water surface rasters (with a flaga). and convert these. 
+
+### cache behavior feature
 see `docs/dev/adr/0012-cache-policy-and-lifecycle.md`
 - [ ] build out modules
 - [ ] update CLI
 - [ ] add tests
 - [ ] udpate documentation
- 
-### release v1.0.0
-- [ ] update changelog
-- [ ] tag and release on GitHub
+
+### add building blocking feature
+- [ ] identify data source (shoudl have comparable coverage to HRDEM)
+- [ ] develop Proof of concept of fetching w/ bbox
+- [ ] integrate. should be similar to dem fetching. 
+- [ ] add tests
+- [ ] documentation
+- [ ] add to tutorial

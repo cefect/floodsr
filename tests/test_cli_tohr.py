@@ -191,6 +191,50 @@ def test_parse_tohr_allows_fetch_hrdem_without_dem(tile_case: dict):
 
 
 @pytest.mark.parametrize("tile_case", _FETCH_PARSE_CASES, indirect=True)
+def test_parse_tohr_allows_machine_json_only(tile_case: dict, tmp_path: Path):
+    """Ensure tohr parser accepts machine-interface JSON as an alternate required-arg source."""
+    case_spec = tile_case["case_spec"]
+    machine_payload = {
+        "in_fp": str(tile_case["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
+        "dem": str(tile_case["tile_dir"] / case_spec["inputs"]["dem_fp"]),
+    }
+    machine_json_fp = tmp_path / "tohr_machine.json"
+    machine_json_fp.write_text(json.dumps(machine_payload), encoding="utf-8")
+
+    parsed_args = _parse_arguments(["tohr", "--machine-json", str(machine_json_fp)])
+    assert parsed_args.in_fp == Path(machine_payload["in_fp"])
+    assert parsed_args.dem == Path(machine_payload["dem"])
+
+
+@pytest.mark.parametrize("tile_case", _FETCH_PARSE_CASES, indirect=True)
+def test_parse_tohr_cli_args_override_machine_json(tile_case: dict, tmp_path: Path):
+    """Ensure explicit CLI args retain precedence over machine-interface JSON."""
+    case_spec = tile_case["case_spec"]
+    machine_payload = {
+        "in_fp": str(tile_case["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
+        "dem": str(tile_case["tile_dir"] / case_spec["inputs"]["dem_fp"]),
+    }
+    machine_json_fp = tmp_path / "tohr_machine_override.json"
+    machine_json_fp.write_text(json.dumps(machine_payload), encoding="utf-8")
+    override_input_fp = tmp_path / "override_input.tif"
+    override_dem_fp = tmp_path / "override_dem.tif"
+
+    parsed_args = _parse_arguments(
+        [
+            "tohr",
+            "--machine-json",
+            str(machine_json_fp),
+            "--in",
+            str(override_input_fp),
+            "--dem",
+            str(override_dem_fp),
+        ]
+    )
+    assert parsed_args.in_fp == override_input_fp
+    assert parsed_args.dem == override_dem_fp
+
+
+@pytest.mark.parametrize("tile_case", _FETCH_PARSE_CASES, indirect=True)
 def test_parse_tohr_rejects_dem_and_fetch_hrdem_together(tile_case: dict):
     """Ensure tohr parser rejects simultaneous --dem and --fetch-hrdem."""
     case_spec = tile_case["case_spec"]
