@@ -58,11 +58,12 @@ each of these should have their own help sub-menu.
 with some global kwargs (mostly logging?)
 
 
-## tohr
+## CLI: tohr
 requirements:
 - needs to support multiple models with different I/O contracts, but the same CLI entrypoint and engine abstraction. see `0005-model-registry.md` and `0015-engine-runtime.md`
 - `tohr` pipeline function should create and teardown model workers via context management (`with ...`).
 - needs to be **just push go** ready with a single command, but also support more advanced use cases (e.g., custom output path, custom model version, etc.)
+- should accept an alternate machine-interface JSON of CLI-equivalent parameters (e.g., model version and tiling settings). should use the same parameter schema as CLI args  
 - no `truth` or `metrics`. just inference
 - provide progress bar and final diagnostics on completion (runtime, shape in, shape out, model version used, file size out)
 - default output should be in cwd with the same name (and filetype and properties... other than shape) as the input but with `_sr.tif` suffix. allow `--out` to specify a different path.
