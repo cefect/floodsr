@@ -8,7 +8,7 @@ Architecture decisions are tracked in ADRs: `docs/dev/adr`
 ### Phase 1 - Define inference contract
 
 - [x] lock ONNX model I/O: tensor names, channel order, dtype, nodata handling,  output scaling/clipping. see  `docs/dev/adr/0001-mvp-runtime-and-cli-contract.md` 
-- [ ] add a small golden test case
+- [x] add a small golden test case
 
 ### ONNX Runtime (ORT) CPU engine MVP
 ADR refs: `docs/dev/adr/0001-mvp-runtime-and-cli-contract.md`, `docs/dev/adr/0004-repository-and-module-architecture.md`
@@ -16,42 +16,52 @@ ADR refs: `docs/dev/adr/0001-mvp-runtime-and-cli-contract.md`, `docs/dev/adr/000
 - [x] implement `EngineORT` session load/run path
 - [x] add deterministic CPU unit tests
 
-### CLI MVP
-ADR refs: `docs/dev/adr/0001-mvp-runtime-and-cli-contract.md`, `docs/dev/adr/0003-logging-policy-cli-and-library.md`, `docs/dev/adr/0004-repository-and-module-architecture.md`
+### CLI 
 
 - [x] implement `floodsr infer` from GeoTiff
 - [x] add `floodsr doctor` backend/extras diagnostics
 
-### Phase 4 - Model registry UX
+###   Model registry UX
 ADR refs: `docs/dev/adr/0005-model-registry-and-artifact-validation.md`, `docs/dev/adr/0004-repository-and-module-architecture.md`
 
 - [x] implement manifest, cache download, sha256 validation
 - [x] provide `models fetch/list` commands
 - [x] add integration checks for corrupted downloads
 
-### Phase 5 - GeoTIFF I/O + tiling + stitching
+###  tiling + stitching
 ADR refs: `docs/dev/adr/0008-tiling.md`
 
 - [x] windowed reads, tile batching, overlap/blend stitching
 - [x] preserve georeferencing metadata
 
-### Phase 6 - Packaging and install story
+###   Packaging/install and pupublishing
 ADR refs: `docs/dev/adr/0002-packaging-and-installation-strategy.md`
 
-- [ ] publish to PyPi (manually). see `docs/dev/adr/0013-publishing.md`
+- [ ] try publish to PyPi (manually). see `docs/dev/adr/0013-publishing.md`
+- [ ] automate build/test/publish to PyPi  w/ trusted publishing. see `docs/dev/adr/0013-publishing.md`
 
-### add CostGrow model  
+### add costgrow_pcraster model  
+- [ ] update `container/miniforge/Dockerfile` to be more modular. rename current deploy layer to `onnx`. add a nother layer  for `pcraster` (use same syntax with environment files for each targert). add short/final layer for `deploy` to keep end point resolution the same. 
+- [ ] evaluate/test how much heavier the install is now. 
+- [ ] add model to registry, add `floodsr/models/costgrow_pcraster.py` and other implementation work. see `others/CostGrow_pcraster_inline.ipynb`. 
+- [ ] add tests 
+- [ ] documentation.
 
 ### preprocessing
 - [ ] allow ingestion of water surface rasters (with a flaga). and convert these. 
 
 ### Documentation
- 
+- [x] publish ENG to ReadTheDocs
+- [ ] add tutorial. write as notebooks and port to RTD? shiould be based on tutorial data. see `examples.ipynb`. Just one tutorial for now, showing model fetching, switching, and `tohr`. i.e., cover most of CLI. 
+- [ ] setup for french version
+- [ ] LLM french translation
+- [ ] human proof
 
 
 ### CI/CD
 - [ ] nice test coverage with fast feedback loops
-- [ ] automate build/test/publish to PyPi  w/ trusted publishing. see `docs/dev/adr/0013-publishing.md`
+- [ ] add some badges to README
+ 
 
 ### cache behavior
 see `docs/dev/adr/0012-cache-policy-and-lifecycle.md`
@@ -60,3 +70,6 @@ see `docs/dev/adr/0012-cache-policy-and-lifecycle.md`
 - [ ] add tests
 - [ ] udpate documentation
  
+### release v1.0.0
+- [ ] update changelog
+- [ ] tag and release on GitHub
