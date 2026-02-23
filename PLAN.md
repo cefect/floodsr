@@ -34,11 +34,14 @@ ADR refs: `docs/dev/adr/0008-tiling.md`
 - [x] windowed reads, tile batching, overlap/blend stitching
 - [x] preserve georeferencing metadata
 
-###   Packaging/install and pupublishing
+###   Packaging/install and pupublishing CI/CD
 ADR refs: `docs/dev/adr/0002-packaging-and-installation-strategy.md`
 
 - [ ] try publish to PyPi (manually). see `docs/dev/adr/0013-publishing.md`
 - [ ] automate build/test/publish to PyPi  w/ trusted publishing. see `docs/dev/adr/0013-publishing.md`
+- [ ] nice test coverage with fast feedback loops
+- [ ] add some CI/CD badges to README
+- [ ] think about depencies (what ranges should go in toml?) Ci/CD depency matrix? 
 
 
 
@@ -50,11 +53,7 @@ ADR refs: `docs/dev/adr/0002-packaging-and-installation-strategy.md`
 - [ ] human proof
 
 
-### CI/CD
-- [ ] nice test coverage with fast feedback loops
-- [ ] add some badges to README
  
-
 
  
 ### release v1.0.0
