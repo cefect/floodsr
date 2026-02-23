@@ -79,7 +79,7 @@ see `docs/dev/adr/0012-cache-policy-and-lifecycle.md`
 - [ ] udpate documentation
 
 ### add building blocking feature
-- [ ] identify data source (shoudl have comparable coverage to HRDEM)
+- [ ] identify data source: see `docs/dev/adr/0016-buildings.md`
 - [ ] develop Proof of concept of fetching w/ bbox
 - [ ] integrate. should be similar to dem fetching. 
 - [ ] add tests
