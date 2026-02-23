@@ -5,6 +5,7 @@
 		"LICENSE": true,
 		"*.egg-info": true,
 		"**/build": true,
+		"*.aux.xml": true,
 	},
 	
 	"search.exclude": {
@@ -14,6 +15,7 @@
 		"**/.snakemake": true,
 		"LICENSE": true,
 		"**/build": true,
+		"*.aux.xml": true,
 	},
 "jupyter.notebookFileRoot": "${workspaceFolder}",
 	"python-envs.pythonProjects": [
