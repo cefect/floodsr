@@ -17,22 +17,37 @@
 
 ```json
 {
-  "model": {
-    "version": "ResUNet_16x_DEM",
-    "file_name": "model_tohr.onnx",
-    "compatible": true
-  },
   "inputs": {
     "lowres_fp": "lowres032.tif",
     "dem_fp": "hires002_dem.tif",
     "truth_fp": "hires002.tif"
   },
   "expected": {
-    "precision": 3,
-    "metrics": {
-      "mase_m": 0.0589,
-      "rmse_m": 0.1060,
-      "ssim": 0.6654
+    "ResUNet_16x_DEM_default": {
+      "params": {
+        "model_version": "ResUNet_16x_DEM",
+        "window_method": "feather",
+        "tile_overlap": 1
+      },
+      "metrics": {
+        "precision": 3,
+        "mase_m": 0.0589,
+        "rmse_m": 0.1060,
+        "ssim": 0.6654
+      }
+    },
+    "ResUNet_16x_DEM_hard_tiles": {
+      "params": {
+        "model_version": "ResUNet_16x_DEM",
+        "window_method": "hard",
+        "tile_overlap": 0
+      },
+      "metrics": {
+        "precision": 3,
+        "mase_m": 0.0612,
+        "rmse_m": 0.1097,
+        "ssim": 0.6510
+      }
     }
   },
   "flags": {
@@ -44,7 +59,9 @@
 Test suite should follow this structure:
 
 - `tests/test_tohr_regression.py` should contain one parameterized regression test over all `case_spec.json` cases.
-- ToHR regression should assert output dtype, non-empty output, and expected metrics.
+- ToHR regression should parameterize by human-readable run labels under `expected`.
+- Each run label should define CLI-style `params` and expected `metrics`.
+- ToHR regression should assert output dtype, non-empty output, and expected metrics for each run label.
 - Special-case behavior should branch only on explicit `flags`.
 
 
@@ -84,6 +101,7 @@ We also want to keep tests organized by *module* (mirroring the package layout),
 
 **modularization and paramterization**:
 test parameterization should mirror the available models (`floodsr/models.json`) and test data (`tests/data/*/case_spec.json`), with fixtures to load and validate.
+all test cases are expected to be runnable across all supported models through run-label entries under `expected`.
 
 
 ## Rationale

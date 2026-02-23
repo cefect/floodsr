@@ -1,4 +1,4 @@
-# ADR-0003: Logging Policy for CLI and Library
+# ADR-0003: Logging 
 
  
 The CLI and library need predictable operational logging with user controls and stable conventions for module loggers.
