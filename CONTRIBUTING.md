@@ -102,6 +102,23 @@ python -m floodsr.cli models fetch ResUNet_16x_DEM
 pytest -q tests/test_model_registry.py::test_default_manifest_http_links_resolve
 ```
 
+## Fetch test TIFFs from Git LFS
+
+`tests/data/*.tif` is tracked by Git LFS. If you cloned with LFS smudge disabled, you may have pointer text files instead of GeoTIFF binaries.
+
+```bash
+git lfs install
+git lfs pull --include="tests/data/**" --exclude=""
+git lfs checkout tests/data
+```
+
+Quick verification (no pointer files should be reported):
+
+```bash
+grep -RIl --include="*.tif" --include="*.tiff" \
+  "^version https://git-lfs.github.com/spec/v1$" tests/data || true
+```
+
 # PIPX local install
 
 ```bash
