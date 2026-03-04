@@ -41,7 +41,7 @@ ADR refs: `docs/dev/adr/0002-packaging-and-installation-strategy.md`
 - [ ] create a dev branch, and reserve main (almost always) matching releases. feature branch off of dev. (sometimes there will be a tiny main branch commit that doesn't trigger a tag or a pypi release). 
 - [ ] add a test to prove `container/miniforge/conda-env-deploy.lock.yml` matches the current environment. check `container/miniforge/Dockerfile` if you get stuck. 
 - [ ] debug Ci/CD tests and implement nice test coverage with fast feedback loops. currnetly running all tests...debuug the current cicd test suite.. maybe run fewer test tags? 
-- [ ] Seth to add wgordy as maintainer. try publish to PyPi (manually). cleanup the readme a bit. update `releasing.md`. see `docs/dev/adr/0013-publishing.md`
+- [x] Seth to add wgordy as maintainer. try publish to PyPi (manually).  update `releasing.md`. see `docs/dev/adr/0013-publishing.md`
 - [ ] automate build/test/publish to PyPi  w/ trusted publishing. see `docs/dev/adr/0013-publishing.md`
 - [ ] add some CI/CD badges to README
 - [ ] think about dependencies (what ranges should go in toml?) Ci/CD depency matrix? must run windows. 
