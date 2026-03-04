@@ -1,8 +1,11 @@
 # releasing/publishing
 see `docs/dev/adr/0013-publishing.md`
 
-## manual publish to test pypi
+# MANUAL pip
+--------------------------------------------------
 
+## testpypi
+---------------------------------------------------
 ### setting up tokens
 create a test token
 copy to `~/.pypirc`:
@@ -56,4 +59,38 @@ docker run --rm condaforge/miniforge3:25.3.1-0 bash -lc "
   floodsr doctor &&
   floodsr models list
 "
+```
+
+
+## pypi
+---------------------------------------------------
+
+Use the same build/test flow from the `testpypi` section above.
+Do not rebuild between indexes: upload the already validated `dist/*` artifacts.
+
+### pypi-specific setup
+
+Add a PyPI token to `~/.pypirc`:
+
+ 
+
+### publish to pypi (after testpypi passes)
+
+```bash
+# 1) ensure the exact same artifacts from TestPyPI validation are present
+ls -lh dist/*
+python -m twine check dist/*
+
+# 2) upload to PyPI (requires ~/.pypirc with [pypi] token)
+python -m twine upload --repository pypi dist/*
+```
+
+### quick post-publish check
+
+```bash
+python -m pip index versions floodsr
+pipx install floodsr
+floodsr doctor
+floodsr models list
+pipx uninstall floodsr
 ```
