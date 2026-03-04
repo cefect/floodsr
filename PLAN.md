@@ -34,32 +34,37 @@ ADR refs: `docs/dev/adr/0008-tiling.md`
 - [x] windowed reads, tile batching, overlap/blend stitching
 - [x] preserve georeferencing metadata
 
-###   Packaging/install and pupublishing CI/CD
+###   Packaging/install and publishing CI/CD
 ADR refs: `docs/dev/adr/0002-packaging-and-installation-strategy.md`
 
-- [ ] try publish to PyPi (manually). see `docs/dev/adr/0013-publishing.md`
+- [x] publish to test_pypi. 
+- [ ] create a dev branch, and reserve main (almost always) matching releases. feature branch off of dev. (sometimes there will be a tiny main branch commit that doesn't trigger a tag or a pypi release). 
+- [ ] add a test to prove `container/miniforge/conda-env-deploy.lock.yml` matches the current environment. check `container/miniforge/Dockerfile` if you get stuck. 
+- [ ] debug Ci/CD tests and implement nice test coverage with fast feedback loops. currnetly running all tests...debuug the current cicd test suite.. maybe run fewer test tags? 
+- [ ] Seth to add wgordy as maintainer. try publish to PyPi (manually). cleanup the readme a bit. update `releasing.md`. see `docs/dev/adr/0013-publishing.md`
 - [ ] automate build/test/publish to PyPi  w/ trusted publishing. see `docs/dev/adr/0013-publishing.md`
-- [ ] nice test coverage with fast feedback loops
 - [ ] add some CI/CD badges to README
-- [ ] think about depencies (what ranges should go in toml?) Ci/CD depency matrix? 
+- [ ] think about dependencies (what ranges should go in toml?) Ci/CD depency matrix? must run windows. 
 
 
 
 ### Documentation
-- [x] publish ENG to ReadTheDocs
-- [ ] add tutorial. write as notebooks and port to RTD? shiould be based on tutorial data. see `examples.ipynb`. Just one tutorial for now, showing model fetching, switching, and `tohr`. i.e., cover most of CLI. 
+- [x] publish ENG to [ReadTheDocs](https://app.readthedocs.org/projects/floodsr/)
+- [ ] walter create accounta and ask to be added. 
+- [ ] add tutorial. write as notebooks and port to RTD? shiould be based on tutorial data. see `examples.ipynb`. Just one tutorial for now, showing model fetching, switching, and `tohr`. then quickly show remaining features. no need to show all optional args.  
 - [ ] setup for french version
 - [ ] LLM french translation
-- [ ] human proof
+- [ ] human proof (emma)
 
-
- 
-
- 
+  
 ### release v1.0.0
 - [ ] update changelog
 - [ ] tag and release on GitHub
 - [ ] pretty picture on readme.md. maybe from `tests/data/rss_dudelange_A` with a zoom in and the lores on the left and hires on the right. using a nice coloscale and the DEM (as hillshade) as a basemap. should pop and be sexy. 
+- [ ] manual test (Ralph)
+
+
+
 
 ### add costgrow_pcraster model  feature
 - [ ] update `container/miniforge/Dockerfile` to be more modular. rename current deploy layer to `onnx`. add a nother layer  for `pcraster` (use same syntax with environment files for each targert). add short/final layer for `deploy` to keep end point resolution the same. 
@@ -85,3 +90,5 @@ see `docs/dev/adr/0012-cache-policy-and-lifecycle.md`
 - [ ] add tests
 - [ ] documentation
 - [ ] add to tutorial
+
+### keep going?
