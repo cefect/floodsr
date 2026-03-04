@@ -14,7 +14,7 @@ Key constraints:
 
 ## Decision
 
-1. Use Git tags as the sole release trigger.
+1. Use Git tags as the sole release trigger. from main branch. 
 
    * Tags matching `vX.Y.ZrcN`, `vX.Y.ZaN`, or `vX.Y.ZbN` are treated as pre-releases.
    * Tags matching `vX.Y.Z` are treated as stable releases.
