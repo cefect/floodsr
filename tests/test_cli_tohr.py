@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from conftest import TEST_TILE_CASES
+from conftest import TEST_TILE_CASES, default_model_version, tile_case, tohr_model_fp
 from floodsr.cli import _parse_arguments, _resolve_default_output_path, _resolve_tohr_model_spec, main
 
 
