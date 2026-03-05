@@ -2,12 +2,16 @@
 
 import hashlib
 import logging
-import math
 import shutil
 import tempfile
 from pathlib import Path
 
 import numpy as np
+
+import rasterio
+from rasterio.merge import merge
+from rasterio.warp import transform_bounds
+ 
 
 from floodsr.dem_sources.base import DemFetchResult
 
@@ -22,7 +26,6 @@ _SESSION_FETCH_CACHE: dict[str, Path] = {}
 
 
 def _build_fetch_cache_key(
-    *,
     depth_crs_repr: str,
     depth_bounds: tuple[float, float, float, float],
     stac_url: str,
@@ -46,8 +49,8 @@ def _resolve_depth_query_geometry(
     depth_lr_fp: str | Path,
 ) -> dict[str, object]:
     """Read low-res raster geometry used for STAC query and output alignment."""
-    import rasterio
-    from rasterio.warp import transform_bounds
+ 
+
 
     depth_path = Path(depth_lr_fp).expanduser().resolve()
     assert depth_path.exists(), f"low-res depth raster does not exist: {depth_path}"
@@ -57,6 +60,7 @@ def _resolve_depth_query_geometry(
         depth_nodata = depth_ds.nodata
     assert depth_crs is not None, f"low-res depth CRS is required for STAC query: {depth_path}"
 
+    # Translate low-res bounds to WGS84 for STAC query filtering.
     lowres_bbox_4326 = transform_bounds(
         depth_crs,
         "EPSG:4326",
@@ -75,7 +79,6 @@ def _resolve_depth_query_geometry(
 
 
 def _query_hrdem_assets(
-    *,
     bbox_4326: tuple[float, float, float, float],
     stac_url: str,
     collection: str,
@@ -90,6 +93,7 @@ def _query_hrdem_assets(
         bbox=list(bbox_4326),
         limit=200,
     )
+    # Materialize the search result once so we can validate coverage and assets.
     items = list(search.items())
     if not items:
         raise RuntimeError(
@@ -118,96 +122,84 @@ def write_dem_from_asset_hrefs(
     depth_lr_fp: str | Path,
     asset_hrefs: list[str],
     output_fp: str | Path,
-    *,
     logger=None,
 ) -> Path:
-    """Build and write one clipped/reprojected DEM from asset hrefs."""
-    import rasterio
-    from rasterio.transform import from_bounds
-    from rasterio.warp import Resampling, calculate_default_transform, reproject
+    """Build and write one clipped DEM mosaic from asset hrefs without CRS reprojection."""
+
 
     log = logger or logging.getLogger(__name__)
+    # Read low-res geometry once and reuse it for source-CRS clipping bounds.
     depth_query = _resolve_depth_query_geometry(depth_lr_fp)
     depth_crs = depth_query["depth_crs"]
     depth_bounds = depth_query["depth_bounds"]
-    depth_nodata = depth_query["depth_nodata"]
     assert asset_hrefs, "asset_hrefs must not be empty"
 
-    left, bottom, right, top = depth_bounds
-    assert right > left and top > bottom, f"invalid depth bounds for fetch: {depth_bounds}"
     out_path = Path(output_fp).expanduser().resolve()
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Use first asset to derive a stable high-res target pixel size.
+    # Use the first asset as the reference grid and source CRS for output writing.
     with rasterio.open(asset_hrefs[0]) as first_ds:
         first_crs = first_ds.crs
         assert first_crs is not None, f"asset CRS is required: {asset_hrefs[0]}"
-        if first_crs == depth_crs:
-            target_res_x = abs(float(first_ds.res[0]))
-            target_res_y = abs(float(first_ds.res[1]))
-        else:
-            default_transform, _, _ = calculate_default_transform(
-                first_crs,
-                depth_crs,
-                first_ds.width,
-                first_ds.height,
-                *first_ds.bounds,
-            )
-            target_res_x = abs(float(default_transform.a))
-            target_res_y = abs(float(default_transform.e))
         source_nodata = first_ds.nodata
+        clip_bounds = transform_bounds(
+            depth_crs,
+            first_crs,
+            *depth_bounds,
+            densify_pts=21,
+        )
 
-    assert target_res_x > 0 and target_res_y > 0, f"invalid target resolution {(target_res_x, target_res_y)}"
-    out_width = max(1, int(math.ceil((right - left) / target_res_x)))
-    out_height = max(1, int(math.ceil((top - bottom) / target_res_y)))
-    out_transform = from_bounds(left, bottom, right, top, out_width, out_height)
+    # Validate transformed query bounds in the source CRS.
+    assert clip_bounds[0] < clip_bounds[2], f"invalid transformed clip bounds x ordering: {clip_bounds}"
+    assert clip_bounds[1] < clip_bounds[3], f"invalid transformed clip bounds y ordering: {clip_bounds}"
+    dst_nodata = float(source_nodata) if source_nodata is not None else -9999.0
 
-    if depth_nodata is not None:
-        dst_nodata = float(depth_nodata)
-    elif source_nodata is not None:
-        dst_nodata = float(source_nodata)
-    else:
-        dst_nodata = -9999.0
-
-    work_nodata = np.float32(-3.4028235e38)
-    merged = np.full((out_height, out_width), work_nodata, dtype=np.float32)
-    valid_mask = np.zeros((out_height, out_width), dtype=bool)
-
-    # Reproject each item onto the low-res CRS/bounds grid and merge valid pixels.
+    # Open all assets and enforce one shared CRS to avoid implicit reprojection.
+    src_ds_l = []
     for href in asset_hrefs:
-        with rasterio.open(href) as src_ds:
-            src_crs = src_ds.crs
-            assert src_crs is not None, f"asset CRS is required: {href}"
-            reprojected = np.full((out_height, out_width), work_nodata, dtype=np.float32)
-            reproject(
-                source=rasterio.band(src_ds, 1),
-                destination=reprojected,
-                src_transform=src_ds.transform,
-                src_crs=src_crs,
-                src_nodata=src_ds.nodata,
-                dst_transform=out_transform,
-                dst_crs=depth_crs,
-                dst_nodata=float(work_nodata),
-                resampling=Resampling.bilinear,
-                num_threads=1,
+        src_ds = rasterio.open(href)
+        src_crs = src_ds.crs
+        assert src_crs is not None, f"asset CRS is required: {href}"
+        if src_crs != first_crs:
+            src_ds.close()
+            for opened_ds in src_ds_l:
+                opened_ds.close()
+            raise AssertionError(
+                f"all HRDEM assets must share one CRS without auto-reprojection: {src_crs} != {first_crs} for {href}"
             )
-            current_valid = ~np.isclose(reprojected, work_nodata)
-            if current_valid.any():
-                merged[current_valid] = reprojected[current_valid]
-                valid_mask |= current_valid
+        src_ds_l.append(src_ds)
 
+    try:
+        # Mosaic and clip in source CRS only; this intentionally avoids depth-CRS reprojection.
+        merged_data, out_transform = merge(
+            src_ds_l,
+            bounds=clip_bounds,
+            indexes=1,
+            nodata=dst_nodata,
+            dtype="float32",
+            method="last",
+        )
+    finally:
+        for src_ds in src_ds_l:
+            src_ds.close()
+
+    merged = merged_data[0].astype(np.float32, copy=False)
+    valid_mask = ~np.isnan(merged) if np.isnan(dst_nodata) else ~np.isclose(merged, np.float32(dst_nodata))
+
+    # Fail hard if no source contributes valid pixels to the target footprint.
     if not valid_mask.any():
         raise RuntimeError(f"no valid DEM pixels found across {len(asset_hrefs)} assets for bounds={depth_bounds}")
 
     merged_to_write = np.where(valid_mask, merged, np.float32(dst_nodata)).astype(np.float32, copy=False)
 
+    # Persist one aligned float32 DEM tile.
     profile = {
         "driver": "GTiff",
-        "height": out_height,
-        "width": out_width,
+        "height": int(merged_to_write.shape[0]),
+        "width": int(merged_to_write.shape[1]),
         "count": 1,
         "dtype": "float32",
-        "crs": depth_crs,
+        "crs": first_crs,
         "transform": out_transform,
         "nodata": dst_nodata,
         "compress": "LZW",
@@ -220,7 +212,6 @@ def write_dem_from_asset_hrefs(
 
 
 def fetch_hrdem_for_lowres_tile(
-    *,
     depth_lr_fp: str | Path,
     output_fp: str | Path | None = None,
     logger=None,
@@ -230,6 +221,7 @@ def fetch_hrdem_for_lowres_tile(
 ) -> DemFetchResult:
     """Fetch one HRDEM tile aligned to a low-res depth raster query footprint."""
     log = logger or logging.getLogger(__name__)
+    # Resolve low-res query geometry once for both cache keying and STAC search.
     depth_query = _resolve_depth_query_geometry(depth_lr_fp)
     depth_path = depth_query["depth_fp"]
     depth_crs = depth_query["depth_crs"]
@@ -245,6 +237,7 @@ def fetch_hrdem_for_lowres_tile(
         f"  asset_key={asset_key}\n"
         f"  depth_lr_fp=\n    {depth_path}"
     )
+    # Build a deterministic request key for in-process cache reuse.
     cache_key = _build_fetch_cache_key(
         depth_crs_repr=depth_crs_repr,
         depth_bounds=depth_bounds,
@@ -256,6 +249,7 @@ def fetch_hrdem_for_lowres_tile(
     item_ids: list[str] = []
     cached_fp = _SESSION_FETCH_CACHE.get(cache_key)
     if cached_fp is not None and cached_fp.exists():
+        # Serve cache hit immediately, optionally copying to an explicit output target.
         if output_fp is None:
             return DemFetchResult(
                 source_id=SOURCE_ID,
@@ -278,6 +272,7 @@ def fetch_hrdem_for_lowres_tile(
             item_ids=item_ids,
         )
 
+    # Cache miss: discover intersecting assets from STAC.
     item_ids, asset_hrefs = _query_hrdem_assets(
         bbox_4326=bbox_4326,
         stac_url=stac_url,
@@ -286,6 +281,7 @@ def fetch_hrdem_for_lowres_tile(
     )
     log.info(f"found {len(item_ids)} HRDEM item(s) intersecting low-res tile bounds")
 
+    # Write to temporary cache path unless caller provided a destination.
     target_fp = _resolve_temp_fetch_path(cache_key) if output_fp is None else Path(output_fp).expanduser().resolve()
     written_fp = write_dem_from_asset_hrefs(
         depth_lr_fp=depth_path,
