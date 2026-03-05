@@ -33,13 +33,13 @@ the boundary is defined as:
 - `use-dem`: ignore lowres depth CRS on mismatch and reproject depth to DEM CRS/grid.
 - `use-lores`: reproject DEM to lowres depth CRS/grid.
 
-### inputs that should be rejected:
+### input requirements
 
 raise a verbose assertion error telling the user to fix if the following are not met by input rasters:
 - identical crs (when `--crs-policy strict`)
 - projected crs (unless `--crs-policy` dicates it be ignored)
 - nodata != 0 (this is a valid depth)
-- everything is invalid/masked
+- at least some valid/unmaksed pixels
 - one invalid data-signal criteria:
     - none (i.e., everything valid)
     - all masked pixels are also nodata
@@ -71,7 +71,7 @@ input dem:
 ## nodata normalization/handling
 Requirements:
 - models can differ on how they treat/handle nodata.
-  - e.g., ResUNet_16x_DEM expects all real at the 
+
 
 ## pre-processing to obtain the platform-model boundary contract
 

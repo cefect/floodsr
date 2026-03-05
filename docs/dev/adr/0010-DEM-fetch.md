@@ -18,7 +18,7 @@ DEFAULT_ASSET = "dtm"
 - make `--dem` optional
 - add optional `--fetch-hrdem` (or just `-f`) flag to trigger HRDEM fetch instead. 
 - either `--dem` or `--fetch-hrdem` must be provided, but not both.
-- add optional `--fetch-out`   flag to specify output path for fetched HRDEM tile. If not provided, the fetched tile will live in the temp directory (e.g. using `tempfile` module) NOT the cahce. should provide some lazy caching so if the same tile is requested in the same fetch session, it doesn't re-fetch from the source. 
+- add optional `--fetch-out`   flag to specify output path for fetched HRDEM tile. If not provided, the fetched tile will live in the temp directory (e.g. using `tempfile` module) NOT the cache. should provide some lazy caching so if the same tile is requested in the same fetch session, it doesn't re-fetch from the source. 
 
 ### implementation strategy (agnostic internals, explicit CLI)
 - keep CLI explicit and hard-coded to HRDEM for now (`--fetch-hrdem`).
@@ -49,8 +49,8 @@ see `dev/proof_of_concepts/hrdem_fetch.ipynb`
 
 
 #### post and pre processing changes
-- We want to avoid inheriting downstream defaults from HRDEM, but minimize refactoring... so anything we expect to be inherited from the DEM should be set from lores depth onto the HRDEM right after fetch (before pre-processing). including at leastL
-    - reprojected to match the low-res depth raster crs and bbox and nodata values. 
+- treat the incoming HRDEM asset identical to explicitly user-provided DEMs.
+  - throw a verbose warning if `--crs-policy=strict`. unlikely the user is passing a lores in the same crs as HRDEM. 
 - then the `docs/dev/adr/0009-preproccessing.md` pre-processing steps and checks are applied to the fetched HRDEM tile  
 
 
