@@ -1,13 +1,15 @@
 # ADR 0009: Pre-processing, input validation, and platform-model boundary
 To support modularization and multiple inference engines, pre-processing has two stages:
 - model-agnostic platform level (see below) to obtain the **platform-model boundary**.
-- model-specific input transformations (e.g., log-scaling, normalization, etc.) that are required to meet the **model-engine boundary**. see `0005-model-registry.md` and `0015-engine-runtime.md`. these happen after platform level. 
+  - includes geospatial harmonization (CRS policy/reprojection), bbox alignment, and nodata normalization/handling.
+- model-specific input transformations (e.g., model-space resampling, log-scaling, normalization, etc.) that are required to meet the **model-engine boundary**. see `0005-model-registry.md` and `0015-engine-runtime.md`. these happen after platform level. 
 
 see `docs/dev/adr/0001-architecture-and-cli.md`
 
 Implementation note:
 - platform-level preprocessing is orchestrated by `floodsr tohr` and is not a standalone CLI entrypoint.
 - shared preprocessing logic should live in `floodsr/preprocessing.py`.
+- model workers consume platform-preprocessed artifacts, assert platform-model boundary conformance, then run model-specific preprocessing/transforms per `0005-model-registry.md`.
 
 
 ## platform-model boundary
@@ -18,18 +20,24 @@ Requirements:
 ### contract
 the boundary is defined as:
 - identical bbox  
-- identical crs
+- identical crs (default `--crs-policy strict`)
 - square pixels
 - all masked pixels are also nodata (and raster has a defined nodata value)
   - nodata value (e.g., -9999) is the same between dem and depths
 
 
 ## input handling
+### CRS policy control
+`floodsr tohr` accepts `--crs-policy` for handling depth/DEM CRS alignment:
+- `strict` (default): require identical projected CRS; fail on mismatch.
+- `use-dem`: ignore lowres depth CRS on mismatch and reproject depth to DEM CRS/grid.
+- `use-lores`: reproject DEM to lowres depth CRS/grid.
+
 ### inputs that should be rejected:
 
 raise a verbose assertion error telling the user to fix if the following are not met by input rasters:
-- identical crs
-- projected crs
+- identical crs (when `--crs-policy strict`)
+- projected crs (unless `--crs-policy` dicates it be ignored)
 - nodata != 0 (this is a valid depth)
 - everything is invalid/masked
 - one invalid data-signal criteria:
@@ -69,6 +77,7 @@ Requirements:
 
 - This stage is executed as part of `tohr` before model-worker execution.
 - Keep this logic shared/model-agnostic in `floodsr/preprocessing.py` where practical.
+- CRS mismatch policy handling (`--crs-policy`) is owned by this platform stage, not by model workers.
 
 
 
