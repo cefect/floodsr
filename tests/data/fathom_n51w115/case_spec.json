@@ -1,0 +1,25 @@
+{
+  "inputs": {
+    "lowres_fp": "n51w115_preprocessed.tif",
+    "dem_fp": "n51w115_preprocessed.tif",
+    "truth_fp": "n51w115_preprocessed.tif"
+  },
+  "expected": {
+    "ResUNet_16x_DEM_default": {
+      "params": {
+        "model_version": "ResUNet_16x_DEM"
+      },
+      "metrics": {
+        "precision": 3,
+        "mase_m": 0.0,
+        "rmse_m": 0.0,
+        "ssim": 1.0
+      }
+    }
+  },
+  "flags": {
+    "in_hrdem": false,
+    "non_native_scale": true,
+    "allow_zero_border": true
+  }
+}
