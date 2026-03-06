@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from conftest import TEST_TILE_CASES, default_model_version, tile_case, tohr_model_fp
+from conftest import TEST_TILE_CASES, default_model_version, tile_case_d, tohr_model_fp
 from floodsr.cli import _parse_arguments, _resolve_default_output_path, _resolve_tohr_model_spec, main
 
 
@@ -31,18 +31,18 @@ _RESOLVE_MODEL_CASES = [pytest.param(TEST_TILE_CASES[0], id=f"data_case_resolve_
 _FETCH_PARSE_CASES = [pytest.param(TEST_TILE_CASES[0], id=f"data_case_fetch_parse_{TEST_TILE_CASES[0].lower()}")]
 
 
-@pytest.mark.parametrize("tile_case", _BASELINE_TOHR_CASES, indirect=True)
+@pytest.mark.parametrize("case_id", _BASELINE_TOHR_CASES)
 def test_main_tohr_runs_data_driven_baseline_case(
     tohr_model_fp: Path,
     tmp_path: Path,
-    tile_case: dict,
+    tile_case_d: dict,
 ) -> None:
     """Ensure tohr command runs for a non-HRDEM data-driven case."""
     pytest.importorskip("onnxruntime")
     rasterio = pytest.importorskip("rasterio")
-    case_spec = tile_case["case_spec"]
-    tile_dir = tile_case["tile_dir"]
-    output_fp = tmp_path / f"{tile_case['case_name']}_pred_cli.tif"
+    case_spec = tile_case_d["case_spec"]
+    tile_dir = tile_case_d["tile_dir"]
+    output_fp = tmp_path / f"{tile_case_d['case_name']}_pred_cli.tif"
 
     assert not case_spec["flags"]["in_hrdem"]
     exit_code = main(
@@ -66,18 +66,18 @@ def test_main_tohr_runs_data_driven_baseline_case(
     assert pred.size > 0
 
 
-@pytest.mark.parametrize("tile_case", _SPECIAL_TOHR_CASES, indirect=True)
+@pytest.mark.parametrize("case_id", _SPECIAL_TOHR_CASES)
 def test_main_tohr_runs_in_hrdem_flagged_case(
     tohr_model_fp: Path,
     tmp_path: Path,
-    tile_case: dict,
+    tile_case_d: dict,
 ) -> None:
     """Ensure tohr command runs for in_hrdem-flagged cases."""
     pytest.importorskip("onnxruntime")
     pytest.importorskip("rasterio")
-    case_spec = tile_case["case_spec"]
-    tile_dir = tile_case["tile_dir"]
-    output_fp = tmp_path / f"{tile_case['case_name']}_pred_cli_in_hrdem.tif"
+    case_spec = tile_case_d["case_spec"]
+    tile_dir = tile_case_d["tile_dir"]
+    output_fp = tmp_path / f"{tile_case_d['case_name']}_pred_cli_in_hrdem.tif"
 
     assert case_spec["flags"]["in_hrdem"]
     exit_code = main(
@@ -102,11 +102,11 @@ def test_main_tohr_runs_in_hrdem_flagged_case(
     assert output_fp.exists()
 
 
-@pytest.mark.parametrize("tile_case", _DEFAULT_OUTPUT_CASES, indirect=True)
-def test_default_output_path_uses_cwd_and_input_stem(tmp_path: Path, tile_case: dict):
+@pytest.mark.parametrize("case_id", _DEFAULT_OUTPUT_CASES)
+def test_default_output_path_uses_cwd_and_input_stem(tmp_path: Path, tile_case_d: dict):
     """Ensure ToHR default output path is generated in cwd with _sr suffix."""
-    case_spec = tile_case["case_spec"]
-    tile_dir = tile_case["tile_dir"]
+    case_spec = tile_case_d["case_spec"]
+    tile_dir = tile_case_d["tile_dir"]
     input_fp = tile_dir / case_spec["inputs"]["lowres_fp"]
     cwd = os.getcwd()
     try:
@@ -118,10 +118,10 @@ def test_default_output_path_uses_cwd_and_input_stem(tmp_path: Path, tile_case: 
     assert output_fp == (tmp_path / f"{input_fp.stem}_sr.tif").resolve()
 
 
-@pytest.mark.parametrize("tile_case", _RESOLVE_MODEL_CASES, indirect=True)
+@pytest.mark.parametrize("case_id", _RESOLVE_MODEL_CASES)
 def test_resolve_tohr_model_spec_uses_cached_manifest_default(
     tmp_path: Path,
-    tile_case: dict,
+    tile_case_d: dict,
     default_model_version: str,
 ):
     """Ensure ToHR default model resolution uses cached first runnable manifest model."""
@@ -154,14 +154,14 @@ def test_resolve_tohr_model_spec_uses_cached_manifest_default(
             str(cache_dir),
         ]
     )
-    case_spec = tile_case["case_spec"]
+    case_spec = tile_case_d["case_spec"]
     args = _parse_arguments(
         [
             "tohr",
             "--in",
-            str(tile_case["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
+            str(tile_case_d["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
             "--dem",
-            str(tile_case["tile_dir"] / case_spec["inputs"]["dem_fp"]),
+            str(tile_case_d["tile_dir"] / case_spec["inputs"]["dem_fp"]),
             "--manifest",
             str(manifest_fp),
             "--cache-dir",
@@ -174,15 +174,15 @@ def test_resolve_tohr_model_spec_uses_cached_manifest_default(
     assert model_fp.exists()
 
 
-@pytest.mark.parametrize("tile_case", _FETCH_PARSE_CASES, indirect=True)
-def test_parse_tohr_allows_fetch_hrdem_without_dem(tile_case: dict):
+@pytest.mark.parametrize("case_id", _FETCH_PARSE_CASES)
+def test_parse_tohr_allows_fetch_hrdem_without_dem(tile_case_d: dict):
     """Ensure tohr parser accepts --fetch-hrdem without requiring --dem."""
-    case_spec = tile_case["case_spec"]
+    case_spec = tile_case_d["case_spec"]
     parsed_args = _parse_arguments(
         [
             "tohr",
             "--in",
-            str(tile_case["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
+            str(tile_case_d["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
             "--fetch-hrdem",
         ]
     )
@@ -191,15 +191,15 @@ def test_parse_tohr_allows_fetch_hrdem_without_dem(tile_case: dict):
     assert parsed_args.dem is None
 
 
-@pytest.mark.parametrize("tile_case", _FETCH_PARSE_CASES, indirect=True)
-def test_parse_tohr_allows_fetch_force_tiling_flag(tile_case: dict):
+@pytest.mark.parametrize("case_id", _FETCH_PARSE_CASES)
+def test_parse_tohr_allows_fetch_force_tiling_flag(tile_case_d: dict):
     """Ensure tohr parser accepts --fetch-force-tiling when HRDEM fetch is enabled."""
-    case_spec = tile_case["case_spec"]
+    case_spec = tile_case_d["case_spec"]
     parsed_args = _parse_arguments(
         [
             "tohr",
             "--in",
-            str(tile_case["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
+            str(tile_case_d["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
             "--fetch-hrdem",
             "--fetch-force-tiling",
         ]
@@ -208,13 +208,13 @@ def test_parse_tohr_allows_fetch_force_tiling_flag(tile_case: dict):
     assert parsed_args.fetch_force_tiling is True
 
 
-@pytest.mark.parametrize("tile_case", _FETCH_PARSE_CASES, indirect=True)
-def test_parse_tohr_allows_machine_json_only(tile_case: dict, tmp_path: Path):
+@pytest.mark.parametrize("case_id", _FETCH_PARSE_CASES)
+def test_parse_tohr_allows_machine_json_only(tile_case_d: dict, tmp_path: Path):
     """Ensure tohr parser accepts machine-interface JSON as an alternate required-arg source."""
-    case_spec = tile_case["case_spec"]
+    case_spec = tile_case_d["case_spec"]
     machine_payload = {
-        "in_fp": str(tile_case["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
-        "dem": str(tile_case["tile_dir"] / case_spec["inputs"]["dem_fp"]),
+        "in_fp": str(tile_case_d["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
+        "dem": str(tile_case_d["tile_dir"] / case_spec["inputs"]["dem_fp"]),
     }
     machine_json_fp = tmp_path / "tohr_machine.json"
     machine_json_fp.write_text(json.dumps(machine_payload), encoding="utf-8")
@@ -224,13 +224,13 @@ def test_parse_tohr_allows_machine_json_only(tile_case: dict, tmp_path: Path):
     assert parsed_args.dem == Path(machine_payload["dem"])
 
 
-@pytest.mark.parametrize("tile_case", _FETCH_PARSE_CASES, indirect=True)
-def test_parse_tohr_cli_args_override_machine_json(tile_case: dict, tmp_path: Path):
+@pytest.mark.parametrize("case_id", _FETCH_PARSE_CASES)
+def test_parse_tohr_cli_args_override_machine_json(tile_case_d: dict, tmp_path: Path):
     """Ensure explicit CLI args retain precedence over machine-interface JSON."""
-    case_spec = tile_case["case_spec"]
+    case_spec = tile_case_d["case_spec"]
     machine_payload = {
-        "in_fp": str(tile_case["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
-        "dem": str(tile_case["tile_dir"] / case_spec["inputs"]["dem_fp"]),
+        "in_fp": str(tile_case_d["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
+        "dem": str(tile_case_d["tile_dir"] / case_spec["inputs"]["dem_fp"]),
     }
     machine_json_fp = tmp_path / "tohr_machine_override.json"
     machine_json_fp.write_text(json.dumps(machine_payload), encoding="utf-8")
@@ -252,34 +252,34 @@ def test_parse_tohr_cli_args_override_machine_json(tile_case: dict, tmp_path: Pa
     assert parsed_args.dem == override_dem_fp
 
 
-@pytest.mark.parametrize("tile_case", _FETCH_PARSE_CASES, indirect=True)
-def test_parse_tohr_rejects_dem_and_fetch_hrdem_together(tile_case: dict):
+@pytest.mark.parametrize("case_id", _FETCH_PARSE_CASES)
+def test_parse_tohr_rejects_dem_and_fetch_hrdem_together(tile_case_d: dict):
     """Ensure tohr parser rejects simultaneous --dem and --fetch-hrdem."""
-    case_spec = tile_case["case_spec"]
+    case_spec = tile_case_d["case_spec"]
     with pytest.raises(SystemExit):
         _parse_arguments(
             [
                 "tohr",
                 "--in",
-                str(tile_case["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
+                str(tile_case_d["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
                 "--dem",
-                str(tile_case["tile_dir"] / case_spec["inputs"]["dem_fp"]),
+                str(tile_case_d["tile_dir"] / case_spec["inputs"]["dem_fp"]),
                 "--fetch-hrdem",
             ]
         )
 
 
-@pytest.mark.parametrize("tile_case", _FETCH_PARSE_CASES, indirect=True)
-def test_main_tohr_fetch_out_requires_fetch_hrdem(tile_case: dict, tmp_path: Path):
+@pytest.mark.parametrize("case_id", _FETCH_PARSE_CASES)
+def test_main_tohr_fetch_out_requires_fetch_hrdem(tile_case_d: dict, tmp_path: Path):
     """Ensure tohr runtime rejects --fetch-out unless --fetch-hrdem is enabled."""
-    case_spec = tile_case["case_spec"]
+    case_spec = tile_case_d["case_spec"]
     exit_code = main(
         [
             "tohr",
             "--in",
-            str(tile_case["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
+            str(tile_case_d["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
             "--dem",
-            str(tile_case["tile_dir"] / case_spec["inputs"]["dem_fp"]),
+            str(tile_case_d["tile_dir"] / case_spec["inputs"]["dem_fp"]),
             "--fetch-out",
             str(tmp_path / "fetched_dem.tif"),
         ]

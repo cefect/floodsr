@@ -4,11 +4,11 @@ import logging
 from pathlib import Path
 
 from floodsr.dem_sources.base import DemFetchResult
-from floodsr.dem_sources.hrdem_mosaic import fetch_hrdem_for_lowres_tile
+from floodsr.dem_sources.hrdem_mosaic import main_fetch_hrdem_for_lowres_tile
 
 
 _SOURCE_REGISTRY = {
-    "hrdem": fetch_hrdem_for_lowres_tile,
+    "hrdem": main_fetch_hrdem_for_lowres_tile,
 }
 
 

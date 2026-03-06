@@ -42,6 +42,7 @@ DEFAULT_ASSET = "dtm"
   - bundle chunks into a VRT for downstream processing (avoid in-memory merge)
 - HRDEM coverage is irrugalr and discontinuous and dynamic:
   - pre-filter the fetch by querying [HRDEM Project Extent](https://maps-cartes.services.geo.ca/server_serveur/rest/services/NRCan/coverage_HRDEM_en/MapServer/4). see `proof_of_concepts/hrdem_project_extent.ipynb`
+  - use returned project extent polygon geometries for tile filtering (not feature bbox-only checks)
   - warn when the user attempts to query a fetch tile with no coverage, and omit fetching this tile. 
 - Use 3979 bbox only for candidate discovery (STAC), then exact intersection
 
@@ -53,10 +54,10 @@ DEFAULT_ASSET = "dtm"
     - fetch from hrdem mosaic in one go (no tiling) and merge in-memory. (current implementation)
 - `tiled`:
   - download HRDEM Project Extent features intersecting fetch footprint polygon (3979). throw error if no features returned.
-  - build a tiling scheme using lores/query crs, rounded to 10m. write tiling to tmp as .gpkg for debugging. 
-  - check intersect of fetch tiles (lores crs) against hardem project extent features (3979):
+  - build a tiling scheme in fetch-native/source CRS (no eager conversion to 3979).
+  - inside the tiled fetch loop, convert each fetch-tile geometry/bounds to 3979 only for HRDEM Project Extent polygon intersection checks.
     - throw error if no intersecting tiles
-    - warn if there are any fetch tiles that DO NOT intersect. store keys of these so we know not to fetch them downstream.
+    - warn when a tile does not intersect and write nodata for that tile (skip source reads for that tile).
   - loop through the tile grid (progress bar)
     - bbox fetch tile to 3979
     - build a cache payload and filepath for this tile

@@ -56,4 +56,4 @@ dist/
 
 #dont want to share this
 tests/data/fathom_n51w115/n51w115_preprocessed.tif
-tests/data/fathom_n51w115_clip/lores.tif
+tests/data/fathom_clip/lores.tif

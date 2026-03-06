@@ -8,13 +8,13 @@ import pytest
 import floodsr.dem_sources.catalog
 import floodsr.tohr
 import misc.eval
-from conftest import default_model_version, logger, synthetic_tohr_tiles, tile_case, tohr_model_fp
+from conftest import default_model_version, logger, synthetic_tohr_tiles, tile_case_d, tohr_model_fp
 import rasterio
 
 pytestmark = pytest.mark.e2e
 
 @pytest.mark.parametrize(
-    "tile_case,payload_kwargs",
+    "case_id,payload_kwargs",
     [
         pytest.param("2407_FHIMP_tile", {}, id="data_case_2407_fhimp_tile"),
         pytest.param("rss_dudelange_A", {}, id="data_case_rss_dudelange_a"),
@@ -24,11 +24,10 @@ pytestmark = pytest.mark.e2e
             id="fathom_n51w115",
         ),
     ],
-    indirect=["tile_case"],
 )
 def test_tohr_regression_matches_case_spec_metrics(
     tohr_model_fp: Path,
-    tile_case: dict,
+    tile_case_d: dict,
     payload_kwargs: dict,
     tmp_path: Path,
     logger,
@@ -36,12 +35,12 @@ def test_tohr_regression_matches_case_spec_metrics(
     """Validate ToHR metrics for all data-driven case specs via direct tohr invocation."""
     # `tohr_model_fp` is provided by tests/conftest.py::tohr_model_fp (local _inputs model or fetched cache model).
     # Load the per-case spec and input directory for metric comparisons.
-    case_spec = tile_case["case_spec"]
-    tile_dir = tile_case["tile_dir"]
+    case_spec = tile_case_d["case_spec"]
+    tile_dir = tile_case_d["tile_dir"]
     # Run each expected configuration and compare rounded metrics against spec.
     for run_label, run_spec in case_spec["expected"].items():
         # Build ToHR call arguments directly from case spec params.
-        output_fp = tmp_path / f"{tile_case['case_name']}_{run_label}_pred_sr.tif"
+        output_fp = tmp_path / f"{tile_case_d['case_name']}_{run_label}_pred_sr.tif"
         depth_lr_fp = tile_dir / case_spec["inputs"]["lowres_fp"]
         dem_hr_fp = tile_dir / case_spec["inputs"]["dem_fp"]
         run_params = run_spec["params"].copy()
@@ -73,9 +72,9 @@ def test_tohr_regression_matches_case_spec_metrics(
                 logger=logger,
             )
         except Exception as err:
-            pytest.fail(f"tohr failed for case={tile_case['case_name']} run={run_label}; error={err}")
+            pytest.fail(f"tohr failed for case={tile_case_d['case_name']} run={run_label}; error={err}")
 
-        assert output_fp.exists(), f"missing tohr output for case={tile_case['case_name']} run={run_label}: {output_fp}"
+        assert output_fp.exists(), f"missing tohr output for case={tile_case_d['case_name']} run={run_label}: {output_fp}"
         # Compute eval metrics from generated prediction and compare with expected.
         metrics = misc.eval.compute_depth_error_metrics_from_file(
             reference_fp=tile_dir / case_spec["inputs"]["truth_fp"],

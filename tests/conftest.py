@@ -28,6 +28,17 @@ def _read_tile_case(case_name: str) -> dict:
         and "dem_fp" in case_spec["inputs"]
         and "truth_fp" in case_spec["inputs"]
     ), f"invalid case inputs for {case_name}"
+    # Validate configured input paths, but allow explicit `False` sentinels for optional inputs.
+    for input_key in ("lowres_fp", "dem_fp", "truth_fp"):
+        input_value = case_spec["inputs"][input_key]
+        if input_value is False:
+            continue
+        assert isinstance(input_value, str) and input_value.strip(), (
+            f"invalid case input value for {case_name}/{input_key}: {input_value!r}"
+        )
+        assert (tile_dir / input_value).exists(), (
+            f"missing case input file for {case_name}/{input_key}:\n    {tile_dir / input_value}"
+        )
     assert isinstance(case_spec["expected"], dict) and case_spec["expected"], f"invalid expected block for {case_name}"
     for run_label, run_spec in case_spec["expected"].items():
         assert "params" in run_spec and "metrics" in run_spec, f"invalid expected run block for {case_name}/{run_label}"
@@ -147,11 +158,11 @@ def default_model_version():
 
 
 @pytest.fixture
-def tile_case(request, tile_case_catalog):
-    """Return a tile case by explicit name parameter."""
-    case_name = request.param
-    assert case_name in tile_case_catalog, f"missing tile case in catalog: {case_name}"
-    return tile_case_catalog[case_name]
+def tile_case_d(case_id, tile_case_catalog):
+    """Return one tile case payload by explicit case_id parameter."""
+    assert isinstance(case_id, str) and case_id.strip(), f"invalid case_id parameter: {case_id!r}"
+    assert case_id in tile_case_catalog, f"missing tile case in catalog: {case_id}"
+    return tile_case_catalog[case_id]
 
 
 @pytest.fixture(scope="session")
