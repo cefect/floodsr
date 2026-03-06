@@ -131,6 +131,7 @@ def _build_tohr_machine_cli_tokens(payload: dict[str, object], argv: list[str]) 
         "dem": "--dem",
         "fetch_hrdem": "--fetch-hrdem",
         "fetch_out": "--fetch-out",
+        "fetch_force_tiling": "--fetch-force-tiling",
         "out": "--out",
         "model_version": "--model-version",
         "model_path": "--model-path",
@@ -145,7 +146,7 @@ def _build_tohr_machine_cli_tokens(payload: dict[str, object], argv: list[str]) 
         "tile_size": "--tile-size",
         "crs_policy": "--crs-policy",
     }
-    bool_flags = {"fetch_hrdem", "force"}
+    bool_flags = {"fetch_hrdem", "fetch_force_tiling", "force"}
     cli_tokens = []
     for raw_key, value in payload.items():
         key = _normalize_machine_key(raw_key)
@@ -222,6 +223,7 @@ def main_cli(args: argparse.Namespace) -> int:
                 source_id="hrdem",
                 depth_lr_fp=args.in_fp,
                 output_fp=args.fetch_out,
+                fetch_force_tiling=args.fetch_force_tiling,
                 logger=log,
             )
             dem_fp = fetch_result.dem_fp
@@ -354,6 +356,11 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
         type=Path,
         default=None,
         help="Optional output path for fetched HRDEM tile. Defaults to temp directory.",
+    )
+    tohr_parser.add_argument(
+        "--fetch-force-tiling",
+        action="store_true",
+        help="Force tiled HRDEM fetch windows (default auto-triggers when estimated fetch exceeds memory limit).",
     )
     tohr_parser.add_argument(
         "--out",

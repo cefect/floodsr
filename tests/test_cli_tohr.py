@@ -187,7 +187,25 @@ def test_parse_tohr_allows_fetch_hrdem_without_dem(tile_case: dict):
         ]
     )
     assert parsed_args.fetch_hrdem is True
+    assert parsed_args.fetch_force_tiling is False
     assert parsed_args.dem is None
+
+
+@pytest.mark.parametrize("tile_case", _FETCH_PARSE_CASES, indirect=True)
+def test_parse_tohr_allows_fetch_force_tiling_flag(tile_case: dict):
+    """Ensure tohr parser accepts --fetch-force-tiling when HRDEM fetch is enabled."""
+    case_spec = tile_case["case_spec"]
+    parsed_args = _parse_arguments(
+        [
+            "tohr",
+            "--in",
+            str(tile_case["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
+            "--fetch-hrdem",
+            "--fetch-force-tiling",
+        ]
+    )
+    assert parsed_args.fetch_hrdem is True
+    assert parsed_args.fetch_force_tiling is True
 
 
 @pytest.mark.parametrize("tile_case", _FETCH_PARSE_CASES, indirect=True)

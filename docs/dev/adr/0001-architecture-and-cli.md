@@ -38,7 +38,7 @@ see also:
   - `tiling.py` (single shared script for windowing + mosaicking)
 - DEM source abstraction:
   - `dem_sources/base.py`
-  - `dem_sources/hrdem_stac.py`
+  - `dem_sources/hrdem_mosaic.py`
   - `dem_sources/catalog.py`
 - I/O layer:
   - `io/rasterio_io.py`

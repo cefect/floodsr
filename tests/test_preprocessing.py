@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from conftest import logger, synthetic_tohr_tiles
-from floodsr.dem_sources.hrdem_stac import write_dem_from_asset_hrefs
+from floodsr.dem_sources.hrdem_mosaic import write_dem_from_asset_hrefs
 from floodsr.preprocessing import write_platform_prepared_rasters, write_prepared_rasters
 
 

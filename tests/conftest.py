@@ -86,17 +86,26 @@ def pytest_report_header(config):
 # ----- Fixtures -----
 # -------------------
 @pytest.fixture(scope="session")
-def logger():
+def logger(tmp_path_factory):
     """Simple logger fixture for the function under test."""
     log = logging.getLogger("pytest")
     log.setLevel(logging.DEBUG)
+    # Write pytest logger output to a stable per-session file in pytest temp output.
+    log_dir = tmp_path_factory.mktemp("test_logs")
+    log_fp = log_dir / "pytest.session.log"
+    formatter = logging.Formatter("%(levelname)s:%(name)s:%(message)s")
     # keep handlers minimal to avoid duplicate logs across runs
-    if not log.handlers:
-        handler = logging.StreamHandler()
-        handler.setLevel(logging.DEBUG)
-        formatter = logging.Formatter("%(levelname)s:%(name)s:%(message)s")
-        handler.setFormatter(formatter)
-        log.addHandler(handler)
+    if not any(isinstance(handler, logging.StreamHandler) and not isinstance(handler, logging.FileHandler) for handler in log.handlers):
+        stream_handler = logging.StreamHandler()
+        stream_handler.setLevel(logging.DEBUG)
+        stream_handler.setFormatter(formatter)
+        log.addHandler(stream_handler)
+    if not any(isinstance(handler, logging.FileHandler) and pathlib.Path(handler.baseFilename) == log_fp for handler in log.handlers):
+        file_handler = logging.FileHandler(log_fp)
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(formatter)
+        log.addHandler(file_handler)
+    log.info(f"pytest logger file:\n    {log_fp}")
     return log
 
 
