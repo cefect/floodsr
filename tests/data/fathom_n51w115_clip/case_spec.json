@@ -1,6 +1,6 @@
 {
   "inputs": {
-    "lowres_fp": "n51w115_preprocessed.tif",
+    "lowres_fp": "lores.tif",
     "dem_fp": false,
     "truth_fp": false
   },
