@@ -1,4 +1,20 @@
-"""HRDEM STAC backend implementation."""
+"""HRDEM STAC backend implementation.
+
+This module supports two fetch modes: a non-windowed merge for fast, high-memory
+runs and a windowed tile-to-VRT path for lower-memory systems.
+
+Tuning
+------
+The reproducible profile in ``/workspace/misc/profiling`` shows the expected
+tradeoff on the large ``fathom_1024`` fixture. On the 2026-03-06 run,
+``non_windowed`` peaked at about 10.2 GiB RSS in about 206 s, ``windowed_w512``
+peaked at about 5.9 GiB in about 212 s, and ``windowed_w256`` peaked at about
+1.75 GiB in about 260 s. Start with non-windowed on high-memory systems, then
+force tiling and reduce ``fetch_window_size`` as available memory drops. See
+``/workspace/misc/profiling/readme.md`` and
+``/workspace/misc/profiling/output/summary.csv`` for the profile inputs and
+results.
+"""
 
 import hashlib
 import json

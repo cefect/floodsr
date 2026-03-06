@@ -45,50 +45,12 @@ The key fields are:
 - `fetch_window_size`: fetch tile size used for the case
 - `force_tiling`: whether the case was forced onto `_03_read_dem_windowed_tiles_to_vrt`
 
-Inspect one case trace over time:
+# RESULTS
 
-```bash
-head /workspace/misc/profiling/output/windowed_w512_trace.csv
-tail /workspace/misc/profiling/output/windowed_w512_trace.csv
-```
+## 2026-03-06 run
 
-Quickly sort by peak memory:
-
-```bash
-python - <<'PY'
-import csv
-from pathlib import Path
-
-fp = Path("/workspace/misc/profiling/output/summary.csv")
-with fp.open() as f:
-    rows = list(csv.DictReader(f))
-for row in sorted(rows, key=lambda row: float(row["peak_memory_mib"]), reverse=True):
-    print(
-        row["case_id"],
-        f"peak_memory_mib={float(row['peak_memory_mib']):.2f}",
-        f"wall_clock_s={float(row['wall_clock_s']):.2f}",
-    )
-PY
-```
-
-## case definitions
-
-- `non_windowed`
-  - `force_tiling=False`
-  - `memory_limit_gib=4096.0`
-  - intended to hit `_02_read_dem_non_windowed`
-- `windowed_w512`
-  - `force_tiling=True`
-  - `fetch_window_size=512`
-  - intended to hit `_03_read_dem_windowed_tiles_to_vrt`
-- `windowed_w256`
-  - `force_tiling=True`
-  - `fetch_window_size=256`
-  - intended to hit `_03_read_dem_windowed_tiles_to_vrt`
-
-## notes
-
-- The bash entrypoint runs each case in a fresh `conda run -n dev python` process so memory state does not leak between cases.
-- The experiment uses the normal HRDEM fetch code path, including live network access to STAC and project-extent services.
-- `memory_profiler` samples process RSS, so values should be treated as approximate but comparable across cases.
-- The Python module is intentionally not a CLI; it just exposes fixed-case functions used by the bash entrypoint.
+| case_id | status | force_tiling | fetch_window_size | memory_limit_gib | peak_memory_mib | wall_clock_s |
+| --- | --- | --- | --- | --- | --- | --- |
+| `non_windowed` | `ok` | `FALSE` | `256` | `4096` | `10201.69531` | `206.28154708398506` |
+| `windowed_w512` | `ok` | `TRUE` | `512` | `0.01` | `5913.132813` | `211.6905551289965` |
+| `windowed_w256` | `ok` | `TRUE` | `256` | `0.01` | `1752.421875` | `260.3550035379885` |
