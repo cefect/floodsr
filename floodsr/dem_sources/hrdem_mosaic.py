@@ -35,7 +35,7 @@ DEFAULT_ASSET = "dtm"
 PROJECT_EXTENT_URL = (
     "https://maps-cartes.services.geo.ca/server_serveur/rest/services/NRCan/coverage_HRDEM_en/MapServer/4"
 )
-DEFAULT_FETCH_WINDOW_SIZE = 2048
+DEFAULT_FETCH_WINDOW_SIZE = 256 #coarse pixels
 DEFAULT_FETCH_MEMORY_LIMIT_GIB = 16.0
 DEFAULT_STAC_QUERY_LIMIT = 200
 DEFAULT_BOUNDS_DENSIFY_PTS = 21
@@ -47,6 +47,7 @@ DEFAULT_TILE_NUM_THREADS = "ALL_CPUS"
 DEFAULT_TILE_BIGTIFF = "IF_SAFER"
 DEFAULT_VRT_RESOLUTION = "highest"
 DEFAULT_WORK_NODATA = np.float32(-3.4028235e38)
+DEFAULT_NON_WINDOWED_MERGE_MEM_LIMIT_MB = 256
 MIN_TILED_BLOCK_SIZE = 16
 TILE_CACHE_DIR_NAME = "floodsr_hrdem_tile_cache"
 TEMP_OUTPUT_PREFIX = "floodsr_hrdem_output"
@@ -281,7 +282,8 @@ def _estimate_fetch_geometry(
     est_width = max(1, int(np.ceil((clip_bounds[2] - clip_bounds[0]) / pixel_width)))
     est_height = max(1, int(np.ceil((clip_bounds[3] - clip_bounds[1]) / pixel_height)))
     est_pixels = int(est_width * est_height)
-    est_float32_gib = (est_pixels * 4.0) / (1024.0**3)
+    # Approximate peak RAM for the non-windowed path, not just one float32 output array.
+    est_float32_gib = ((est_pixels * (4.0 + 1.0 + 4.0)) / (1024.0**3)) * 1.5
     out_transform = from_bounds(*clip_bounds, est_width, est_height)
     return {
         "source_crs": first_crs,
@@ -554,7 +556,7 @@ def _02_read_dem_non_windowed(
     request_token: str,
     logger=None,
 ) -> dict[str, object]:
-    """Read/write DEM using one full-scene merge in memory with per-tile GeoTIFF caching."""
+    """Read/write DEM using one full-scene merge streamed to disk in chunks."""
     log = logger or logging.getLogger(__name__)
     tile_shape = (int(base_profile["height"]), int(base_profile["width"]))
     tile_cache_key = _build_tile_cache_key(
@@ -567,35 +569,41 @@ def _02_read_dem_non_windowed(
     write_meta_d = {"any_valid": False, "merged_shape": tile_shape}
 
     def _write_non_windowed_dem(write_fp: Path):
-        """Merge one DEM tile from all sources and write to write_fp."""
+        """Merge one DEM tile to disk with a bounded merge working set."""
         src_meta_l = _open_source_meta_list(asset_hrefs, first_crs)
         src_ds_l = [src_meta["ds"] for src_meta in src_meta_l]
+        profile = base_profile.copy()
+        profile["transform"] = base_profile["transform"]
+        profile["height"] = int(base_profile["height"])
+        profile["width"] = int(base_profile["width"])
+        res = (
+            abs(float(profile["transform"].a)),
+            abs(float(profile["transform"].e)),
+        )
 
         try:
-            # Merge once over the target clip bounds.
-            merged_data, out_transform = merge(
+            # Stream the merge to disk so rasterio chunks the destination by mem_limit.
+            merge(
                 src_ds_l,
                 bounds=clip_bounds,
+                res=res,
                 indexes=1,
                 nodata=dst_nodata,
                 dtype="float32",
                 method="last",
+                mem_limit=int(DEFAULT_NON_WINDOWED_MERGE_MEM_LIMIT_MB),
+                dst_path=write_fp,
+                dst_kwds=profile,
             )
         finally:
             _close_source_meta_list(src_meta_l)
-
-        merged = merged_data[0].astype(np.float32, copy=False)
-        valid_mask = _build_valid_mask(merged, dst_nodata)
-        merged_to_write = _finalize_float32_tile(merged, valid_mask, dst_nodata)
-        profile = base_profile.copy()
-        profile["transform"] = out_transform
-        profile["height"] = int(merged_to_write.shape[0])
-        profile["width"] = int(merged_to_write.shape[1])
-        with rasterio.open(write_fp, "w", **profile) as dst_ds:
-            dst_ds.write(merged_to_write, 1)
-        write_meta_d["any_valid"] = bool(valid_mask.any())
-        write_meta_d["merged_shape"] = merged_to_write.shape
-        log.debug(f"non-windowed merge complete: valid_pixels={int(valid_mask.sum()):,}")
+        write_meta_d["any_valid"] = _raster_has_any_valid_pixels(write_fp, dst_nodata)
+        with rasterio.open(write_fp) as ds:
+            write_meta_d["merged_shape"] = (int(ds.height), int(ds.width))
+        log.debug(
+            f"non-windowed merge complete: merged_shape={write_meta_d['merged_shape']}, "
+            f"mem_limit_mb={DEFAULT_NON_WINDOWED_MERGE_MEM_LIMIT_MB:,}"
+        )
 
     dem_fp, cache_hit = _materialize_tif_with_cache(
         out_fp=out_path,
@@ -667,8 +675,8 @@ def _03_read_dem_windowed_tiles_to_vrt(
     )
     edge_tile_count = int(tile_count - full_tile_count)
     log.info(
-        f"window tiling plan: lowres_window_shape={fetch_window_size:,}x{fetch_window_size:,}, "
-        f"lowres_grid_rows={tile_rows:,}, lowres_grid_cols={tile_cols:,}, tiles_total={tile_count:,}, "
+        f"window tiling plan: lowres_window_shape={fetch_window_size:,} x {fetch_window_size:,}, "
+        f"lowres_grid={tile_rows:,}x{tile_cols:,}, tiles_total={tile_count:,}, "
         f"full_tiles={full_tile_count:,}, edge_tiles={edge_tile_count:,}"
     )
     tile_grid_gdf = tile_grid_gdf.copy()
@@ -928,7 +936,7 @@ def write_dem_from_asset_hrefs(
     log.debug(f"reference asset CRS={first_crs}, clip_bounds={clip_bounds}")
     log.info(
         f"raw fetch request grid: width={est_width:,}, height={est_height:,}, "
-        f"pixels={est_pixels:,}, float32_estimate={est_float32_gb:.2f} GiB"
+        f"pixels={est_pixels:,}, non_windowed_peak_estimate={est_float32_gb:.2f} GiB"
     )
 
     base_profile = {
@@ -1082,12 +1090,12 @@ def main_fetch_hrdem_for_lowres_tile(
         log.warning("forcing tiled fetch via configuration")
     elif tiling_enabled:
         log.warning(
-            f"auto-enabling tiled fetch: estimated float32 raster memory {est_float32_gib:.2f} GiB "
+            f"auto-enabling tiled fetch: estimated non-windowed peak memory {est_float32_gib:.2f} GiB "
             f"exceeds limit {memory_limit_gib:.2f} GiB"
         )
     else:
         log.debug(
-            f"estimated float32 raster memory {est_float32_gib:.2f} GiB within limit {memory_limit_gib:.2f} GiB; "
+            f"estimated non-windowed peak memory {est_float32_gib:.2f} GiB within limit {memory_limit_gib:.2f} GiB; "
             "using non-tiled fetch"
         )
 

@@ -313,6 +313,66 @@ def test_write_dem_from_asset_hrefs_synthetic_cases(
         assert not np.any(np.isclose(arr, np.float32(nodata)))
 
 
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "asset_coverage_x_frac",
+    [
+        pytest.param(1.0, id="non_windowed_full_coverage"),
+        pytest.param(0.5, id="non_windowed_partial_coverage"),
+    ],
+)
+def test_write_dem_from_asset_hrefs_non_windowed_outputs_float32_non_empty(
+    tmp_path: Path,
+    logger,
+    synthetic_lowres_builder,
+    asset_coverage_x_frac: float,
+):
+    """Synthetic local assets should exercise the non-windowed write path."""
+    depth_lr_fp, depth_arr, depth_transform = synthetic_lowres_builder(
+        "depth_lr_local_asset_non_windowed",
+        SYNTHETIC_LOCAL_WRITE_BASE_D["depth_shape"],
+        SYNTHETIC_LOCAL_WRITE_BASE_D["depth_res"],
+        SYNTHETIC_LOCAL_WRITE_BASE_D["depth_crs"],
+    )
+    depth_bounds = array_bounds(*depth_arr.shape, depth_transform)
+    asset_fp = tmp_path / "asset_dem_local_non_windowed.tif"
+    asset_arr = np.linspace(
+        100.0,
+        140.0,
+        SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"][0] * SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"][1],
+        dtype=np.float32,
+    ).reshape(SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"])
+    asset_bounds = (
+        depth_bounds[0],
+        depth_bounds[1],
+        depth_bounds[0] + ((depth_bounds[2] - depth_bounds[0]) * float(asset_coverage_x_frac)),
+        depth_bounds[3],
+    )
+    asset_transform = from_bounds(
+        *asset_bounds,
+        SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"][1],
+        SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"][0],
+    )
+    _write_single_band_geotiff(
+        asset_fp,
+        asset_arr,
+        asset_transform,
+        SYNTHETIC_LOCAL_WRITE_BASE_D["asset_crs"],
+        nodata=-9999.0,
+    )
+
+    output_fp = tmp_path / "fetched_dem_local_asset_non_windowed.tif"
+    dem_fp = floodsr.dem_sources.hrdem_mosaic.write_dem_from_asset_hrefs(
+        depth_lr_fp=depth_lr_fp,
+        asset_hrefs=[str(asset_fp)],
+        output_fp=output_fp,
+        logger=logger,
+        fetch_window_size=None,
+    )
+
+    _read_output_dem_with_basic_assertions(dem_fp)
+
+
 @pytest.mark.network
 @pytest.mark.parametrize(
     "case_id",
