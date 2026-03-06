@@ -15,4 +15,5 @@ dependencies:
   - typer=0.24.0
   - pytest=9.0.2
   - tqdm
+  - geopandas-base
   
