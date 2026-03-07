@@ -71,35 +71,39 @@ def test_main_tohr_runs_in_hrdem_flagged_case(
     tohr_model_fp: Path,
     tmp_path: Path,
     tile_case_d: dict,
-) -> None:
+):
     """Ensure tohr command runs for in_hrdem-flagged cases."""
     pytest.importorskip("onnxruntime")
-    pytest.importorskip("rasterio")
+    rasterio = pytest.importorskip("rasterio")
     case_spec = tile_case_d["case_spec"]
     tile_dir = tile_case_d["tile_dir"]
     output_fp = tmp_path / f"{tile_case_d['case_name']}_pred_cli_in_hrdem.tif"
 
     assert case_spec["flags"]["in_hrdem"]
-    exit_code = main(
-        [
-            "tohr",
-            "--in",
-            str(tile_dir / case_spec["inputs"]["lowres_fp"]),
-            "--dem",
-            str(tile_dir / case_spec["inputs"]["dem_fp"]),
-            "--out",
-            str(output_fp),
-            "--model-path",
-            str(tohr_model_fp),
-            "--window-method",
-            "hard",
-            "--tile-overlap",
-            "0",
-        ]
-    )
+    cli_args = [
+        "tohr",
+        "--in",
+        str(tile_dir / case_spec["inputs"]["lowres_fp"]),
+        "--out",
+        str(output_fp),
+        "--model-path",
+        str(tohr_model_fp),
+        "--window-method",
+        "hard",
+        "--tile-overlap",
+        "0",
+    ]
+    if case_spec["inputs"]["dem_fp"] is False:
+        cli_args.extend(["--fetch-hrdem", "--crs-policy", "use-dem"])
+    else:
+        cli_args.extend(["--dem", str(tile_dir / case_spec["inputs"]["dem_fp"])])
+    exit_code = main(cli_args)
+    with rasterio.open(output_fp) as ds:
+        pred = ds.read(1)
 
     assert exit_code == 0
-    assert output_fp.exists()
+    assert pred.dtype == np.float32
+    assert pred.size > 0
 
 
 @pytest.mark.parametrize("case_id", _DEFAULT_OUTPUT_CASES)

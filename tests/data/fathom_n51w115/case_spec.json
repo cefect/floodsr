@@ -20,6 +20,7 @@
   "flags": {
     "in_hrdem": true,
     "non_native_scale": true,
-    "allow_zero_border": true
+    "allow_zero_border": true,
+    "supports_regression_metrics": false
   }
 }

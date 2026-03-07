@@ -49,6 +49,10 @@ def _read_tile_case(case_name: str) -> dict:
             "mase_m" in run_spec["metrics"] and "rmse_m" in run_spec["metrics"] and "ssim" in run_spec["metrics"]
         ), f"missing expected metrics keys for {case_name}/{run_label}"
     assert "in_hrdem" in case_spec["flags"], f"missing required flags.in_hrdem for {case_name}"
+    if "supports_regression_metrics" in case_spec["flags"]:
+        assert isinstance(case_spec["flags"]["supports_regression_metrics"], bool), (
+            f"invalid flags.supports_regression_metrics for {case_name}"
+        )
     return {
         "case_name": case_name,
         "tile_dir": tile_dir,

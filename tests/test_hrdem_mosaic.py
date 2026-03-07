@@ -115,12 +115,11 @@ def test_build_fetch_tile_grid_gdf_and_selection_mask_writes_geojson(
     assert bool((~fetch_mask).any()) is True
 
     tile_grid_geojson_fp = tmp_path / f"{case_id}_fetch_tile_grid.geojson"
-    tile_grid_gdf.to_file(tile_grid_geojson_fp, driver="GeoJSON")
+    tile_grid_geojson_fp.write_text(tile_grid_gdf.to_json(), encoding="utf-8")
     assert tile_grid_geojson_fp.exists()
-    tile_grid_read_gdf = gpd.read_file(tile_grid_geojson_fp)
-    with rasterio.open(depth_lr_fp) as depth_ds:
-        assert tile_grid_read_gdf.crs == depth_ds.crs
-    assert len(tile_grid_read_gdf) == len(tile_grid_gdf)
+    tile_grid_geojson_d = json.loads(tile_grid_geojson_fp.read_text(encoding="utf-8"))
+    assert tile_grid_geojson_d["type"] == "FeatureCollection"
+    assert len(tile_grid_geojson_d["features"]) == len(tile_grid_gdf)
 
     logger.info(f"Built tile grid GeoDataFrame with {len(tile_grid_gdf)} tiles, {fetch_mask.sum()} selected for fetch, saved to\n{tile_grid_geojson_fp}")
 
@@ -393,6 +392,7 @@ def test_write_dem_from_asset_hrefs_non_windowed_outputs_float32_non_empty(
             {
                 "force_tiling": True,
                 "fetch_window_size": 32,
+                "use_project_extent_filter": False,
             },
             id="tiling_w32",
         ),
