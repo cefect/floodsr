@@ -12,7 +12,7 @@ import misc.eval
 from conftest import TEST_TILE_CASES, default_model_version, logger, synthetic_tohr_tiles, tile_case_d, tohr_model_fp
 import rasterio
 
-pytestmark = pytest.mark.e2e
+pytestmark = [pytest.mark.e2e, pytest.mark.network]
 
 _CASE_SPEC_BY_NAME = {
     case_name: json.loads((Path("tests/data") / case_name / "case_spec.json").read_text(encoding="utf-8"))

@@ -34,14 +34,14 @@ What it does:
 
 Purpose:
 - Run the full CI test suite.
-- Exclude local-only sphinx-marked tests.
+- Exclude local-only sphinx-marked tests and all network-marked tests.
 
 What it does:
 1. Checks out the repo.
 2. Sets up Python 3.11.
 3. Installs system GDAL plus project/test dependencies for the extended path.
 4. Runs:
-   - `pytest -m "not sphinx"`
+   - `pytest -m "not sphinx and not network"`
 
 Triggers:
 - `pull_request`
@@ -80,3 +80,4 @@ Typical failure buckets:
 - Packaging/install errors: project metadata, dependency resolution, wheel build.
 - CLI import errors: missing runtime deps or import-time assumptions.
 - Command contract regressions: changed or removed CLI subcommands/options.
+- Test tier selection drift: a network-dependent test is missing `@pytest.mark.network` and leaks into CI.

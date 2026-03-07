@@ -32,6 +32,7 @@ _FETCH_PARSE_CASES = [pytest.param(TEST_TILE_CASES[0], id=f"data_case_fetch_pars
 
 
 @pytest.mark.parametrize("case_id", _BASELINE_TOHR_CASES)
+@pytest.mark.network
 def test_main_tohr_runs_data_driven_baseline_case(
     tohr_model_fp: Path,
     tmp_path: Path,
@@ -67,6 +68,7 @@ def test_main_tohr_runs_data_driven_baseline_case(
 
 
 @pytest.mark.parametrize("case_id", _SPECIAL_TOHR_CASES)
+@pytest.mark.network
 def test_main_tohr_runs_in_hrdem_flagged_case(
     tohr_model_fp: Path,
     tmp_path: Path,
