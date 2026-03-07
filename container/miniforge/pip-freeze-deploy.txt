@@ -36,6 +36,7 @@ pydantic @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_p
 pydantic_core @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_pydantic-core_1762989004/work
 Pygments @ file:///home/conda/feedstock_root/build_artifacts/pygments_1750615794071/work
 pyparsing @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_pyparsing_1769003998/work
+pyproj @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_pyproj_1772623249/work
 PySocks @ file:///home/conda/feedstock_root/build_artifacts/pysocks_1733217236728/work
 pystac @ file:///home/conda/feedstock_root/build_artifacts/pystac_1768070072920/work
 pystac-client @ file:///home/conda/feedstock_root/build_artifacts/pystac-client_1752925287736/work
