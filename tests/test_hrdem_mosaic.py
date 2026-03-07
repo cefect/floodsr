@@ -1,7 +1,10 @@
 """Tests for HRDEM fetch helpers using synthetic and fixture-driven rasters."""
 
 import json
+import os
 from pathlib import Path
+import subprocess
+import sys
 
 import numpy as np
 import pytest
@@ -370,6 +373,92 @@ def test_write_dem_from_asset_hrefs_non_windowed_outputs_float32_non_empty(
     )
 
     _read_output_dem_with_basic_assertions(dem_fp)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "fetch_window_size",
+    [
+        pytest.param(32, id="missing_gdal_forces_non_windowed"),
+    ],
+)
+def test_write_dem_from_asset_hrefs_without_gdal_forces_non_windowed(
+    tmp_path: Path,
+    synthetic_lowres_builder,
+    fetch_window_size: int,
+):
+    """A core-install subprocess should fall back to the non-windowed HRDEM writer."""
+    depth_lr_fp, depth_arr, depth_transform = synthetic_lowres_builder(
+        "depth_lr_local_asset_no_gdal",
+        SYNTHETIC_LOCAL_WRITE_BASE_D["depth_shape"],
+        SYNTHETIC_LOCAL_WRITE_BASE_D["depth_res"],
+        SYNTHETIC_LOCAL_WRITE_BASE_D["depth_crs"],
+    )
+    depth_bounds = array_bounds(*depth_arr.shape, depth_transform)
+    asset_fp = tmp_path / "asset_dem_local_no_gdal.tif"
+    asset_arr = np.linspace(
+        100.0,
+        140.0,
+        SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"][0] * SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"][1],
+        dtype=np.float32,
+    ).reshape(SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"])
+    asset_transform = from_bounds(
+        *depth_bounds,
+        SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"][1],
+        SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"][0],
+    )
+    _write_single_band_geotiff(
+        asset_fp,
+        asset_arr,
+        asset_transform,
+        SYNTHETIC_LOCAL_WRITE_BASE_D["asset_crs"],
+        nodata=-9999.0,
+    )
+
+    # Shadow the installed osgeo package so the subprocess sees a core-only environment.
+    shadow_root = tmp_path / "shadow_core"
+    shadow_pkg = shadow_root / "osgeo"
+    shadow_pkg.mkdir(parents=True, exist_ok=True)
+    (shadow_pkg / "__init__.py").write_text('raise ModuleNotFoundError("simulated missing osgeo")\n', encoding="utf-8")
+
+    script_fp = tmp_path / "run_no_gdal_fallback.py"
+    output_fp = tmp_path / "fetched_dem_local_asset_no_gdal.vrt"
+    script_fp.write_text(
+        "\n".join(
+            [
+                "import json",
+                "from pathlib import Path",
+                "import floodsr.dem_sources.hrdem_mosaic",
+                "",
+                "dem_fp = floodsr.dem_sources.hrdem_mosaic.write_dem_from_asset_hrefs(",
+                f"    depth_lr_fp={json.dumps(str(depth_lr_fp))},",
+                f"    asset_hrefs={[str(asset_fp)]!r},",
+                f"    output_fp={json.dumps(str(output_fp))},",
+                f"    fetch_window_size={int(fetch_window_size)},",
+                ")",
+                "dem_path = Path(dem_fp)",
+                'tile_dir = dem_path.parent / f"{dem_path.stem}__fetch_tiles"',
+                'print(json.dumps({"suffix": dem_path.suffix, "tile_dir_exists": tile_dir.exists()}))',
+            ]
+        ),
+        encoding="utf-8",
+    )
+    env = os.environ.copy()
+    env["PYTHONPATH"] = os.pathsep.join(
+        [value for value in (str(shadow_root), str(Path.cwd()), env.get("PYTHONPATH", "")) if value]
+    )
+    result = subprocess.run(
+        [sys.executable, str(script_fp)],
+        check=True,
+        capture_output=True,
+        cwd=Path.cwd(),
+        env=env,
+        text=True,
+    )
+    payload = json.loads(result.stdout.strip().splitlines()[-1])
+
+    assert payload["suffix"] == ".tif"
+    assert payload["tile_dir_exists"] is False
 
 
 @pytest.mark.network

@@ -19,7 +19,7 @@ Recommended first install:
 
    pipx install floodsr
 
-See :doc:`installation` for full installation paths.
+This is the core install. See :doc:`installation` for the extended GDAL-backed path.
 
 Quickstart
 ----------

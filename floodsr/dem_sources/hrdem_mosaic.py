@@ -1,7 +1,9 @@
 """HRDEM STAC backend implementation.
 
 This module supports two fetch modes: a non-windowed merge for fast, high-memory
-runs and a windowed tile-to-VRT path for lower-memory systems.
+runs and a windowed tile-to-VRT path for lower-memory systems. When GDAL Python
+bindings are unavailable, tiled requests are forced onto the non-windowed path
+so the core install remains importable and usable.
 
 Tuning
 ------
@@ -27,8 +29,6 @@ from typing import Callable
 from urllib.parse import urlencode
 from urllib.request import urlopen
 
-from osgeo import gdal
-
 import geopandas as gpd
 import numpy as np
 
@@ -42,6 +42,12 @@ from tqdm.auto import tqdm
 
 
 from floodsr.dem_sources.base import DemFetchResult
+
+
+try:
+    from osgeo import gdal
+except ImportError:
+    gdal = None
 
 
 SOURCE_ID = "hrdem"
@@ -67,6 +73,11 @@ DEFAULT_NON_WINDOWED_MERGE_MEM_LIMIT_MB = 256
 MIN_TILED_BLOCK_SIZE = 16
 TILE_CACHE_DIR_NAME = "floodsr_hrdem_tile_cache"
 TEMP_OUTPUT_PREFIX = "floodsr_hrdem_output"
+
+
+def _gdal_is_available() -> bool:
+    """Return True when GDAL Python bindings are importable."""
+    return gdal is not None
 
 
 def _build_request_token(
@@ -663,6 +674,7 @@ def _03_read_dem_windowed_tiles_to_vrt(
 ) -> dict[str, object]:
     """Read DEM windows into per-tile GeoTIFFs and assemble one VRT mosaic."""
     log = logger or logging.getLogger(__name__)
+    assert _gdal_is_available(), "windowed VRT assembly requires GDAL Python bindings"
     log.debug(f"_03_read_dem_windowed_tiles_to_vrt start: assets={len(asset_hrefs)}, out_path={out_path}")
     # Normalize and validate the requested fetch tile size.
     fetch_window_size = int(fetch_window_size)
@@ -918,6 +930,19 @@ def write_dem_from_asset_hrefs(
     log = logger or logging.getLogger(__name__)
     # Resolve query geometry once, then derive source-grid fetch geometry.
     depth_query = _resolve_depth_query_geometry(depth_lr_fp)
+    if fetch_window_size is not None:
+        fetch_window_size = int(fetch_window_size)
+        assert fetch_window_size > 0, f"fetch_window_size must be > 0; got {fetch_window_size}"
+    assert asset_hrefs, "asset_hrefs must not be empty"
+
+    # Force the wheel-friendly merge path whenever GDAL bindings are absent.
+    if fetch_window_size is not None and not _gdal_is_available():
+        log.warning(
+            f"GDAL Python bindings not available; forcing non-windowed HRDEM read and ignoring "
+            f"fetch_window_size={fetch_window_size}"
+        )
+        fetch_window_size = None
+
     if request_token is None:
         request_token = _build_request_token(
             depth_bounds=depth_query["depth_bounds"],
@@ -926,18 +951,20 @@ def write_dem_from_asset_hrefs(
             asset_key="direct_assets",
             tiling_enabled=bool(fetch_window_size is not None),
             fetch_window_size=0 if fetch_window_size is None else int(fetch_window_size),
-            use_project_extent_filter=bool(use_project_extent_filter),
+            use_project_extent_filter=bool(fetch_window_size is not None and use_project_extent_filter),
         )
-    assert asset_hrefs, "asset_hrefs must not be empty"
     log.debug(
         f"write_dem_from_asset_hrefs inputs: depth_lr_fp={depth_query['depth_fp']}, "
         f"depth_crs={depth_query['depth_crs']}, depth_bounds={depth_query['depth_bounds']}, "
         f"depth_shape={(int(depth_query['depth_height']), int(depth_query['depth_width']))}, "
         f"asset_count={len(asset_hrefs)}, request_token={request_token}, use_cache={use_cache}, "
-        f"use_project_extent_filter={use_project_extent_filter}"
+        f"fetch_window_size={fetch_window_size}, use_project_extent_filter={use_project_extent_filter}, "
+        f"gdal_available={_gdal_is_available()}"
     )
 
     out_path = Path(output_fp).expanduser().resolve()
+    if fetch_window_size is None and out_path.suffix.lower() == ".vrt":
+        out_path = out_path.with_suffix(".tif")
     out_path.parent.mkdir(parents=True, exist_ok=True)
     geom = _estimate_fetch_geometry(depth_query["depth_crs"], depth_query["depth_bounds"], asset_hrefs[0])
     first_crs = geom["source_crs"]
@@ -1059,6 +1086,7 @@ def main_fetch_hrdem_for_lowres_tile(
         f"  stac_url={stac_url}\n"
         f"  collection={collection}\n"
         f"  asset_key={asset_key}\n"
+        f"  gdal_available={_gdal_is_available()}\n"
         f"  force_tiling={force_tiling}\n"
         f"  fetch_window_size={fetch_window_size}\n"
         f"  memory_limit_gib={memory_limit_gib:.2f}\n"
@@ -1101,9 +1129,19 @@ def main_fetch_hrdem_for_lowres_tile(
         f"found {len(item_ids)} HRDEM item(s) intersecting low-res tile bounds after exact intersection filter"
     )
     est_float32_gib = float(fetch_geom["float32_gib"])
-    tiling_enabled = bool(force_tiling or est_float32_gib > float(memory_limit_gib))
-    if force_tiling:
+    tiling_requested = bool(force_tiling or est_float32_gib > float(memory_limit_gib))
+    tiling_enabled = bool(tiling_requested and _gdal_is_available())
+    if force_tiling and not tiling_enabled:
+        log.warning(
+            "forcing non-windowed fetch because GDAL Python bindings are unavailable even though tiled fetch was requested"
+        )
+    elif force_tiling:
         log.warning("forcing tiled fetch via configuration")
+    elif tiling_requested and not tiling_enabled:
+        log.warning(
+            f"estimated non-windowed peak memory {est_float32_gib:.2f} GiB exceeds limit {memory_limit_gib:.2f} GiB, "
+            "but GDAL Python bindings are unavailable so non-windowed fetch remains in use"
+        )
     elif tiling_enabled:
         log.warning(
             f"auto-enabling tiled fetch: estimated non-windowed peak memory {est_float32_gib:.2f} GiB "
