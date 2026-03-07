@@ -86,6 +86,7 @@ We also want to keep tests organized by *module* (mirroring the package layout),
    - `e2e`: CLI-level tests that exercise the pipeline end-to-end.
    - `network`: tests that require network access (e.g., downloading pinned weights/test data).
    - `sphinx`: local-only docs/linkcheck tests.
+   - `local`: local-only (requires un-commited data). 
 
 2. **Test organization mirrors modules**, not tiers:
    - `tests/<module_path>/test_*.py`
@@ -125,6 +126,7 @@ Add to  `pytest.ini`  marker registration:
 - `e2e`: end-to-end CLI/system tests
 - `network`: requires network access for pinned artifacts
 - `sphinx`: local-only docs/linkcheck tests
+- `local`: local-only tests that depend on local fixture data
 
 ### Example structure
 

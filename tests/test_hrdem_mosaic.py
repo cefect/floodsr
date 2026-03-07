@@ -79,7 +79,7 @@ def _read_output_dem_with_basic_assertions(dem_fp: str | Path):
 @pytest.mark.parametrize(
     "case_id",
     [
-        pytest.param("fathom_clip", id="fathom_clip"),
+        pytest.param("fathom_clip", id="fathom_clip", marks=pytest.mark.local),
     ],
 )
 def test_build_fetch_tile_grid_gdf_and_selection_mask_writes_geojson(
@@ -143,6 +143,7 @@ def test_build_fetch_tile_grid_gdf_and_selection_mask_writes_geojson(
         pytest.param(
             "fathom_clip",
             id="fathom_clip",
+            marks=pytest.mark.local,
         ),
     ],
 )
@@ -375,7 +376,7 @@ def test_write_dem_from_asset_hrefs_non_windowed_outputs_float32_non_empty(
     _read_output_dem_with_basic_assertions(dem_fp)
 
 
-@pytest.mark.unit
+
 @pytest.mark.parametrize(
     "fetch_window_size",
     [
@@ -388,9 +389,10 @@ def test_write_dem_from_asset_hrefs_without_gdal_forces_non_windowed(
     fetch_window_size: int,
 ):
     """A core-install subprocess should fall back to the non-windowed HRDEM writer."""
+    # Keep this fixture minimal because subprocess startup already dominates runtime.
     depth_lr_fp, depth_arr, depth_transform = synthetic_lowres_builder(
         "depth_lr_local_asset_no_gdal",
-        SYNTHETIC_LOCAL_WRITE_BASE_D["depth_shape"],
+        (1, 1),
         SYNTHETIC_LOCAL_WRITE_BASE_D["depth_res"],
         SYNTHETIC_LOCAL_WRITE_BASE_D["depth_crs"],
     )
@@ -399,13 +401,13 @@ def test_write_dem_from_asset_hrefs_without_gdal_forces_non_windowed(
     asset_arr = np.linspace(
         100.0,
         140.0,
-        SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"][0] * SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"][1],
+        8 * 8,
         dtype=np.float32,
-    ).reshape(SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"])
+    ).reshape((8, 8))
     asset_transform = from_bounds(
         *depth_bounds,
-        SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"][1],
-        SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"][0],
+        8,
+        8,
     )
     _write_single_band_geotiff(
         asset_fp,
