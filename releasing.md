@@ -51,9 +51,9 @@ Configure GitHub Actions Trusted Publishing in both TestPyPI and PyPI for the `f
 ### pre-release to TestPyPI
 
 ```bash
-# 1) start from an up-to-date main branch
-git checkout main
-git pull --ff-only origin main
+# 1) start from an up-to-date master branch
+git checkout master
+git pull --ff-only origin master
 
 # 2) optional local sanity check before tagging
 python -m build
@@ -65,7 +65,7 @@ git push origin v0.1.3rc1
 ```
 
 This triggers `.github/workflows/release.yml`, which:
-- verifies the tagged commit is reachable from `main`
+- verifies the tagged commit is reachable from `master`
 - builds artifacts once
 - runs unit and install-smoke validation
 - publishes to TestPyPI
@@ -74,13 +74,13 @@ This triggers `.github/workflows/release.yml`, which:
 ### stable release to PyPI
 
 ```bash
-# 1) start from an up-to-date main branch
-git checkout main
-git pull --ff-only origin main
+# 1) start from an up-to-date master branch
+git checkout master
+git pull --ff-only origin master
 
 # 2) create and push an annotated stable tag
-git tag -a v0.1.3 -m "Release v0.1.3"
-git push origin v0.1.3
+git tag -a v0.0.2 -m "Release v0.0.2"
+git push origin v0.0.2
 ```
 
 This triggers the same release workflow, but stable tags publish to PyPI instead of TestPyPI.
@@ -90,7 +90,7 @@ This triggers the same release workflow, but stable tags publish to PyPI instead
 After pushing a tag:
 
 1. Open GitHub Actions and confirm the `Release` workflow started from the tag.
-2. Confirm the `verify tag commit is on main` job passed.
+2. Confirm the `verify tag commit is on master` job passed.
 3. Confirm the built version matches the tag in the build job logs.
 4. Confirm the publish job targeted the correct index:
    - `testpypi` for `vX.Y.ZrcN`, `vX.Y.ZaN`, `vX.Y.ZbN`
