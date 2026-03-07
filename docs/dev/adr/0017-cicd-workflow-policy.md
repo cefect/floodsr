@@ -8,8 +8,7 @@ Several ADRs define packaging, testing, and publishing intent, but the GitHub Ac
 
 - CI owns packaging validation for published artifacts.
 - CI builds release artifacts once and reuses them across downstream workflow steps.
-- GitHub Actions test selection excludes `network` tests.
-- `sphinx` tests are local-only and do not run in GitHub Actions.
+- GitHub Actions test selection is limited to `unit` tests. 
 - Tag-triggered publishing workflow topology is defined here and supports the release semantics in `ADR-0013`.
 
 ## Cross-References
