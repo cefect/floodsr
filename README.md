@@ -17,7 +17,7 @@ Implemented backend:
 ## Installation
 
 ```bash
-# recommended: isolated CLI install for users
+# recommended core install: isolated CLI install for users
 python -m pip install --user pipx
 pipx ensurepath
 pipx install floodsr
@@ -29,10 +29,24 @@ TestPyPI install:
 pipx install --index-url https://test.pypi.org/simple/ --pip-args="--extra-index-url https://pypi.org/simple" floodsr
 ```
 
+Extended install for GDAL/VRT-dependent workflows:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y gdal-bin libgdal-dev
+python -m pip install "gdal==$(gdal-config --version)"
+python -m pip install "floodsr[extended]"
+```
+
+The default `floodsr` package is the core install. It does not require
+`osgeo.gdal`, and the HRDEM fetcher falls back to the non-windowed path when
+GDAL bindings are missing.
+
 Developer install:
 
 ```bash
 pip install -e ".[dev]"
+pip install -e ".[dev,extended]"  # after system GDAL + matching bindings
 ```
 
 
