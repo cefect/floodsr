@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from conftest import models_manifest_fp
 from floodsr.cli import _parse_arguments, _resolve_log_level, main
 
 

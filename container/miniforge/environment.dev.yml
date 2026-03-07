@@ -18,6 +18,7 @@ dependencies:
   - setuptools
   - wheel
   - pyproj
+  - memory_profiler
   - pip
   - pip:
       - imageio

@@ -28,6 +28,17 @@ def _read_tile_case(case_name: str) -> dict:
         and "dem_fp" in case_spec["inputs"]
         and "truth_fp" in case_spec["inputs"]
     ), f"invalid case inputs for {case_name}"
+    # Validate configured input paths, but allow explicit `False` sentinels for optional inputs.
+    for input_key in ("lowres_fp", "dem_fp", "truth_fp"):
+        input_value = case_spec["inputs"][input_key]
+        if input_value is False:
+            continue
+        assert isinstance(input_value, str) and input_value.strip(), (
+            f"invalid case input value for {case_name}/{input_key}: {input_value!r}"
+        )
+        assert (tile_dir / input_value).exists(), (
+            f"missing case input file for {case_name}/{input_key}:\n    {tile_dir / input_value}"
+        )
     assert isinstance(case_spec["expected"], dict) and case_spec["expected"], f"invalid expected block for {case_name}"
     for run_label, run_spec in case_spec["expected"].items():
         assert "params" in run_spec and "metrics" in run_spec, f"invalid expected run block for {case_name}/{run_label}"
@@ -38,6 +49,10 @@ def _read_tile_case(case_name: str) -> dict:
             "mase_m" in run_spec["metrics"] and "rmse_m" in run_spec["metrics"] and "ssim" in run_spec["metrics"]
         ), f"missing expected metrics keys for {case_name}/{run_label}"
     assert "in_hrdem" in case_spec["flags"], f"missing required flags.in_hrdem for {case_name}"
+    if "supports_regression_metrics" in case_spec["flags"]:
+        assert isinstance(case_spec["flags"]["supports_regression_metrics"], bool), (
+            f"invalid flags.supports_regression_metrics for {case_name}"
+        )
     return {
         "case_name": case_name,
         "tile_dir": tile_dir,
@@ -86,17 +101,26 @@ def pytest_report_header(config):
 # ----- Fixtures -----
 # -------------------
 @pytest.fixture(scope="session")
-def logger():
+def logger(tmp_path_factory):
     """Simple logger fixture for the function under test."""
     log = logging.getLogger("pytest")
     log.setLevel(logging.DEBUG)
+    # Write pytest logger output to a stable per-session file in pytest temp output.
+    log_dir = tmp_path_factory.mktemp("test_logs")
+    log_fp = log_dir / "pytest.session.log"
+    formatter = logging.Formatter("%(levelname)s:%(name)s:%(message)s")
     # keep handlers minimal to avoid duplicate logs across runs
-    if not log.handlers:
-        handler = logging.StreamHandler()
-        handler.setLevel(logging.DEBUG)
-        formatter = logging.Formatter("%(levelname)s:%(name)s:%(message)s")
-        handler.setFormatter(formatter)
-        log.addHandler(handler)
+    if not any(isinstance(handler, logging.StreamHandler) and not isinstance(handler, logging.FileHandler) for handler in log.handlers):
+        stream_handler = logging.StreamHandler()
+        stream_handler.setLevel(logging.DEBUG)
+        stream_handler.setFormatter(formatter)
+        log.addHandler(stream_handler)
+    if not any(isinstance(handler, logging.FileHandler) and pathlib.Path(handler.baseFilename) == log_fp for handler in log.handlers):
+        file_handler = logging.FileHandler(log_fp)
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(formatter)
+        log.addHandler(file_handler)
+    log.info(f"pytest logger file:\n    {log_fp}")
     return log
 
 
@@ -138,11 +162,11 @@ def default_model_version():
 
 
 @pytest.fixture
-def tile_case(request, tile_case_catalog):
-    """Return a tile case by explicit name parameter."""
-    case_name = request.param
-    assert case_name in tile_case_catalog, f"missing tile case in catalog: {case_name}"
-    return tile_case_catalog[case_name]
+def tile_case_d(case_id, tile_case_catalog):
+    """Return one tile case payload by explicit case_id parameter."""
+    assert isinstance(case_id, str) and case_id.strip(), f"invalid case_id parameter: {case_id!r}"
+    assert case_id in tile_case_catalog, f"missing tile case in catalog: {case_id}"
+    return tile_case_catalog[case_id]
 
 
 @pytest.fixture(scope="session")

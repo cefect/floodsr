@@ -1,54 +1,65 @@
 # ADR-0002: Packaging and Installation Strategy
 
- 
-End users need a clean install path that does not pollute host environments (including QGIS-managed Python), with a CPU-only runtime.
-
- 
+End users need a clean install path that does not pollute host environments, while still making room for features that truly depend on GDAL.
 
 ## background
-There is one real-world problem you should design around:
+
+There are two packaging constraints that drive the install strategy:
 
 1. **Multiple ORT versions on the system can cause undefined behavior**
 
-* ORT’s build docs explicitly warn that if multiple ORT versions are installed and library search paths are involved, ORT can find the wrong libraries and behave unpredictably.  
+* ORT’s build docs explicitly warn that if multiple ORT versions are installed and library search paths are involved, ORT can find the wrong libraries and behave unpredictably.
 
-Because of that, standardize on one runtime package and avoid mixed ORT installs.
+2. **Some `floodsr` features have a real GDAL dependency**
+
+* Commands that build or manipulate VRTs, and any future direct-GDAL features, require system GDAL plus matching Python bindings. (rasterio doesnt have vrt functions)
+
+
+Because of that, the package should expose one progressive capability model rather than presenting all commands as equally available in every install.
 
 ## decision
- 
-- Ship one pip package providing:
+
+- Ship one Python package providing:
   - Python library: `floodsr`
   - CLI entrypoint: `floodsr`
-- Recommend `pipx` as the primary installation method for end users.
+- Adopt a **progressive capability model** with two installation modes:
+  - **Core install**
+    - Uses pure-Python or wheel-friendly dependencies only.
+    - Must not require `osgeo.gdal`.
+    - Provides the default CLI and library surface for users who only need the non-GDAL path.
+    - VRT-dependent commands are unavailable.
+  - **Extended install**
+    - Requires system GDAL and matching Python bindings.
+    - Enables VRT-dependent commands and any future direct-GDAL features.
 - Keep publishing target as PyPI/TestPyPI wheels and source distributions.
-- Validate published artifacts with an isolated smoke test that uses `pipx` (local or containerized).
+- Validate published artifacts against the capability level they claim to support.
+
+
+yes, this is complicated... but we spent a lot of time building the in-memory HRDEM fetcher.
+So we either:
+- break our **install must be simple** rule
+- revert and have no in-memory HRDEM fetcher (could do some more testing with `merge(mem_limit....)`.. but ran out of time, and this doesnt pre-filter)
+- or we do the work to support both install paths and validate them properly.
+
 
 ## deployment strategy
 
 1. Build and validate artifacts from source.
 2. Upload to TestPyPI first.
-3. Smoke test install with `pipx` from TestPyPI in an isolated runtime.
-4. Promote the same process to PyPI after TestPyPI verification.
+3. Smoke test the **core install** from TestPyPI in an isolated runtime.
+4. Separately smoke test the **extended install** in an environment with system GDAL and matching Python bindings.
+5. Promote the same process to PyPI after TestPyPI verification.
 
-Reference install commands:
+Reference smoke-test commands:
 
 ```bash
-# install from TestPyPI into an isolated pipx venv
+# core install from TestPyPI into an isolated pipx venv
 pipx install --index-url https://test.pypi.org/simple/ --pip-args="--extra-index-url https://pypi.org/simple" floodsr
 
-# sanity checks
+# sanity checks for the core capability set
 pipx runpip floodsr show floodsr
 pipx run floodsr doctor
 pipx run floodsr models list
 
 # clean up local smoke-test environment
 pipx uninstall floodsr
-```
-
-
-## Consequences
-
-- Users get isolated installs by default.
-- Runtime selection is explicit and CPU-only.
-- This reduces the risk of ORT library conflicts from mixed installs.  
-- Release validation more closely matches end-user CLI installation behavior.
