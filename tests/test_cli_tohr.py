@@ -6,32 +6,59 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from conftest import TEST_TILE_CASES, default_model_version, tile_case_d, tohr_model_fp
+from conftest import LOCAL_TILE_CASES, TEST_TILE_CASES, default_model_version, tile_case_d, tohr_model_fp
 from floodsr.cli import _parse_arguments, _resolve_default_output_path, _resolve_tohr_model_spec, main
 
-
-pytestmark = pytest.mark.e2e
 
 _CASE_SPEC_BY_NAME = {
     case_name: json.loads((Path("tests/data") / case_name / "case_spec.json").read_text(encoding="utf-8"))
     for case_name in TEST_TILE_CASES
 }
 _BASELINE_TOHR_CASES = [
-    pytest.param(case_name, id=f"data_case_{case_name.lower()}_non_hrdem")
+    pytest.param(
+        case_name,
+        id=f"data_case_{case_name.lower()}_non_hrdem",
+        marks=pytest.mark.local if case_name in LOCAL_TILE_CASES else (),
+    )
     for case_name, case_spec in _CASE_SPEC_BY_NAME.items()
     if not bool(case_spec["flags"]["in_hrdem"])
 ]
 _SPECIAL_TOHR_CASES = [
-    pytest.param(case_name, id=f"data_case_{case_name.lower()}_in_hrdem")
+    pytest.param(
+        case_name,
+        id=f"data_case_{case_name.lower()}_in_hrdem",
+        marks=pytest.mark.local if case_name in LOCAL_TILE_CASES else (),
+    )
     for case_name, case_spec in _CASE_SPEC_BY_NAME.items()
     if bool(case_spec["flags"]["in_hrdem"])
 ]
-_DEFAULT_OUTPUT_CASES = [pytest.param(case_name, id=f"data_case_output_name_{case_name.lower()}") for case_name in TEST_TILE_CASES]
-_RESOLVE_MODEL_CASES = [pytest.param(TEST_TILE_CASES[0], id=f"data_case_resolve_model_{TEST_TILE_CASES[0].lower()}")]
-_FETCH_PARSE_CASES = [pytest.param(TEST_TILE_CASES[0], id=f"data_case_fetch_parse_{TEST_TILE_CASES[0].lower()}")]
+_DEFAULT_OUTPUT_CASES = [
+    pytest.param(
+        case_name,
+        id=f"data_case_output_name_{case_name.lower()}",
+        marks=pytest.mark.local if case_name in LOCAL_TILE_CASES else (),
+    )
+    for case_name in TEST_TILE_CASES
+]
+_RESOLVE_MODEL_CASES = [
+    pytest.param(
+        TEST_TILE_CASES[0],
+        id=f"data_case_resolve_model_{TEST_TILE_CASES[0].lower()}",
+        marks=pytest.mark.local if TEST_TILE_CASES[0] in LOCAL_TILE_CASES else (),
+    )
+]
+_FETCH_PARSE_CASES = [
+    pytest.param(
+        TEST_TILE_CASES[0],
+        id=f"data_case_fetch_parse_{TEST_TILE_CASES[0].lower()}",
+        marks=pytest.mark.local if TEST_TILE_CASES[0] in LOCAL_TILE_CASES else (),
+    )
+]
 
 
 @pytest.mark.parametrize("case_id", _BASELINE_TOHR_CASES)
+@pytest.mark.e2e
+@pytest.mark.network
 def test_main_tohr_runs_data_driven_baseline_case(
     tohr_model_fp: Path,
     tmp_path: Path,
@@ -67,6 +94,8 @@ def test_main_tohr_runs_data_driven_baseline_case(
 
 
 @pytest.mark.parametrize("case_id", _SPECIAL_TOHR_CASES)
+@pytest.mark.e2e
+@pytest.mark.network
 def test_main_tohr_runs_in_hrdem_flagged_case(
     tohr_model_fp: Path,
     tmp_path: Path,
@@ -107,6 +136,7 @@ def test_main_tohr_runs_in_hrdem_flagged_case(
 
 
 @pytest.mark.parametrize("case_id", _DEFAULT_OUTPUT_CASES)
+@pytest.mark.unit
 def test_default_output_path_uses_cwd_and_input_stem(tmp_path: Path, tile_case_d: dict):
     """Ensure ToHR default output path is generated in cwd with _sr suffix."""
     case_spec = tile_case_d["case_spec"]
@@ -123,6 +153,7 @@ def test_default_output_path_uses_cwd_and_input_stem(tmp_path: Path, tile_case_d
 
 
 @pytest.mark.parametrize("case_id", _RESOLVE_MODEL_CASES)
+@pytest.mark.unit
 def test_resolve_tohr_model_spec_uses_cached_manifest_default(
     tmp_path: Path,
     tile_case_d: dict,
@@ -179,6 +210,7 @@ def test_resolve_tohr_model_spec_uses_cached_manifest_default(
 
 
 @pytest.mark.parametrize("case_id", _FETCH_PARSE_CASES)
+@pytest.mark.unit
 def test_parse_tohr_allows_fetch_hrdem_without_dem(tile_case_d: dict):
     """Ensure tohr parser accepts --fetch-hrdem without requiring --dem."""
     case_spec = tile_case_d["case_spec"]
@@ -196,6 +228,7 @@ def test_parse_tohr_allows_fetch_hrdem_without_dem(tile_case_d: dict):
 
 
 @pytest.mark.parametrize("case_id", _FETCH_PARSE_CASES)
+@pytest.mark.unit
 def test_parse_tohr_allows_fetch_force_tiling_flag(tile_case_d: dict):
     """Ensure tohr parser accepts --fetch-force-tiling when HRDEM fetch is enabled."""
     case_spec = tile_case_d["case_spec"]
@@ -213,6 +246,7 @@ def test_parse_tohr_allows_fetch_force_tiling_flag(tile_case_d: dict):
 
 
 @pytest.mark.parametrize("case_id", _FETCH_PARSE_CASES)
+@pytest.mark.unit
 def test_parse_tohr_allows_machine_json_only(tile_case_d: dict, tmp_path: Path):
     """Ensure tohr parser accepts machine-interface JSON as an alternate required-arg source."""
     case_spec = tile_case_d["case_spec"]
@@ -229,6 +263,7 @@ def test_parse_tohr_allows_machine_json_only(tile_case_d: dict, tmp_path: Path):
 
 
 @pytest.mark.parametrize("case_id", _FETCH_PARSE_CASES)
+@pytest.mark.unit
 def test_parse_tohr_cli_args_override_machine_json(tile_case_d: dict, tmp_path: Path):
     """Ensure explicit CLI args retain precedence over machine-interface JSON."""
     case_spec = tile_case_d["case_spec"]
@@ -257,6 +292,7 @@ def test_parse_tohr_cli_args_override_machine_json(tile_case_d: dict, tmp_path: 
 
 
 @pytest.mark.parametrize("case_id", _FETCH_PARSE_CASES)
+@pytest.mark.unit
 def test_parse_tohr_rejects_dem_and_fetch_hrdem_together(tile_case_d: dict):
     """Ensure tohr parser rejects simultaneous --dem and --fetch-hrdem."""
     case_spec = tile_case_d["case_spec"]
@@ -274,6 +310,7 @@ def test_parse_tohr_rejects_dem_and_fetch_hrdem_together(tile_case_d: dict):
 
 
 @pytest.mark.parametrize("case_id", _FETCH_PARSE_CASES)
+@pytest.mark.unit
 def test_main_tohr_fetch_out_requires_fetch_hrdem(tile_case_d: dict, tmp_path: Path):
     """Ensure tohr runtime rejects --fetch-out unless --fetch-hrdem is enabled."""
     case_spec = tile_case_d["case_spec"]

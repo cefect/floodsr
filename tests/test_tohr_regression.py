@@ -9,17 +9,22 @@ import pytest
 import floodsr.dem_sources.catalog
 import floodsr.tohr
 import misc.eval
-from conftest import TEST_TILE_CASES, default_model_version, logger, synthetic_tohr_tiles, tile_case_d, tohr_model_fp
+from conftest import LOCAL_TILE_CASES, TEST_TILE_CASES, default_model_version, logger, synthetic_tohr_tiles, tile_case_d, tohr_model_fp
 import rasterio
 
-pytestmark = pytest.mark.e2e
+pytestmark = [pytest.mark.e2e, pytest.mark.network]
 
 _CASE_SPEC_BY_NAME = {
     case_name: json.loads((Path("tests/data") / case_name / "case_spec.json").read_text(encoding="utf-8"))
     for case_name in TEST_TILE_CASES
 }
 _REGRESSION_CASES = [
-    pytest.param(case_name, run_label, id=f"data_case_{case_name.lower()}__{run_label.lower()}")
+    pytest.param(
+        case_name,
+        run_label,
+        id=f"data_case_{case_name.lower()}__{run_label.lower()}",
+        marks=pytest.mark.local if case_name in LOCAL_TILE_CASES else (),
+    )
     for case_name, case_spec in _CASE_SPEC_BY_NAME.items()
     for run_label in case_spec["expected"]
 ]

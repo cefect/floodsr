@@ -7,7 +7,6 @@ import pytest
 
 
 DOCS_SOURCE_DIR = Path("docs/user")
-pytestmark = pytest.mark.network
 
 
 @pytest.mark.sphinx

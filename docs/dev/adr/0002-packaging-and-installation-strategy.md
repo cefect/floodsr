@@ -44,22 +44,8 @@ So we either:
 
 ## deployment strategy
 
-1. Build and validate artifacts from source.
-2. Upload to TestPyPI first.
-3. Smoke test the **core install** from TestPyPI in an isolated runtime.
-4. Separately smoke test the **extended install** in an environment with system GDAL and matching Python bindings.
-5. Promote the same process to PyPI after TestPyPI verification.
+See `ADR-0017` for CI/CD workflow policy.
 
-Reference smoke-test commands:
+## CI/CD summary
 
-```bash
-# core install from TestPyPI into an isolated pipx venv
-pipx install --index-url https://test.pypi.org/simple/ --pip-args="--extra-index-url https://pypi.org/simple" floodsr
-
-# sanity checks for the core capability set
-pipx runpip floodsr show floodsr
-pipx run floodsr doctor
-pipx run floodsr models list
-
-# clean up local smoke-test environment
-pipx uninstall floodsr
+See `ADR-0017` for CI/CD workflow policy.
