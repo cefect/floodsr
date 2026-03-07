@@ -30,11 +30,10 @@ Key constraints:
    * Stable tags publish to PyPI only.
    * Stable releases are not duplicated to TestPyPI.
 
-4. The CI workflow:
+4. See `ADR-0017` for CI/CD workflow policy.
 
-   * Runs on tag push.
-   * Builds sdist and wheel once.
-   * Runs basic packaging validation.
-   * Publishes to the appropriate index based on tag type.
+## CI/CD summary
+
+See `ADR-0017` for CI/CD workflow policy.
 
  

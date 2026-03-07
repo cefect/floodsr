@@ -66,7 +66,7 @@ Test suite should follow this structure:
 
 
 
-# Test Strategy and CI/CD Gates
+# Test Strategy
 
  
 ## Context
@@ -95,10 +95,8 @@ We also want to keep tests organized by *module* (mirroring the package layout),
    - Run unit tests only by default.
    - E2E and network tests are opt-in.
 
-4. **CI/CD policy**:
-   - **Pull Requests / Pushes:** run all CI-safe tests, excluding `sphinx` and `network`.
-   - **Releases:** run the same CI-safe suite, excluding `sphinx` and `network`.
-   - **Network tests:** do not run in GitHub Actions; they are manual/local verification only.
+4. **CI/CD policy references**:
+   - See `ADR-0017` for CI/CD workflow policy.
 
 **modularization and paramterization**:
 test parameterization should mirror the available models (`floodsr/models.json`) and test data (`tests/data/*/case_spec.json`), with fixtures to load and validate.
@@ -129,4 +127,8 @@ Add to  `pytest.ini`  marker registration:
 - `sphinx`: local-only docs/linkcheck tests
 
 ### Example structure
+
+## Cross-References
+
+- `ADR-0017` owns CI/CD workflow policy.
  
