@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from conftest import default_model_version, models_manifest_fp
 from floodsr.model_registry import (
     fetch_model,
     get_retrieval_backend,

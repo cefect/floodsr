@@ -48,7 +48,8 @@ FloodSR needs a stable model layer that:
 - Subclass behavior:
   - override `run(...)`
   - organize model-specific flow into submethods:
-    - Model specific pre-processing
+    - Input boundary assertions (validate platform-model boundary artifacts from `0009-preproccessing.md`)
+    - Model-specific pre-processing (for example model-space resampling, model-value normalization/log scaling)
     - Tiling/windowing
     - Core inference at model-engine boundary
     - Mosaicking/stitching
@@ -95,13 +96,11 @@ FloodSR needs a stable model layer that:
 
 #### Workflow (from `others/inference_inline_norm_loop.ipynb`)
 
-1. Model specific pre-processing
+1. Input boundary assertions, model-parameter resolution, and model-specific pre-processing
+- Platform preprocessing ownership is defined in `0001-architecture-and-cli.md` and `0009-preproccessing.md`.
+- Model workers ingest platform-model boundary artifacts and assert required boundary assumptions before model-specific transforms.
 - Load `train_config.json` and resolve model parameters (`SCALE`, LR/HR tile geometry, `MAX_DEPTH`, DEM clip settings).
-- Validate input raster compatibility (CRS, bounds, and grid checks).
-- Keep LR depth on raw LR grid.
-- Resample HR depth and DEM to model-space HR grid derived from `raw_lr_shape * SCALE`.
-- Apply depth normalization using `log1p(clip(depth, 0, MAX_DEPTH)) / log1p(MAX_DEPTH)`.
-- Keep DEM normalization as tile-local (computed inside the inference loop), matching notebook behavior.
+- Apply model-specific preprocessing/transforms (for example model-space resampling, `log1p` scaling, and tile-local DEM normalization) after boundary assertions.
 
 2. Tiling/windowing
 - Pad model-space arrays so LR/HR windows align exactly with fixed model tile sizes.

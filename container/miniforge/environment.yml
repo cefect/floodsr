@@ -11,7 +11,10 @@ dependencies:
   - pystac=1.14.3
   - pystac-client=0.9.0
   - rasterio=1.5.0
+  - gdal
   - typer=0.24.0
   - pytest=9.0.2
   - tqdm
+  - geopandas-base
+  - pyproj
   

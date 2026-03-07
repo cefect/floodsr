@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from conftest import logger, ort_tile_inputs, tohr_model_fp
 from floodsr.engine import EngineORT
 from floodsr.engine.base import EngineBase
 from floodsr.engine.providers import get_onnxruntime_info, get_rasterio_info
