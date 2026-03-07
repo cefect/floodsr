@@ -29,33 +29,17 @@ Configure the repository once on GitHub:
 
 No PyPI API tokens or `~/.pypirc` entries are required for the CI/CD release path.
 
-### TestPyPI Trusted Publisher
+### Trusted Publishers
 
-Configure a Trusted Publisher for the TestPyPI project:
+Configure GitHub Actions Trusted Publishing in both TestPyPI and PyPI for the `floodsr` project:
 
-1. Sign in to TestPyPI.
-2. Open the project settings for `floodsr`.
-3. Add a Trusted Publisher for GitHub Actions.
-4. Set:
+1. Sign in to each index and open the project settings for `floodsr`.
+2. Add a Trusted Publisher for GitHub Actions with:
    - GitHub owner: the repository owner/org
    - Repository name: `floodsr`
    - Workflow filename: `release.yml`
-   - Environment name: `testpypi`
-5. If the project does not yet exist on TestPyPI, create a pending publisher for the project name first, then let the first trusted publish create the project.
-
-### PyPI Trusted Publisher
-
-Configure a Trusted Publisher for the PyPI project:
-
-1. Sign in to PyPI.
-2. Open the project settings for `floodsr`.
-3. Add a Trusted Publisher for GitHub Actions.
-4. Set:
-   - GitHub owner: the repository owner/org
-   - Repository name: `floodsr`
-   - Workflow filename: `release.yml`
-   - Environment name: `pypi`
-5. If the project does not yet exist on PyPI, create a pending publisher for the project name first, then let the first trusted publish create the project.
+   - Environment name: `testpypi` on TestPyPI, `pypi` on PyPI
+3. If the project does not yet exist on an index, create a pending publisher first and let the first trusted publish create the project.
 
 
 
