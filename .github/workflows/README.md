@@ -1,82 +1,56 @@
 # GitHub Workflows
 
-This directory contains CI workflows for this repository.
+This directory contains the two active GitHub Actions workflows for this repository.
 
-## `pipx-smoke.yml`
-
-Purpose:
-- Keep a fast packaging/entrypoint smoke gate via `pipx`.
-
-What it does:
-1. Checks out the repo.
-2. Sets up Python 3.11.
-3. Installs `pipx`.
-4. Installs the project using:
-   - `python -m pipx install --force .`
-5. Runs a simple CLI smoke sequence:
-   - `floodsr --help`
-   - `floodsr doctor`
-   - `floodsr models list`
-
-## `build-install-strategy.yml`
+## `ci.yml`
 
 Purpose:
-- Build one wheel and one sdist.
-- Validate the progressive core vs. extended install strategy from those built artifacts.
+- Run branch CI for pull requests and pushes to `main`.
+- Validate unit tests plus packaging/install smoke checks without any publish privilege.
 
 What it does:
-1. Builds `dist/*` with `python -m build`.
-2. Runs `twine check` on the artifacts.
-3. Smoke tests the core wheel in isolated envs without installing GDAL bindings.
-4. Smoke tests the extended wheel after installing system GDAL and matching Python GDAL bindings.
-
-## `full-tests.yml`
-
-Purpose:
-- Run the full CI test suite.
-- Exclude local-only sphinx-marked tests.
-
-What it does:
-1. Checks out the repo.
-2. Sets up Python 3.11.
-3. Installs system GDAL plus project/test dependencies for the extended path.
-4. Runs:
-   - `pytest -m "not sphinx"`
+1. Runs `pytest -m "unit and not local"`.
+2. Builds `dist/*` with `python -m build`.
+3. Runs `twine check` on the built artifacts.
+4. Smoke tests the built core wheel in isolated envs without GDAL bindings.
+5. Smoke tests the built extended wheel after installing system GDAL and matching Python bindings.
 
 Triggers:
 - `pull_request`
 - `push` to `main`
-- `workflow_dispatch` (manual run)
+- `workflow_dispatch`
 
-## Configuration
+## `release.yml`
 
-Common edits in `.github/workflows/pipx-smoke.yml`:
-- Python version: change `actions/setup-python` -> `python-version`.
-- Platform: change `runs-on` (currently `ubuntu-latest`).
-- Smoke install target: change the pipx install string from `.` as needed.
-- Smoke commands: edit the `Smoke test CLI` step.
+Purpose:
+- Publish tagged releases using Trusted Publishing.
+- Keep Git tags, GitHub Releases, and package versions synchronized through `setuptools-scm`.
 
-Common edits in `.github/workflows/full-tests.yml`:
-- Python version: change `actions/setup-python` -> `python-version`.
-- Platform: change `runs-on` (currently `ubuntu-latest`).
-- Test dependencies: edit the `Install system GDAL` and `Install test dependencies` steps.
-- Test selection: edit the `Run pytest suite` step.
+What it does:
+1. Triggers on pushed tags matching `v*`.
+2. Checks out full Git history and verifies the tagged commit is reachable from `main`.
+3. Builds `dist/*` once and validates that the derived package version matches the tag.
+4. Runs the release validation suite and install smoke checks.
+5. Publishes pre-releases to TestPyPI or stable releases to PyPI via Trusted Publishing.
+6. Creates or updates the GitHub Release from the same tag.
 
 ## Running
 
 From GitHub UI:
 1. Open **Actions**.
-2. Select **CI - pipx smoke**.
-3. Click **Run workflow**.
+2. Select **CI** or **Release**.
+3. Inspect the run for the relevant branch or tag.
 
 Using GitHub CLI:
 ```bash
-gh workflow run pipx-smoke.yml
+gh workflow run ci.yml
 ```
 
 ## Interpreting failures
 
 Typical failure buckets:
-- Packaging/install errors: project metadata, dependency resolution, wheel build.
-- CLI import errors: missing runtime deps or import-time assumptions.
-- Command contract regressions: changed or removed CLI subcommands/options.
+- Packaging/install errors: project metadata, dependency resolution, or wheel build failures.
+- Versioning errors: the `setuptools-scm` derived version does not match the pushed tag.
+- Tag policy errors: the tagged commit is not reachable from `main`.
+- Trusted Publishing errors: missing or mismatched PyPI/TestPyPI publisher configuration.
+- Test tier selection drift: a non-unit test leaked into CI selection.

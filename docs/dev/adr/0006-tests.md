@@ -66,7 +66,7 @@ Test suite should follow this structure:
 
 
 
-# Test Strategy and CI/CD Gates
+# Test Strategy
 
  
 ## Context
@@ -75,7 +75,7 @@ Test suite should follow this structure:
 - Fast, deterministic feedback in local development (e.g., VS Code).
 - Reliable cross-platform verification on clean machines via GitHub Actions.
 - A clear separation between fast unit tests and slower, higher-fidelity end-to-end checks.
-- Occasional tests that require network access (pinned artifacts), without making all PR runs flaky.
+- Occasional tests that require network access (pinned artifacts), without making local defaults or CI flaky.
 
 We also want to keep tests organized by *module* (mirroring the package layout), while classifying tests by *tier* (unit / e2e / network).
 
@@ -86,6 +86,7 @@ We also want to keep tests organized by *module* (mirroring the package layout),
    - `e2e`: CLI-level tests that exercise the pipeline end-to-end.
    - `network`: tests that require network access (e.g., downloading pinned weights/test data).
    - `sphinx`: local-only docs/linkcheck tests.
+   - `local`: local-only (requires un-commited data). 
 
 2. **Test organization mirrors modules**, not tiers:
    - `tests/<module_path>/test_*.py`
@@ -95,9 +96,8 @@ We also want to keep tests organized by *module* (mirroring the package layout),
    - Run unit tests only by default.
    - E2E and network tests are opt-in.
 
-4. **CI/CD policy**:
-   - **Pull Requests / Pushes:** run the full test suite excluding `sphinx` tests.
-   - **Releases:** run the full test suite excluding `sphinx` tests.
+4. **CI/CD policy references**:
+   - See `ADR-0017` for CI/CD workflow policy.
 
 **modularization and paramterization**:
 test parameterization should mirror the available models (`floodsr/models.json`) and test data (`tests/data/*/case_spec.json`), with fixtures to load and validate.
@@ -115,6 +115,7 @@ all test cases are expected to be runnable across all supported models through r
 - Network tests must:
   - Use pinned URLs and expected hashes.
   - Fail with actionable messages when downloads change or are unavailable.
+  - Be explicitly marked with `@pytest.mark.network` so they never leak into CI.
 - Developers must remember to run E2E/network tiers locally when changing pipeline behavior.
 
 ## Implementation Notes
@@ -125,6 +126,11 @@ Add to  `pytest.ini`  marker registration:
 - `e2e`: end-to-end CLI/system tests
 - `network`: requires network access for pinned artifacts
 - `sphinx`: local-only docs/linkcheck tests
+- `local`: local-only tests that depend on local fixture data
 
 ### Example structure
+
+## Cross-References
+
+- `ADR-0017` owns CI/CD workflow policy.
  

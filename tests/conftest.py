@@ -11,6 +11,7 @@ TEST_TILE_CASES = tuple(
     sorted(case_spec.parent.name for case_spec in pathlib.Path("tests/data").glob("*/case_spec.json"))
 )
 assert TEST_TILE_CASES, "no data-driven test cases found in tests/data/*/case_spec.json"
+LOCAL_TILE_CASES = tuple(case_name for case_name in TEST_TILE_CASES if case_name.startswith(("fathom", "rss_")))
 
 
 def _read_tile_case(case_name: str) -> dict:
