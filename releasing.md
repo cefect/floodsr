@@ -1,52 +1,121 @@
 # releasing/publishing
-see `docs/dev/adr/0013-publishing.md`
 
-# MANUAL pip
---------------------------------------------------
+See `docs/dev/adr/0013-publishing.md` and `docs/dev/adr/0017-cicd-workflow-policy.md`.
 
-## testpypi
----------------------------------------------------
-### setting up tokens
-create a test token
-copy to `~/.pypirc`:
+# CI/CD Triggered
+----------------------------
 
-```ini
-[testpypi]
-  username = __token__
-  password = ....
-```
-ensure its bind mounted and accessible in the container
+## setup (one time)
 
+### local packaging tools
 
-
-### Build, Test, and Publish (TestPyPI)
+Install the local release tooling into the project environment:
 
 ```bash
-# 1) activate the project runtime environment (base per project guidance)
-conda activate dev
-
-# 2) check local package is installed in the active environment
-python -c "from importlib.metadata import version; print(version('floodsr'))"
-
-# 3) check build/publish tools are installed
-python -m pip show build twine
-
-# 4) run tests before packaging
-pytest -q
-
-# 5) build source + wheel into ./dist
-python -m build
-
-# 6) validate package metadata/artifacts
-python -m twine check dist/*
-
-# 7) publish to TestPyPI (requires ~/.pypirc with [testpypi] token)
-python -m twine upload --repository testpypi dist/*
-
+conda activate base
+python -m pip install -e ".[dev]"
+python -m pip show setuptools setuptools-scm build twine
 ```
 
- 
-### optional: disposable container smoke test (no host pollution)
+### GitHub repository
+
+Configure the repository once on GitHub:
+
+1. Ensure GitHub Actions is enabled for the repository.
+2. Keep `.github/workflows/release.yml` at that exact filename because PyPI Trusted Publishing binds to the workflow filename.
+3. Create the GitHub environment `testpypi`.
+4. Create the GitHub environment `pypi`.
+5. Optionally add required reviewers or wait timers to the `pypi` environment before stable releases.
+
+No PyPI API tokens or `~/.pypirc` entries are required for the CI/CD release path.
+
+### TestPyPI Trusted Publisher
+
+Configure a Trusted Publisher for the TestPyPI project:
+
+1. Sign in to TestPyPI.
+2. Open the project settings for `floodsr`.
+3. Add a Trusted Publisher for GitHub Actions.
+4. Set:
+   - GitHub owner: the repository owner/org
+   - Repository name: `floodsr`
+   - Workflow filename: `release.yml`
+   - Environment name: `testpypi`
+5. If the project does not yet exist on TestPyPI, create a pending publisher for the project name first, then let the first trusted publish create the project.
+
+### PyPI Trusted Publisher
+
+Configure a Trusted Publisher for the PyPI project:
+
+1. Sign in to PyPI.
+2. Open the project settings for `floodsr`.
+3. Add a Trusted Publisher for GitHub Actions.
+4. Set:
+   - GitHub owner: the repository owner/org
+   - Repository name: `floodsr`
+   - Workflow filename: `release.yml`
+   - Environment name: `pypi`
+5. If the project does not yet exist on PyPI, create a pending publisher for the project name first, then let the first trusted publish create the project.
+
+
+
+
+## creating a release
+
+`setuptools-scm` is the version source. Do not edit a static package version in `pyproject.toml`.
+
+### pre-release to TestPyPI
+
+```bash
+# 1) start from an up-to-date main branch
+git checkout main
+git pull --ff-only origin main
+
+# 2) optional local sanity check before tagging
+python -m build
+python -m twine check dist/*
+
+# 3) create and push an annotated pre-release tag
+git tag -a v0.1.3rc1 -m "Release v0.1.3rc1"
+git push origin v0.1.3rc1
+```
+
+This triggers `.github/workflows/release.yml`, which:
+- verifies the tagged commit is reachable from `main`
+- builds artifacts once
+- runs unit and install-smoke validation
+- publishes to TestPyPI
+- creates or updates the GitHub Release from the same tag
+
+### stable release to PyPI
+
+```bash
+# 1) start from an up-to-date main branch
+git checkout main
+git pull --ff-only origin main
+
+# 2) create and push an annotated stable tag
+git tag -a v0.1.3 -m "Release v0.1.3"
+git push origin v0.1.3
+```
+
+This triggers the same release workflow, but stable tags publish to PyPI instead of TestPyPI.
+
+## validating the trigger
+
+After pushing a tag:
+
+1. Open GitHub Actions and confirm the `Release` workflow started from the tag.
+2. Confirm the `verify tag commit is on main` job passed.
+3. Confirm the built version matches the tag in the build job logs.
+4. Confirm the publish job targeted the correct index:
+   - `testpypi` for `vX.Y.ZrcN`, `vX.Y.ZaN`, `vX.Y.ZbN`
+   - `pypi` for `vX.Y.Z`
+5. Confirm the GitHub Release exists for that same tag.
+
+## quick post-publish checks
+
+### TestPyPI
 
 ```bash
 docker run --rm condaforge/miniforge3:25.3.1-0 bash -lc "
@@ -61,31 +130,7 @@ docker run --rm condaforge/miniforge3:25.3.1-0 bash -lc "
 "
 ```
 
-
-## pypi
----------------------------------------------------
-
-Use the same build/test flow from the `testpypi` section above.
-Do not rebuild between indexes: upload the already validated `dist/*` artifacts.
-
-### pypi-specific setup
-
-Add a PyPI token to `~/.pypirc`:
-
- 
-
-### publish to pypi (after testpypi passes)
-
-```bash
-# 1) ensure the exact same artifacts from TestPyPI validation are present
-ls -lh dist/*
-python -m twine check dist/*
-
-# 2) upload to PyPI (requires ~/.pypirc with [pypi] token)
-python -m twine upload --repository pypi dist/*
-```
-
-### quick post-publish check
+### PyPI
 
 ```bash
 python -m pip index versions floodsr
