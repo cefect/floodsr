@@ -16,4 +16,5 @@ dependencies:
   - pytest=9.0.2
   - tqdm
   - geopandas-base
+  - pyproj
   
