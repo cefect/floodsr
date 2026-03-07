@@ -223,6 +223,7 @@ dependencies:
   - pydantic-core=2.41.5=py312h868fb18_1
   - pygments=2.19.2=pyhd8ed1ab_0
   - pyparsing=3.3.2=pyhcf101f3_0
+  - pyproj=3.7.2=py312he675c61_3
   - pysocks=1.7.1=pyha55dd90_7
   - pystac=1.14.3=pyhd8ed1ab_0
   - pystac-client=0.9.0=pyhd8ed1ab_0
