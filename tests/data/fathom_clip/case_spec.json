@@ -1,0 +1,26 @@
+{
+  "inputs": {
+    "lowres_fp": "lores.tif",
+    "dem_fp": false,
+    "truth_fp": false
+  },
+  "expected": {
+    "ResUNet_16x_DEM_default": {
+      "params": {
+        "model_version": "ResUNet_16x_DEM"
+      },
+      "metrics": {
+        "precision": 3,
+        "mase_m": 0.0,
+        "rmse_m": 0.0,
+        "ssim": 1.0
+      }
+    }
+  },
+  "flags": {
+    "in_hrdem": true,
+    "non_native_scale": true,
+    "allow_zero_border": true,
+    "supports_regression_metrics": false
+  }
+}
