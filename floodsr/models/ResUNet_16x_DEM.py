@@ -71,7 +71,7 @@ Inference:
  
 """
 
-import logging, math, tempfile, time
+import logging, math, time
 from pathlib import Path
 from typing import Any
 
@@ -79,8 +79,11 @@ import numpy as np
 
 from floodsr.engine import EngineORT
 from floodsr.models.base import Model
-from floodsr.preprocessing import _read_single_band_raster, _write_single_band_raster, resolve_preprocess_config, write_prepared_rasters
+from floodsr.preprocessing import _read_single_band_raster, _write_single_band_raster, replace_nodata_with_zero, resolve_preprocess_config
 from floodsr.tiling import build_feather_ramp, build_tile_starts, iter_window_origins
+
+from rasterio.transform import from_bounds as bounds_to_transform
+from rasterio.warp import Resampling, reproject
 
 
 def _pixel_size_m(profile: dict) -> tuple[float, float]:
@@ -115,7 +118,6 @@ class ModelWorker(Model):
     def __init__(
         self,
         model_fp: str | Path,
-        *,
         providers: tuple[str, ...] = ("CPUExecutionProvider",),
         logger=None,
     ):
@@ -139,9 +141,10 @@ class ModelWorker(Model):
 
     def _run_tiled_model_on_prepared(
         self,
-        *,
-        depth_lr_fp: str | Path,
-        dem_hr_fp: str | Path,
+        depth_lr_raw: np.ndarray,
+        dem_hr_raw: np.ndarray,
+        depth_lr_profile: dict,
+        dem_hr_profile: dict,
         preprocess_cfg: dict[str, object],
         model_lr_tile: int,
         model_scale: int,
@@ -154,10 +157,14 @@ class ModelWorker(Model):
 
         Parameters
         ----------
-        depth_lr_fp:
-            Path to prepared low-resolution depth raster.
-        dem_hr_fp:
-            Path to prepared high-resolution DEM raster.
+        depth_lr_raw:
+            Prepared low-resolution depth array.
+        dem_hr_raw:
+            Prepared high-resolution DEM array on model grid.
+        depth_lr_profile:
+            Profile metadata for prepared low-resolution depth.
+        dem_hr_profile:
+            Profile metadata for prepared high-resolution DEM.
         preprocess_cfg:
             Resolved preprocessing configuration dictionary.
         model_lr_tile:
@@ -180,9 +187,7 @@ class ModelWorker(Model):
         assert self.engine is not None, "worker must be entered before running inference"
         assert window_method in {"hard", "feather"}, f"unsupported window_method={window_method}"
 
-        # Read already-aligned rasters prepared for model-space execution.
-        depth_lr_raw, _depth_lr_nodata, depth_lr_profile = _read_single_band_raster(depth_lr_fp)
-        dem_hr_raw, _dem_hr_nodata, dem_hr_profile = _read_single_band_raster(dem_hr_fp)
+        # Validate prepared in-memory arrays before tiling and inference.
         assert depth_lr_raw.ndim == 2, f"aligned depth must be 2D; got {depth_lr_raw.shape}"
         assert dem_hr_raw.ndim == 2, f"aligned DEM must be 2D; got {dem_hr_raw.shape}"
         assert np.isfinite(depth_lr_raw).all(), "aligned depth contains non-finite values"
@@ -394,75 +399,59 @@ class ModelWorker(Model):
 
     def run(
         self,
-        *,
         depth_lr_fp: str | Path,
         dem_hr_fp: str | Path,
         output_fp: str | Path,
+        crs_policy: str = "strict",
         max_depth: float | None = None,
         dem_pct_clip: float | None = None,
         window_method: str = "feather",
         tile_overlap: int | None = None,
         tile_size: int | None = None,
     ) -> dict[str, Any]:
-        """
-        Run the model-specific ToHR workflow.
+        """Run model-specific ToHR from platform-preprocessed input rasters."""
 
-        Parameters
-        ----------
-        depth_lr_fp:
-            Low-resolution depth raster path (single band).
-        dem_hr_fp:
-            High-resolution DEM raster path (single band).
-        output_fp:
-            Output raster path for high-resolution depth prediction.
-        max_depth:
-            Optional max-depth override for depth scaling.
-        dem_pct_clip:
-            Optional DEM percentile clip override.
-        window_method:
-            Mosaicing mode (`hard` or `feather`).
-        tile_overlap:
-            Optional LR overlap for feather mode.
-        tile_size:
-            Optional LR tile-size override (must match model contract).
 
-        Returns
-        -------
-        dict[str, Any]
-            Output path plus runtime and preprocessing diagnostics.
-        """
         start = time.perf_counter()
         log = self.log
         assert self.engine is not None, "worker must be used under context management"
 
-        # Resolve and validate user-facing paths.
+        # Resolve and validate preprocessed input/output paths.
         depth_lr_path = Path(depth_lr_fp).expanduser().resolve()
         dem_hr_path = Path(dem_hr_fp).expanduser().resolve()
         out_path = Path(output_fp).expanduser().resolve()
-        assert depth_lr_path.exists(), f"low-res depth raster does not exist: {depth_lr_path}"
-        assert dem_hr_path.exists(), f"DEM raster does not exist: {dem_hr_path}"
+        assert depth_lr_path.exists(), f"preprocessed low-res depth raster does not exist: {depth_lr_path}"
+        assert dem_hr_path.exists(), f"preprocessed DEM raster does not exist: {dem_hr_path}"
         window_method = (window_method or "feather").strip().lower()
         assert window_method in {"hard", "feather"}, f"unsupported window_method={window_method}"
 
         log.info(
             f"starting tohr inference with model_version={self.model_version}\n"
             f"model\n    {self.model_fp}\n"
-            f"depth_lr\n    {depth_lr_path}\n"
-            f"dem_hr\n    {dem_hr_path}\n"
+            f"platform_depth_lr\n    {depth_lr_path}\n"
+            f"platform_dem_hr\n    {dem_hr_path}\n"
             f"output\n    {out_path}"
         )
 
-        # Read raw metadata now so we can assert output georeferencing later.
-        depth_lr_raw, _, depth_lr_raw_profile = _read_single_band_raster(depth_lr_path)
-        dem_hr_raw, _, dem_hr_raw_profile = _read_single_band_raster(dem_hr_path)
-        depth_lr_bounds = _profile_bounds(depth_lr_raw_profile)
+        # Load platform-preprocessed artifacts and assert boundary assumptions.
+        depth_lr_raw, _, depth_lr_profile = _read_single_band_raster(depth_lr_path)
+        dem_platform_raw, dem_platform_nodata, dem_platform_profile = _read_single_band_raster(dem_hr_path)
+        depth_crs = depth_lr_profile.get("crs")
+        dem_crs = dem_platform_profile.get("crs")
+        assert depth_crs is not None and dem_crs is not None, "platform-preprocessed rasters must define CRS"
+        assert depth_crs == dem_crs, f"platform-preprocessed CRS mismatch: depth={depth_crs}, dem={dem_crs}"
+        depth_bounds = _profile_bounds(depth_lr_profile)
+        dem_bounds = _profile_bounds(dem_platform_profile)
+        assert all(np.isclose(a, b, atol=1e-6, rtol=0.0) for a, b in zip(depth_bounds, dem_bounds)), (
+            f"platform-preprocessed bounds mismatch: depth={depth_bounds}, dem={dem_bounds}"
+        )
         log.info(
-            "raw inputs\n"
-            f"  depth_lr shape={depth_lr_raw.shape} res={_pixel_size_m(depth_lr_raw_profile)} m/pix\n"
-            f"  dem_hr shape={dem_hr_raw.shape} res={_pixel_size_m(dem_hr_raw_profile)} m/pix"
+            "platform-preprocessed inputs\n"
+            f"  depth_lr shape={depth_lr_raw.shape} res={_pixel_size_m(depth_lr_profile)} m/pix\n"
+            f"  dem_hr shape={dem_platform_raw.shape} res={_pixel_size_m(dem_platform_profile)} m/pix"
         )
 
-        # Resolve preprocessing config and runtime contract for this model.
+        # Resolve model-specific preprocessing settings and runtime contract.
         preprocess_cfg = resolve_preprocess_config(
             self.model_fp,
             max_depth=max_depth,
@@ -511,92 +500,141 @@ class ModelWorker(Model):
         if overlap_lr < 0:
             raise AssertionError(f"tile_overlap must be >= 0; got {overlap_lr}")
 
-        # Execute preprocess -> tiled model run -> postprocess write.
-        with tempfile.TemporaryDirectory(prefix="floodsr-prep-") as prepped_dir:
-            prepped = write_prepared_rasters(
-                depth_lr_fp=depth_lr_path,
-                dem_hr_fp=dem_hr_path,
-                scale=model_scale,
-                out_dir=prepped_dir,
-                logger=log,
+        # Model-specific preprocessing: resample platform DEM to model HR grid.
+        target_hr_h = int(depth_lr_raw.shape[0] * model_scale)
+        target_hr_w = int(depth_lr_raw.shape[1] * model_scale)
+        assert target_hr_h > 0 and target_hr_w > 0, f"target HR shape invalid {(target_hr_h, target_hr_w)}"
+        dem_model_transform = bounds_to_transform(*depth_bounds, width=target_hr_w, height=target_hr_h)
+        dem_model = np.empty((target_hr_h, target_hr_w), dtype=np.float32)
+        reproject(
+            source=dem_platform_raw,
+            destination=dem_model,
+            src_transform=dem_platform_profile["transform"],
+            src_crs=dem_platform_profile["crs"],
+            src_nodata=dem_platform_nodata,
+            dst_transform=dem_model_transform,
+            dst_crs=depth_lr_profile["crs"],
+            dst_nodata=dem_platform_nodata,
+            resampling=Resampling.bilinear,
+            num_threads=1,
+        )
+        dem_model = replace_nodata_with_zero(dem_model, dem_platform_nodata)
+        assert np.isfinite(dem_model).all(), "model-space DEM contains non-finite values"
+
+        dem_model_profile = dem_platform_profile.copy()
+        dem_model_profile.update(
+            {
+                "height": int(dem_model.shape[0]),
+                "width": int(dem_model.shape[1]),
+                "transform": dem_model_transform,
+            }
+        )
+        dem_raw_profile = dem_platform_profile.copy()
+        dem_raw_profile.update(
+            {
+                "height": int(dem_platform_raw.shape[0]),
+                "width": int(dem_platform_raw.shape[1]),
+                "transform": dem_platform_profile["transform"],
+            }
+        )
+        was_resampled = bool(
+            dem_model.shape != dem_platform_raw.shape
+            or not all(
+                np.isclose(
+                    (dem_model_transform.a, dem_model_transform.e),
+                    (dem_platform_profile["transform"].a, dem_platform_profile["transform"].e),
+                )
             )
+        )
+        prepped = {
+            "depth_lr_prepared_fp": str(depth_lr_path),
+            "dem_hr_prepared_fp": str(dem_hr_path),
+            "depth_lr_profile": depth_lr_profile,
+            "dem_profile": dem_model_profile,
+            "dem_raw_profile": dem_raw_profile,
+            "depth_lr_shape": tuple(depth_lr_raw.shape),
+            "dem_hr_shape": tuple(dem_model.shape),
+            "dem_raw_shape": tuple(dem_platform_raw.shape),
+            "resampled": was_resampled,
+            "crs_policy": crs_policy,
+        }
+        expected_bounds = _profile_bounds(prepped["depth_lr_profile"])
+        log.info(
+            "model preprocessing complete\n"
+            f"  scale={model_scale} (HR/LR ratio)\n"
+            f"  crs_policy={prepped['crs_policy']}\n"
+            f"  aligned depth shape={prepped['depth_lr_shape']} resampled={prepped['resampled']}\n"
+            f"  aligned dem shape={prepped['dem_hr_shape']} raw_dem_shape={prepped['dem_raw_shape']}\n"
+            f"  max_depth={float(preprocess_cfg['max_depth'])} dem_pct_clip={float(preprocess_cfg['dem_pct_clip'])}"
+        )
+
+        prediction_model_m, tile_cache_size, tile_dem_stats = self._run_tiled_model_on_prepared(
+            depth_lr_raw=depth_lr_raw,
+            dem_hr_raw=dem_model,
+            depth_lr_profile=depth_lr_profile,
+            dem_hr_profile=dem_model_profile,
+            preprocess_cfg=preprocess_cfg,
+            model_lr_tile=model_lr_tile,
+            model_scale=model_scale,
+            contract_hr_tile=contract_hr_tile,
+            window_method=window_method,
+            overlap_lr=overlap_lr,
+        )
+        assert prediction_model_m.shape == tuple(prepped["dem_hr_shape"]), (
+            f"prediction shape {prediction_model_m.shape} must match preprocessed DEM shape {prepped['dem_hr_shape']}"
+        )
+
+        output_profile = prepped["dem_raw_profile"].copy()
+        output_profile.update(dtype="float32", count=1)
+        output_profile.pop("blockxsize", None)
+        output_profile.pop("blockysize", None)
+
+        # Post-process model output and map back to platform DEM grid when needed.
+        prediction_out_m = prediction_model_m.astype(np.float32, copy=False)
+        post_resampled = tuple(prepped["dem_raw_shape"]) != tuple(prediction_model_m.shape)
+        if post_resampled:
             log.info(
-                "preprocessing complete\n"
-                f"  scale={model_scale} (HR/LR ratio)\n"
-                f"  aligned depth shape={prepped['depth_lr_shape']} "
-                f"resampled={prepped['resampled']}\n"
-                f"  aligned dem shape={prepped['dem_hr_shape']} "
-                f"raw_dem_shape={prepped['dem_raw_shape']}\n"
-                f"  max_depth={float(preprocess_cfg['max_depth'])} "
-                f"dem_pct_clip={float(preprocess_cfg['dem_pct_clip'])}"
+                f"post-resampling model output from {prediction_model_m.shape} "
+                f"to {tuple(prepped['dem_raw_shape'])} on raw DEM grid with bilinear interpolation."
             )
-
-            prediction_model_m, tile_cache_size, tile_dem_stats = self._run_tiled_model_on_prepared(
-                depth_lr_fp=prepped["depth_lr_prepared_fp"],
-                dem_hr_fp=prepped["dem_hr_prepared_fp"],
-                preprocess_cfg=preprocess_cfg,
-                model_lr_tile=model_lr_tile,
-                model_scale=model_scale,
-                contract_hr_tile=contract_hr_tile,
-                window_method=window_method,
-                overlap_lr=overlap_lr,
+            prediction_resampled_m = np.empty(tuple(prepped["dem_raw_shape"]), dtype=np.float32)
+            reproject(
+                source=prediction_model_m.astype(np.float32, copy=False),
+                destination=prediction_resampled_m,
+                src_transform=prepped["dem_profile"]["transform"],
+                src_crs=prepped["dem_profile"]["crs"],
+                dst_transform=prepped["dem_raw_profile"]["transform"],
+                dst_crs=prepped["dem_raw_profile"]["crs"],
+                resampling=Resampling.bilinear,
+                num_threads=1,
             )
-            assert prediction_model_m.shape == tuple(prepped["dem_hr_shape"]), (
-                f"prediction shape {prediction_model_m.shape} must match preprocessed DEM shape {prepped['dem_hr_shape']}"
-            )
+            prediction_out_m = prediction_resampled_m
 
-            output_profile = prepped["dem_raw_profile"].copy()
-            output_profile.update(dtype="float32", count=1)
-            output_profile.pop("blockxsize", None)
-            output_profile.pop("blockysize", None)
+        prediction_out_m = np.clip(prediction_out_m, 0.0, float(preprocess_cfg["max_depth"])).astype(
+            np.float32,
+            copy=False,
+        )
+        prediction_out_m = np.where(
+            prediction_out_m < float(self.low_depth_mask_m),
+            0.0,
+            prediction_out_m,
+        ).astype(np.float32, copy=False)
 
-            prediction_out_m = prediction_model_m.astype(np.float32, copy=False)
-            post_resampled = tuple(prepped["dem_raw_shape"]) != tuple(prediction_model_m.shape)
-            if post_resampled:
-                from rasterio.warp import Resampling, reproject
+        prepared_dem_bounds = _profile_bounds(prepped["dem_raw_profile"])
+        assert all(np.isclose(a, b, atol=1e-6, rtol=0.0) for a, b in zip(prepared_dem_bounds, expected_bounds)), (
+            f"output profile bounds {prepared_dem_bounds} do not match expected low-res bounds {expected_bounds}"
+        )
 
-                log.info(
-                    f"post-resampling model output from {prediction_model_m.shape} "
-                    f"to {tuple(prepped['dem_raw_shape'])} on raw DEM grid with bilinear interpolation."
-                )
-                prediction_resampled_m = np.empty(tuple(prepped["dem_raw_shape"]), dtype=np.float32)
-                reproject(
-                    source=prediction_model_m.astype(np.float32, copy=False),
-                    destination=prediction_resampled_m,
-                    src_transform=prepped["dem_profile"]["transform"],
-                    src_crs=prepped["dem_profile"]["crs"],
-                    dst_transform=prepped["dem_raw_profile"]["transform"],
-                    dst_crs=prepped["dem_raw_profile"]["crs"],
-                    resampling=Resampling.bilinear,
-                    num_threads=1,
-                )
-                prediction_out_m = prediction_resampled_m
-
-            prediction_out_m = np.clip(prediction_out_m, 0.0, float(preprocess_cfg["max_depth"])).astype(
-                np.float32,
-                copy=False,
-            )
-            prediction_out_m = np.where(
-                prediction_out_m < float(self.low_depth_mask_m),
-                0.0,
-                prediction_out_m,
-            ).astype(np.float32, copy=False)
-
-            prepared_dem_bounds = _profile_bounds(prepped["dem_raw_profile"])
-            assert all(np.isclose(a, b, atol=1e-6, rtol=0.0) for a, b in zip(prepared_dem_bounds, depth_lr_bounds)), (
-                f"output profile bounds {prepared_dem_bounds} do not match incoming low-res bounds {depth_lr_bounds}"
-            )
-
-            out_written_fp = _write_single_band_raster(out_path, prediction_out_m, output_profile)
-            _, _, written_profile = _read_single_band_raster(out_written_fp)
-            written_shape = (int(written_profile["height"]), int(written_profile["width"]))
-            assert written_shape == tuple(prepped["dem_raw_shape"]), (
-                f"written output shape {written_shape} must match raw DEM shape {prepped['dem_raw_shape']}"
-            )
-            written_bounds = _profile_bounds(written_profile)
-            assert all(np.isclose(a, b, atol=1e-6, rtol=0.0) for a, b in zip(written_bounds, depth_lr_bounds)), (
-                f"written output bounds {written_bounds} must match incoming low-res bounds {depth_lr_bounds}"
-            )
+        out_written_fp = _write_single_band_raster(out_path, prediction_out_m, output_profile)
+        _, _, written_profile = _read_single_band_raster(out_written_fp)
+        written_shape = (int(written_profile["height"]), int(written_profile["width"]))
+        assert written_shape == tuple(prepped["dem_raw_shape"]), (
+            f"written output shape {written_shape} must match raw DEM shape {prepped['dem_raw_shape']}"
+        )
+        written_bounds = _profile_bounds(written_profile)
+        assert all(np.isclose(a, b, atol=1e-6, rtol=0.0) for a, b in zip(written_bounds, expected_bounds)), (
+            f"written output bounds {written_bounds} must match expected low-res bounds {expected_bounds}"
+        )
 
         runtime_s = time.perf_counter() - start
         out_file_size = int(out_written_fp.stat().st_size)
@@ -614,6 +652,7 @@ class ModelWorker(Model):
                 "dem_pct_clip": float(preprocess_cfg["dem_pct_clip"]),
                 "dem_ref_stats": preprocess_cfg["dem_ref_stats"],
                 "window_method": window_method,
+                "crs_policy": prepped["crs_policy"],
                 "tile_overlap_lr": overlap_lr,
                 "tile_size_lr": model_lr_tile,
                 "tile_size_hr": contract_hr_tile,
