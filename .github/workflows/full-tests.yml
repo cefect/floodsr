@@ -44,7 +44,7 @@ jobs:
           python -m pip install "gdal==$(gdal-config --version)"
           python -m pip install -e ".[dev,extended]"
 
-      # Run all CI tests while excluding local-only sphinx-marked tests.
+      # Run all CI-safe tests while excluding local-only sphinx and network-marked tests.
       - name: Run pytest suite
         run: |
-          pytest -m "not sphinx"
+          pytest -m "not sphinx and not network"

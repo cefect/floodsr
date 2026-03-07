@@ -75,7 +75,7 @@ Test suite should follow this structure:
 - Fast, deterministic feedback in local development (e.g., VS Code).
 - Reliable cross-platform verification on clean machines via GitHub Actions.
 - A clear separation between fast unit tests and slower, higher-fidelity end-to-end checks.
-- Occasional tests that require network access (pinned artifacts), without making all PR runs flaky.
+- Occasional tests that require network access (pinned artifacts), without making local defaults or CI flaky.
 
 We also want to keep tests organized by *module* (mirroring the package layout), while classifying tests by *tier* (unit / e2e / network).
 
@@ -96,8 +96,9 @@ We also want to keep tests organized by *module* (mirroring the package layout),
    - E2E and network tests are opt-in.
 
 4. **CI/CD policy**:
-   - **Pull Requests / Pushes:** run the full test suite excluding `sphinx` tests.
-   - **Releases:** run the full test suite excluding `sphinx` tests.
+   - **Pull Requests / Pushes:** run all CI-safe tests, excluding `sphinx` and `network`.
+   - **Releases:** run the same CI-safe suite, excluding `sphinx` and `network`.
+   - **Network tests:** do not run in GitHub Actions; they are manual/local verification only.
 
 **modularization and paramterization**:
 test parameterization should mirror the available models (`floodsr/models.json`) and test data (`tests/data/*/case_spec.json`), with fixtures to load and validate.
@@ -115,6 +116,7 @@ all test cases are expected to be runnable across all supported models through r
 - Network tests must:
   - Use pinned URLs and expected hashes.
   - Fail with actionable messages when downloads change or are unavailable.
+  - Be explicitly marked with `@pytest.mark.network` so they never leak into CI.
 - Developers must remember to run E2E/network tiers locally when changing pipeline behavior.
 
 ## Implementation Notes
