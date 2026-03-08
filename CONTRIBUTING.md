@@ -119,6 +119,38 @@ grep -RIl --include="*.tif" --include="*.tiff" \
   "^version https://git-lfs.github.com/spec/v1$" tests/data || true
 ```
 
+## Manual Release Validation
+
+Before tagging a release, run this checklist in a clean environment to confirm
+the published wheel works end-to-end. CI covers the core smoke path; this
+checklist adds GDAL and inference coverage.
+
+```bash
+# 1. Create a fresh env and install
+conda create -n fresh-test python=3.11 -y
+conda activate fresh-test
+pip install floodsr          # or: pip install dist/floodsr-*.whl
+
+# 2. Verify CLI entrypoints
+floodsr --help
+floodsr doctor
+
+# 3. Model registry
+floodsr models list
+floodsr models fetch ResUNet_16x_DEM   # substitute current default model name
+
+# 4. Inference run (requires GDAL and a test raster)
+floodsr infer <path/to/test-raster.tif> --output out.tif
+
+# 5. Clean up
+conda deactivate
+conda env remove -n fresh-test
+```
+
+> The `extended-install-smoke` CI job (GDAL + inference) is currently disabled
+> pending a reliable GDAL install strategy. Until it is re-enabled, this manual
+> checklist is the only validation gate for GDAL-dependent paths.
+
 # PIPX local install
 
 ```bash
