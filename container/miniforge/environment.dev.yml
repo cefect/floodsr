@@ -1,6 +1,30 @@
 channels:
   - conda-forge
 dependencies:
+  # --- Core runtime (mirrors environment.yml / pyproject.toml dependencies) ---
+  - python=3.12.12
+  - numpy=2.4.2
+  - onnxruntime=1.22.2
+  - platformdirs=4.9.2
+  - pydantic=2.12.5
+  - pystac=1.14.3
+  - pystac-client=0.9.0
+  - rasterio=1.5.0
+  - gdal
+  - geopandas-base
+  - pyproj
+  - shapely
+  - tqdm
+  - typer=0.24.0
+  # --- Dev / test tooling ---
+  - pytest
+  - python-build
+  - twine
+  - setuptools
+  - wheel
+  - memory_profiler
+  - pip
+  # --- Notebook / analysis extras ---
   - jupyterlab=4.5.4
   - notebook=7.5.3
   - ipykernel=7.2.0
@@ -11,14 +35,5 @@ dependencies:
   - palettable=3.3.3
   - pillow=12.1.1
   - matplotlib
-  - pytest
-  # PyPI package build + publish tooling.
-  - python-build
-  - twine
-  - setuptools
-  - wheel
-  - pyproj
-  - memory_profiler
-  - pip
   - pip:
       - imageio
