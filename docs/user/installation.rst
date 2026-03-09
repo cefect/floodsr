@@ -54,20 +54,3 @@ Install Core With pip (Advanced)
 
    python -m pip install --upgrade pip
    python -m pip install floodsr
-
-Install From Source (Advanced)
-------------------------------
-
-.. code-block:: bash
-
-   git clone <repo-url>
-   cd floodsr
-   python -m pip install -e .
-   python -m pip install -e ".[dev]"
-
-For the extended source install:
-
-.. code-block:: bash
-
-   python -m pip install "gdal==$(gdal-config --version)"
-   python -m pip install -e ".[dev,extended]"

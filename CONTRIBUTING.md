@@ -43,7 +43,7 @@ services:
       context: ../..
       dockerfile: container/Dockerfile
       target: dev
-    image: cefect/floodsr:dev-v0.3
+    image: cefect/floodsr:dev-v0.8
     environment:
       TMPDIR: /home/cefect/LS/10_IO/2407_FHIMP/tmp
       XDG_CONFIG_HOME: /home/cefect/.config
@@ -106,63 +106,4 @@ pytest -q tests/test_model_registry.py::test_default_manifest_http_links_resolve
 
 `tests/data/*.tif` is tracked by Git LFS. If you cloned with LFS smudge disabled, you may have pointer text files instead of GeoTIFF binaries.
 
-```bash
-git lfs install
-git lfs pull --include="tests/data/**" --exclude=""
-git lfs checkout tests/data
-```
-
-Quick verification (no pointer files should be reported):
-
-```bash
-grep -RIl --include="*.tif" --include="*.tiff" \
-  "^version https://git-lfs.github.com/spec/v1$" tests/data || true
-```
-
-## Manual Release Validation
-
-Before tagging a release, run this checklist in a clean environment to confirm
-the published wheel works end-to-end. CI covers the core smoke path; this
-checklist adds GDAL and inference coverage.
-
-```bash
-# 1. Create a fresh env and install
-conda create -n fresh-test python=3.11 -y
-conda activate fresh-test
-pip install floodsr          # or: pip install dist/floodsr-*.whl
-
-# 2. Verify CLI entrypoints
-floodsr --help
-floodsr doctor
-
-# 3. Model registry
-floodsr models list
-floodsr models fetch ResUNet_16x_DEM   # substitute current default model name
-
-# 4. Inference run (requires GDAL and a test raster)
-floodsr infer <path/to/test-raster.tif> --output out.tif
-
-# 5. Clean up
-conda deactivate
-conda env remove -n fresh-test
-```
-
-> The `extended-install-smoke` CI job (GDAL + inference) is currently disabled
-> pending a reliable GDAL install strategy. Until it is re-enabled, this manual
-> checklist is the only validation gate for GDAL-dependent paths.
-
-# PIPX local install
-
-```bash
-pipx uninstall floodsr || true
-pipx install --force .
-
-floodsr --help
-floodsr doctor
-floodsr models list
-
-floodsr infer \
-  --in tests/data/2407_FHIMP_tile/lowres032.tif \
-  --dem tests/data/2407_FHIMP_tile/hires002_dem.tif
-
-```
+ 

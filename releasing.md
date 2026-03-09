@@ -9,11 +9,10 @@ See `docs/dev/adr/0013-publishing.md` and `docs/dev/adr/0017-cicd-workflow-polic
 
 ### local packaging tools
 
-Install the local release tooling into the project environment:
+Use the devcontainer image for local release tooling:
 
 ```bash
-conda activate base
-python -m pip install -e ".[dev]"
+code .devcontainer/main/devcontainer.json
 python -m pip show setuptools setuptools-scm build twine
 ```
 
