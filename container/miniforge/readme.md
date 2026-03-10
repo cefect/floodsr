@@ -18,7 +18,7 @@ from WSL:
 ```bash
 
 #set the image name
-tag="v0.8"
+tag="v0.9"
 export IMAGE_NAME="cefect/floodsr:miniforge-deploy-$tag"
 
 # build the container
