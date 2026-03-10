@@ -108,6 +108,7 @@ fi
 bold "==> Building dev image: $IMAGE_NAME"
 
 docker buildx build --load \
+  --platform linux/amd64 \
   -f container/miniforge/Dockerfile \
   -t "$IMAGE_NAME" \
   --target dev \
