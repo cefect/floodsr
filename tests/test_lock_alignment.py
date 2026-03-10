@@ -30,6 +30,7 @@ def _active_env_name():
     return json.loads(result.stdout).get("active_prefix_name")
 
 
+@pytest.mark.dev
 def test_conda_lock_alignment():
     """Conda environment is available and functional.
 

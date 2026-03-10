@@ -56,7 +56,7 @@ jobs:
       # Run the CI-safe unit suite only.
       - name: Run unit tests
         run: |
-          pytest -m "unit and not local"
+          pytest -m "unit and not local and not dev"
 
   build-artifacts:
     name: build wheel and sdist (ubuntu-latest)
