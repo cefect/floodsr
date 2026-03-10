@@ -116,23 +116,17 @@ docker buildx build --load \
 
 green "Image built successfully."
 
-# ── 5. Run lock-alignment test (amd64 only) ──────────────────────
-HOST_ARCH="$(docker info --format '{{.Architecture}}')"
+# ── 5. Run environment validation test ──────────────────────────
+bold "==> Validating environment sanity (key packages importable)"
 
-if [ "$HOST_ARCH" = "x86_64" ]; then
-  bold "==> Running lock-alignment test to verify environment parity"
+docker run --rm \
+  --entrypoint /bin/bash \
+  -v "$REPO_ROOT:/workspace:ro" \
+  -w /workspace \
+  "$IMAGE_NAME" \
+  -lc 'conda run -n dev pytest -xvs tests/test_lock_alignment.py'
 
-  docker run --rm \
-    --entrypoint /bin/bash \
-    -v "$REPO_ROOT:/workspace:ro" \
-    -w /workspace \
-    "$IMAGE_NAME" \
-    -lc 'conda run -n dev pytest -xvs tests/test_lock_alignment.py'
-
-  green "Environment parity confirmed!"
-else
-  bold "==> Skipping lock-alignment test (lock files are x86_64; this host is $HOST_ARCH)"
-fi
+green "Environment validation passed!"
 
 # ── 6. Summary & next steps ──────────────────────────────────────
 bold "==> Setup complete!"
