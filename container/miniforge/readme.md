@@ -68,3 +68,10 @@ docker run --rm \
        conda env export -n dev > /out/conda-env-dev.lock.yml'
 
 ```
+
+push to Docker Hub
+```bash
+# push
+docker push $IMAGE_NAME
+
+```
