@@ -1,4 +1,4 @@
-"""Tests that the conda lock file matches the live deploy environment."""
+"""Tests that the conda lock file matches the active pytest environment."""
 
 import json
 import shutil
@@ -6,7 +6,6 @@ import subprocess
 from pathlib import Path
 
 import pytest
-import yaml
 
 
 pytestmark = pytest.mark.unit
@@ -14,73 +13,56 @@ pytestmark = pytest.mark.unit
 LOCK_FILE = Path(__file__).parent.parent / "container" / "miniforge" / "conda-env-deploy.lock.yml"
 
 
-def _parse_lock_file():
-    """Return (env_name, {package: version}) from the lock file."""
-    with LOCK_FILE.open() as fh:
-        data = yaml.safe_load(fh)
-    env_name = data["name"]
-    pinned = {}
-    for entry in data.get("dependencies", []):
-        if not isinstance(entry, str):
-            continue
-        parts = entry.split("=")
-        if len(parts) >= 2:
-            pinned[parts[0]] = parts[1]
-    return env_name, pinned
-
-
 def _conda_available():
+    """Return whether conda is available in the current environment."""
     return shutil.which("conda") is not None
 
 
-def _env_exists(env_name):
+def _active_env_name():
+    """Return the active conda environment name, if conda reports one."""
     result = subprocess.run(
-        ["conda", "env", "list", "--json"],
+        ["conda", "info", "--json"],
         capture_output=True,
         text=True,
     )
     if result.returncode != 0:
-        return False
-    envs = json.loads(result.stdout).get("envs", [])
-    return any(Path(e).name == env_name for e in envs)
+        return None
+    return json.loads(result.stdout).get("active_prefix_name")
 
 
-@pytest.mark.skipif(
-    not _conda_available(),
-    reason="conda not available in this environment",
-)
 def test_conda_lock_alignment():
-    """Every package pinned in the lock file must match the live deploy env."""
-    env_name, pinned = _parse_lock_file()
+    """Conda must report the active pytest environment matches the lock file exactly."""
+    print(f"Checking conda availability for lock alignment test.")
+    assert _conda_available(), "conda not available in this environment"
+    print(f"Checking lock file:\n    {LOCK_FILE}")
+    assert LOCK_FILE.exists(), f"Lock file not found: {LOCK_FILE}"
+    assert LOCK_FILE.is_file(), f"Lock file is not a file: {LOCK_FILE}"
 
-    if not _env_exists(env_name):
-        pytest.skip(f"conda env '{env_name}' does not exist in this environment")
+    env_name = _active_env_name()
+    print(f"Active conda environment reported by conda: {env_name}")
+    assert env_name not in (None, "base"), (
+        "conda active environment is unavailable or not project-specific"
+    )
 
+    # Delegate parsing and comparison to conda so build strings are checked too.
+    print("Running `conda compare --json` against the active environment.")
     result = subprocess.run(
-        ["conda", "list", "--name", env_name, "--json"],
+        ["conda", "compare", "--json", str(LOCK_FILE)],
         capture_output=True,
         text=True,
-        check=True,
     )
-    installed = {pkg["name"]: pkg["version"] for pkg in json.loads(result.stdout)}
+    message_l = json.loads(result.stdout or "[]")
+    print(f"conda compare return code: {result.returncode}")
+    if result.stdout:
+        print(f"conda compare stdout:\n{result.stdout}")
+    if result.stderr:
+        print(f"conda compare stderr:\n{result.stderr}")
 
-    mismatches = []
-    for pkg, locked_version in pinned.items():
-        if pkg not in installed:
-            mismatches.append(f"  {pkg}: locked={locked_version!r} MISSING from env")
-        elif installed[pkg] != locked_version:
-            mismatches.append(
-                f"  {pkg}: locked={locked_version!r} actual={installed[pkg]!r}"
-            )
-
-    assert not mismatches, (
-        f"conda env '{env_name}' diverges from lock file:\n" + "\n".join(mismatches)
+    assert result.returncode == 0, (
+        f"active conda env '{env_name}' diverges from lock file:\n"
+        f"{result.stdout}\n{result.stderr}"
     )
+    assert message_l, "conda compare returned no output"
 
 
-def test_lock_file_is_parseable():
-    """Lock file exists and contains at least one pinned dependency."""
-    assert LOCK_FILE.exists(), f"Lock file not found: {LOCK_FILE}"
-    env_name, pinned = _parse_lock_file()
-    assert env_name, "Lock file must declare a non-empty env name"
-    assert len(pinned) > 0, "Lock file must contain at least one pinned dependency"
+ 
