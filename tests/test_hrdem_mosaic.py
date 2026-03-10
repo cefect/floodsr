@@ -377,6 +377,7 @@ def test_write_dem_from_asset_hrefs_non_windowed_outputs_float32_non_empty(
 
 
 
+@pytest.mark.dev
 @pytest.mark.parametrize(
     "fetch_window_size",
     [
