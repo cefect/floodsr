@@ -143,9 +143,6 @@ jobs:
           print("core import validated without osgeo.gdal")
           PY
 
-  # extended-install-smoke is disabled until GDAL can be reliably installed
-  # in a single CI step without version-skew between the system library and the
-  # Python bindings. Re-enable once a pinned GDAL install strategy is in place.
   # extended-install-smoke:
   #   name: extended wheel smoke (ubuntu-latest)
   #   runs-on: ubuntu-latest
