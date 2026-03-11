@@ -51,7 +51,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       # Install system GDAL so the extended test environment can import osgeo.gdal.
       - name: Install system GDAL
@@ -88,7 +88,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       # Build both artifacts, validate metadata, and assert the derived version matches the tag.
       - name: Build artifacts
@@ -130,7 +130,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       # Fetch the previously built artifacts instead of rebuilding from source.
       - name: Download dist artifacts
