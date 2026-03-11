@@ -18,7 +18,7 @@ from WSL:
 ```bash
 
 #set the image name
-tag="v0.8"
+tag="v0.9"
 export IMAGE_NAME="cefect/floodsr:miniforge-deploy-$tag"
 
 # build the container
@@ -66,5 +66,12 @@ docker run --rm \
   "$IMAGE_NAME" \
   -lc 'conda run -n dev python -m pip freeze > /out/pip-freeze-dev.txt && \
        conda env export -n dev > /out/conda-env-dev.lock.yml'
+
+```
+
+push to Docker Hub
+```bash
+# push
+docker push $IMAGE_NAME
 
 ```

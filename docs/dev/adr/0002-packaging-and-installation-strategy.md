@@ -42,6 +42,17 @@ So we either:
 - or we do the work to support both install paths and validate them properly.
 
 
+## development container strategy
+
+The development and deployment Docker images are always built for **x86_64 (`linux/amd64`)**:
+
+1. **pcraster availability**: pcraster, a key dependency, only has x86_64 builds on conda-forge
+2. **Cross-platform consistency**: Using `docker buildx build --platform linux/amd64` ensures the same image regardless of host architecture
+3. **Host platform support**:
+   - x86_64 hosts: builds natively
+   - ARM64 hosts (Apple Silicon): uses QEMU emulation transparently via Docker
+4. **Lock files**: conda lock files are platform-specific (x86_64); created during image build and verified on x86_64 hosts only
+
 ## deployment strategy
 
 See `ADR-0017` for CI/CD workflow policy.

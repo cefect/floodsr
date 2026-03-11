@@ -1,4 +1,6 @@
 # floodsr
+[![CI](https://github.com/cefect/floodsr/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/cefect/floodsr/actions/workflows/ci.yml)
+[![Release](https://github.com/cefect/floodsr/actions/workflows/release.yml/badge.svg?branch=master)](https://github.com/cefect/floodsr/actions/workflows/release.yml)
 [![Documentation Status](https://readthedocs.org/projects/floodsr/badge/?version=latest)](https://floodsr.readthedocs.io/en/latest/)
 
 Super-Resolution for flood hazard rasters.
@@ -42,13 +44,10 @@ The default `floodsr` package is the core install. It does not require
 `osgeo.gdal`, and the HRDEM fetcher falls back to the non-windowed path when
 GDAL bindings are missing.
 
-Developer install:
+Developer work should use the devcontainer image in
+`.devcontainer/main/devcontainer.json`.
 
-```bash
-pip install -e ".[dev]"
-pip install -e ".[dev,extended]"  # after system GDAL + matching bindings
-```
-
+ 
 
 ## Use
 
@@ -57,7 +56,7 @@ Current CLI surface includes model registry, `tohr` raster execution, and runtim
 List available model versions:
 
 ```bash
-# dev shortcut for the CLI
+# source checkout shortcut for the CLI
 alias floodsr='python -m floodsr.cli'
 
 floodsr models list
