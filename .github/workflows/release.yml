@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   verify-tag-origin:
-    name: verify tag commit is on main (ubuntu-latest)
+    name: verify tag commit is on master (ubuntu-latest)
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -28,11 +28,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Ensure the tagged commit is reachable from main before publishing.
-      - name: Verify tag commit is on main
+      # Ensure the tagged commit is reachable from master before publishing.
+      - name: Verify tag commit is on master
         run: |
-          git fetch origin main
-          git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+          git fetch origin master
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/master
 
   unit-tests:
     name: unit tests (ubuntu-latest)
