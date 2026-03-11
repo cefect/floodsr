@@ -4,11 +4,11 @@ on:
   # Run CI checks before merge.
   pull_request:
     branches:
-      - main
+      - master
   # Keep default branch healthy after merge.
   push:
     branches:
-      - main
+      - master
   # Allow manual reruns from the Actions UI.
   workflow_dispatch:
 

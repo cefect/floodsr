@@ -2,6 +2,53 @@
 
 See `docs/dev/adr/0013-publishing.md` and `docs/dev/adr/0017-cicd-workflow-policy.md`.
 
+# Development Environment Setup
+
+## Running dev-setup.sh
+
+The `dev-setup.sh` script sets up the development environment using Docker:
+
+```bash
+chmod +x dev-setup.sh && ./dev-setup.sh
+```
+
+### What it does
+
+1. Checks prerequisites (docker, git, git-lfs, gh)
+2. Authenticates with GitHub and exports `FLOODSR_GITHUB_TOKEN`
+3. Fetches Git LFS test data
+4. **Builds a Docker image for x86_64 (`linux/amd64`) regardless of host architecture**
+5. Validates that key packages (numpy, rasterio, pydantic) can be imported inside the container
+
+### Platform support
+
+The Docker image is always built for x86_64 (`--platform linux/amd64`):
+- **On x86_64 hosts**: Builds natively, then validates package imports
+- **On ARM64 hosts** (Apple Silicon, M1/M2/M3 Macs): Uses Docker's QEMU emulation for cross-compilation, then validates package imports
+
+This ensures consistency across platforms since pcraster only has x86_64 builds on conda-forge. The validation test runs on all platforms inside the x86_64 container to verify key packages are importable.
+
+### After setup completes
+
+Run an interactive dev shell:
+
+```bash
+docker run --rm -it \
+  --entrypoint /bin/bash \
+  -v "$PWD:/workspace" \
+  -e FLOODSR_GITHUB_TOKEN="$(gh auth token)" \
+  -w /workspace \
+  cefect/floodsr:miniforge-dev-v0.9 -l
+```
+
+Then verify inside the container:
+
+```bash
+python -m floodsr.cli models list
+python -m floodsr.cli models fetch ResUNet_16x_DEM
+pytest -q tests/test_model_registry.py
+```
+
 # CI/CD Triggered
 ----------------------------
 
@@ -9,11 +56,10 @@ See `docs/dev/adr/0013-publishing.md` and `docs/dev/adr/0017-cicd-workflow-polic
 
 ### local packaging tools
 
-Install the local release tooling into the project environment:
+Use the devcontainer image for local release tooling:
 
 ```bash
-conda activate base
-python -m pip install -e ".[dev]"
+code .devcontainer/main/devcontainer.json
 python -m pip show setuptools setuptools-scm build twine
 ```
 
