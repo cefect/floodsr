@@ -1,12 +1,14 @@
 Getting Started
 ===============
 
-Use this page for first contact with ``floodSR``.
+This page contains minimial info to get you up and flooding with ``floodSR``.
+For more detailed information, see the :doc:`user_guide`.
 
 What Is floodSR?
 ----------------
 
-``floodSR`` is a flood-depth super-resolution tool.
+``floodSR`` is a flood-depth :resolution enhancement: tool. 
+Or a super-resolution (SR) tool in machine-speak.
 It takes low-resolution depth input and reconstructs higher-resolution output,
 using terrain (DEM) context to improve local detail.
 
