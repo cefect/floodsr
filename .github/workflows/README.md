@@ -5,7 +5,7 @@ This directory contains the two active GitHub Actions workflows for this reposit
 ## `ci.yml`
 
 Purpose:
-- Run branch CI for pull requests and pushes to `main`.
+- Run branch CI for pull requests and pushes to `master`.
 - Validate unit tests plus packaging/install smoke checks without any publish privilege.
 
 What it does:
@@ -17,7 +17,7 @@ What it does:
 
 Triggers:
 - `pull_request`
-- `push` to `main`
+- `push` to `master`
 - `workflow_dispatch`
 
 ## `release.yml`
@@ -28,7 +28,7 @@ Purpose:
 
 What it does:
 1. Triggers on pushed tags matching `v*`.
-2. Checks out full Git history and verifies the tagged commit is reachable from `main`.
+2. Checks out full Git history and verifies the tagged commit is reachable from `master`.
 3. Builds `dist/*` once and validates that the derived package version matches the tag.
 4. Runs the release validation suite and install smoke checks.
 5. Publishes pre-releases to TestPyPI or stable releases to PyPI via Trusted Publishing.
@@ -51,6 +51,6 @@ gh workflow run ci.yml
 Typical failure buckets:
 - Packaging/install errors: project metadata, dependency resolution, or wheel build failures.
 - Versioning errors: the `setuptools-scm` derived version does not match the pushed tag.
-- Tag policy errors: the tagged commit is not reachable from `main`.
+- Tag policy errors: the tagged commit is not reachable from `master`.
 - Trusted Publishing errors: missing or mismatched PyPI/TestPyPI publisher configuration.
 - Test tier selection drift: a non-unit test leaked into CI selection.
