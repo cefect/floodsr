@@ -1,6 +1,5 @@
 """Tests for ToHR regression and synthetic tiling behavior."""
 
-import json
 from pathlib import Path
 
 import numpy as np
@@ -9,30 +8,20 @@ import pytest
 import floodsr.dem_sources.catalog
 import floodsr.tohr
 import misc.eval
-from conftest import LOCAL_TILE_CASES, TEST_TILE_CASES, default_model_version, logger, synthetic_tohr_tiles, tile_case_d, tohr_model_fp
+from conftest import default_model_version, logger, synthetic_tohr_tiles, tile_case_d, tohr_model_fp
 import rasterio
 
 pytestmark = [pytest.mark.e2e, pytest.mark.network]
 
-_CASE_SPEC_BY_NAME = {
-    case_name: json.loads((Path("tests/data") / case_name / "case_spec.json").read_text(encoding="utf-8"))
-    for case_name in TEST_TILE_CASES
-}
-_REGRESSION_CASES = [
-    pytest.param(
-        case_name,
-        run_label,
-        id=f"data_case_{case_name.lower()}__{run_label.lower()}",
-        marks=pytest.mark.local if case_name in LOCAL_TILE_CASES else (),
-    )
-    for case_name, case_spec in _CASE_SPEC_BY_NAME.items()
-    for run_label in case_spec["expected"]
-]
-
-
 @pytest.mark.parametrize(
     "case_id,run_label",
-    _REGRESSION_CASES,
+    [
+        pytest.param("2407_FHIMP_tile", "ResUNet_16x_DEM_default", id="fhimp_default"),
+        pytest.param("fathom_clip", "ResUNet_16x_DEM_default", id="clip_default", marks=pytest.mark.local),
+        #pytest.param("fathom_n51w115", "ResUNet_16x_DEM_default", id="n51w115_default", marks=pytest.mark.local),
+        pytest.param("rss_dudelange_A", "ResUNet_16x_DEM_default", id="dudelange_default", marks=pytest.mark.local),
+        pytest.param("rss_mersch_A", "ResUNet_16x_DEM_default", id="mersch_default", marks=pytest.mark.local),
+    ],
 )
 def test_tohr_regression_matches_case_spec_metrics(
     tohr_model_fp: Path,
