@@ -24,14 +24,8 @@ Triggers:
 
  ensure the changes are pushed. 
 ```bash
-
-# force run
-workflow="ci.yml"
-gh workflow run $workflow --ref master
- 
-
 # Run it against the current branch:
-gh workflow run $workflow --ref "$(git branch --show-current)"
+gh workflow run --ref "$(git branch --show-current)"
 ```
 
  
