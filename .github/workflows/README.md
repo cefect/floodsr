@@ -1,6 +1,6 @@
 # GitHub Workflows
 
-This directory contains the two active GitHub Actions workflows for this repository.
+This directory contains the active GitHub Actions workflows for this repository.
 
 ## `ci.yml`
 
@@ -9,15 +9,40 @@ Purpose:
 - Validate unit tests plus packaging/install smoke checks without any publish privilege.
 
 What it does:
-1. Runs `pytest -m "unit and not local"`.
+1. Runs `pytest -m "fast and not local and not sphinx"`.
 2. Builds `dist/*` with `python -m build`.
 3. Runs `twine check` on the built artifacts.
-4. Smoke tests the built core wheel in isolated envs without GDAL bindings.
-5. Smoke tests the built extended wheel after installing system GDAL and matching Python bindings.
+4. Smoke tests the built core wheel in isolated envs on `ubuntu-latest` and `windows-latest` without GDAL bindings.
 
 Triggers:
 - `pull_request`
 - `push` to `master`
+- `workflow_dispatch`
+
+### force run
+
+Ensure the changes are pushed.
+```bash
+# Run CI against the current branch:
+gh workflow run ci.yml --ref "$(git branch --show-current)"
+
+# Run the manual install matrix against the current branch:
+gh workflow run install-edge.yml --ref "$(git branch --show-current)"
+```
+
+## `install-edge.yml`
+
+Purpose:
+- Run the expanded manual install-context matrix without slowing normal CI.
+- Validate the basic `pipx` path across host GDAL contexts and the extended conda path.
+
+What it does:
+1. Builds `dist/*` once and validates the artifacts with `twine check`.
+2. Tests the basic `pipx` install on `ubuntu-latest` and `windows-latest`.
+3. Exercises basic installs with no host GDAL, simulated unsupported host GDAL, and simulated supported host GDAL.
+4. Tests the extended conda install path on Ubuntu with GDAL installed before `pip install floodsr`.
+
+Triggers:
 - `workflow_dispatch`
 
 ## `release.yml`
@@ -38,12 +63,13 @@ What it does:
 
 From GitHub UI:
 1. Open **Actions**.
-2. Select **CI** or **Release**.
+2. Select **CI**, **Install Edge**, or **Release**.
 3. Inspect the run for the relevant branch or tag.
 
 Using GitHub CLI:
 ```bash
-gh workflow run ci.yml
+gh workflow run ci.yml --ref master
+gh workflow run install-edge.yml --ref master
 ```
 
 ## Interpreting failures
