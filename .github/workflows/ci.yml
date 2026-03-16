@@ -30,13 +30,13 @@ jobs:
     steps:
       # Fetch repository contents for test execution.
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       # Install a consistent Python runtime.
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -66,13 +66,13 @@ jobs:
     steps:
       # Fetch repository contents for the build.
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       # Install a consistent Python runtime for packaging.
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -85,7 +85,7 @@ jobs:
 
       # Reuse the same artifacts across downstream smoke jobs.
       - name: Upload dist artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: python-dist
           path: dist/*
@@ -104,13 +104,13 @@ jobs:
     steps:
       # Install a consistent Python runtime for isolated smoke envs.
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       # Fetch the previously built artifacts instead of rebuilding from source.
       - name: Download dist artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: python-dist
           path: dist
@@ -169,7 +169,7 @@ jobs:
   #   steps:
   #     # Install a consistent Python runtime for the extended smoke env.
   #     - name: Setup Python
-  #       uses: actions/setup-python@v5
+  #       uses: actions/setup-python@v6
   #       with:
   #         python-version: "3.11"
   #
@@ -181,7 +181,7 @@ jobs:
   #
   #     # Fetch the wheel built in the upstream packaging job.
   #     - name: Download dist artifacts
-  #       uses: actions/download-artifact@v4
+  #       uses: actions/download-artifact@v5
   #       with:
   #         name: python-dist
   #         path: dist

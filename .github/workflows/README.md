@@ -21,24 +21,20 @@ Triggers:
 - `workflow_dispatch`
 
 ### force run
-ensure the changes are pushed. 
 
+ ensure the changes are pushed. 
 ```bash
-gh workflow run ci.yml --ref master
+
+# force run
+workflow="ci.yml"
+gh workflow run $workflow --ref master
+ 
+
+# Run it against the current branch:
+gh workflow run $workflow --ref "$(git branch --show-current)"
 ```
 
-Run it against the current branch:
-
-```bash
-gh workflow run ci.yml --ref "$(git branch --show-current)"
-```
-
-Watch the most recent CI run:
-
-```bash
-gh run watch "$(gh run list --workflow ci.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
-```
-
+ 
 
 ## `release.yml`
 
