@@ -11,7 +11,7 @@ import misc.eval
 from conftest import default_model_version, logger, synthetic_tohr_tiles, tile_case_d, tohr_model_fp
 import rasterio
 
-pytestmark = [pytest.mark.e2e, pytest.mark.network]
+pytestmark = pytest.mark.network
 
 @pytest.mark.parametrize(
     "case_id,run_label",
