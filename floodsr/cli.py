@@ -5,8 +5,7 @@ from pathlib import Path
 
 from floodsr.cache_paths import get_model_cache_path
 from floodsr.checksums import verify_sha256
-from floodsr.dem_sources import fetch_dem
-from floodsr.engine import get_onnxruntime_info, get_rasterio_info
+from floodsr.engine import get_gdal_info, get_onnxruntime_info, get_rasterio_info
 from floodsr.model_registry import (
     fetch_model,
     list_models,
@@ -14,7 +13,6 @@ from floodsr.model_registry import (
     load_models_manifest,
     model_worker_exists,
 )
-from floodsr.tohr import tohr
 
 
 log = logging.getLogger(__name__)
@@ -190,6 +188,18 @@ def _resolve_default_output_path(in_fp: Path) -> Path:
     return (Path.cwd() / f"{in_path.stem}_sr{suffix}").resolve()
 
 
+def _build_doctor_payload() -> dict[str, object]:
+    """Collect one machine-readable runtime diagnostics payload."""
+    ort_info = get_onnxruntime_info()
+    rasterio_info = get_rasterio_info()
+    gdal_info = get_gdal_info()
+    return {
+        "onnxruntime": ort_info,
+        "rasterio": rasterio_info,
+        "gdal": gdal_info,
+    }
+
+
 def main_cli(args: argparse.Namespace) -> int:
     """Run the CLI command selected by parsed arguments."""
     # Route model list command.
@@ -212,6 +222,10 @@ def main_cli(args: argparse.Namespace) -> int:
 
     # Route main ToHR command.
     if args.command == "tohr":
+        # Defer heavy raster imports until the ToHR path is actually used.
+        from floodsr.dem_sources import fetch_dem
+        from floodsr.tohr import tohr
+
         if args.fetch_out is not None and not args.fetch_hrdem:
             raise ValueError("--fetch-out requires --fetch-hrdem")
 
@@ -247,13 +261,23 @@ def main_cli(args: argparse.Namespace) -> int:
 
     # Route doctor command.
     if args.command == "doctor":
-        ort_info = get_onnxruntime_info()
-        rasterio_info = get_rasterio_info()
+        payload = _build_doctor_payload()
+        if args.json:
+            print(json.dumps(payload, indent=2, sort_keys=True))
+            return 0
+        ort_info = payload["onnxruntime"]
+        rasterio_info = payload["rasterio"]
+        gdal_info = payload["gdal"]
         print(f"onnxruntime_installed={ort_info['installed']}")
         print(f"onnxruntime_version={ort_info['version']}")
         print(f"onnxruntime_available_providers={','.join(ort_info['available_providers'])}")
         print(f"rasterio_installed={rasterio_info['installed']}")
         print(f"rasterio_version={rasterio_info['version']}")
+        print(f"gdal_python_installed={gdal_info['python_bindings_installed']}")
+        print(f"gdal_python_version={gdal_info['python_bindings_version']}")
+        print(f"gdal_config_installed={gdal_info['gdal_config_installed']}")
+        print(f"gdal_config_version={gdal_info['gdal_config_version']}")
+        print(f"gdal_vrt_enabled={gdal_info['vrt_enabled']}")
         return 0
 
     raise ValueError(f"unsupported command path: {args.command}/{getattr(args, 'models_command', None)}")
@@ -440,7 +464,12 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
     )
 
     # Register diagnostic command.
-    subparsers.add_parser("doctor", help="Report runtime dependency diagnostics.")
+    doctor_parser = subparsers.add_parser("doctor", help="Report runtime dependency diagnostics.")
+    doctor_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit machine-readable JSON diagnostics.",
+    )
     return parser.parse_args(_inject_tohr_machine_json_args(argv))
 
 
