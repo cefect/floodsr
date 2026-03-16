@@ -38,7 +38,7 @@ Because of that, the package should expose one progressive capability model rath
 yes, this is complicated... but we spent a lot of time building the in-memory HRDEM fetcher.
 So we either:
 - break our **install must be simple** rule
-- revert and have no in-memory HRDEM fetcher (could do some more testing with `merge(mem_limit....)`.. but ran out of time, and this doesnt pre-filter)
+- revert and have no in-memory HRDEM fetcher (could do some more testing with `merge(mem_limit....)`.. but ran out of time, and this won't support pre-filter)
 - or we do the work to support both install paths and validate them properly.
 
 
