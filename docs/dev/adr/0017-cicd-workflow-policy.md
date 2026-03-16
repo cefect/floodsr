@@ -35,3 +35,4 @@ Several ADRs define packaging, testing, and publishing intent, but the GitHub Ac
 - `ADR-0002` owns packaging intent.
 - `ADR-0006` owns test semantics.
 - `ADR-0013` owns release semantics.
+- `.github/workflows/README.md` documents the concrete workflow files and their operator-facing usage.
