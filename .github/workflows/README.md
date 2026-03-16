@@ -18,18 +18,18 @@ gh workflow run install-edge.yml --ref "$(git branch --show-current)"
 ## `ci.yml`
 
 - Purpose: branch CI for pull requests and pushes to `master`.
-- Scope: runs the `fast` pytest tier, builds `dist/*`, runs `twine check`, and smoke-tests the core wheel on Ubuntu and Windows.
+- Scope: runs the `fast` pytest tier, runs one constrained minimum-core test slice, builds `dist/*`, runs `twine check`, and smoke-tests the core wheel on Ubuntu and Windows.
 - Trigger: `pull_request`, `push` to `master`, `workflow_dispatch`.
 
 ## `install-edge.yml`
 
 - Purpose: manual install-matrix validation without slowing normal CI.
-- Scope: builds `dist/*`, tests the basic `pipx` install on Ubuntu and Windows across host-GDAL contexts, and tests the extended conda install on Ubuntu.
-- Trigger: `workflow_dispatch`.
+- Scope: runs one constrained minimum-core test slice, builds `dist/*`, tests the basic `pipx` install on Ubuntu and Windows across host-GDAL contexts, and tests the extended conda install on Ubuntu.
+- Trigger: None (i.e., `workflow_dispatch`).
 
 ## `release.yml`
 
 - Purpose: tagged release validation and publish workflow.
-- Scope: verifies tag ancestry, runs the fast suite, builds and validates `dist/*`, smoke-tests the core install on Ubuntu, smoke-tests the extended conda install on Ubuntu and Windows, then publishes to TestPyPI or PyPI and updates the GitHub Release.
+- Scope: verifies tag ancestry, runs the fast suite, runs one constrained minimum-core test slice, builds and validates `dist/*`, smoke-tests the core install on Ubuntu, smoke-tests the extended conda install on Ubuntu and Windows, then publishes to TestPyPI or PyPI and updates the GitHub Release.
 - Trigger: `push` tags matching `v*`.
  
