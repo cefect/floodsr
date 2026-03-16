@@ -1,5 +1,7 @@
 # Contributing
 
+[project plan](https://docs.google.com/document/d/1_QnUurhdNyuawVcDFsKNLw6biA8Yw130GBm-3e6ij9o/edit?usp=sharing)
+
 ## .devcontainer setup
 needs to:
 - have the `FLOODSR_GITHUB_TOKEN` environment variable set or the `gh` CLI authenticated to access private repo assets (see "Auth model" below).
