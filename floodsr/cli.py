@@ -6,7 +6,7 @@ from pathlib import Path
 from floodsr.cache_paths import get_model_cache_path
 from floodsr.checksums import verify_sha256
 from floodsr.dem_sources import fetch_dem
-from floodsr.engine import get_onnxruntime_info, get_rasterio_info
+from floodsr.engine import get_gdal_info, get_onnxruntime_info, get_rasterio_info
 from floodsr.model_registry import (
     fetch_model,
     list_models,
@@ -249,11 +249,17 @@ def main_cli(args: argparse.Namespace) -> int:
     if args.command == "doctor":
         ort_info = get_onnxruntime_info()
         rasterio_info = get_rasterio_info()
+        gdal_info = get_gdal_info()
         print(f"onnxruntime_installed={ort_info['installed']}")
         print(f"onnxruntime_version={ort_info['version']}")
         print(f"onnxruntime_available_providers={','.join(ort_info['available_providers'])}")
         print(f"rasterio_installed={rasterio_info['installed']}")
         print(f"rasterio_version={rasterio_info['version']}")
+        print(f"gdal_python_installed={gdal_info['python_bindings_installed']}")
+        print(f"gdal_python_version={gdal_info['python_bindings_version']}")
+        print(f"gdal_config_installed={gdal_info['gdal_config_installed']}")
+        print(f"gdal_config_version={gdal_info['gdal_config_version']}")
+        print(f"gdal_vrt_enabled={gdal_info['vrt_enabled']}")
         return 0
 
     raise ValueError(f"unsupported command path: {args.command}/{getattr(args, 'models_command', None)}")

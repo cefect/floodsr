@@ -112,3 +112,5 @@ def test_main_doctor_reports_runtime_diagnostics(capsys: pytest.CaptureFixture[s
     stdout = capsys.readouterr().out
     assert exit_code == 0
     assert "onnxruntime_installed=" in stdout
+    assert "gdal_python_installed=" in stdout
+    assert "gdal_vrt_enabled=" in stdout
