@@ -8,8 +8,6 @@ from pathlib import Path
 import pytest
 
 
-pytestmark = pytest.mark.unit
-
 LOCK_FILE = Path(__file__).parent.parent / "container" / "miniforge" / "conda-env-deploy.lock.yml"
 
 
@@ -30,6 +28,7 @@ def _active_env_name():
     return json.loads(result.stdout).get("active_prefix_name")
 
 
+@pytest.mark.local
 def test_conda_lock_alignment():
     """Conda environment is available and functional.
 

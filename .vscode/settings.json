@@ -18,11 +18,13 @@
 		"*.aux.xml": true,
 	},
 "jupyter.notebookFileRoot": "${workspaceFolder}",
-	"python-envs.pythonProjects": [
-		{
-			"path": "",
-			"envManager": "ms-python.python:system",
-			"packageManager": "ms-python.python:pip"
-		}
-	]
+"python.testing.cwd": "${workspaceFolder}",
+"python-envs.pythonProjects": [
+	{
+		"path": ".",
+		"envManager": "ms-python.python:conda",
+		"packageManager": "ms-python.python:conda"
+	}
+],
+
 }
