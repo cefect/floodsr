@@ -91,10 +91,15 @@ jobs:
           path: dist/*
 
   core-install-smoke:
-    name: core wheel smoke (ubuntu-latest)
-    runs-on: ubuntu-latest
+    name: core wheel smoke (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 5
     needs: build-artifacts
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
 
     steps:
       # Install a consistent Python runtime for isolated smoke envs.
@@ -112,18 +117,25 @@ jobs:
 
       # Install pipx and expose the default local bin path for this job.
       - name: Install pipx
+        shell: bash
         run: |
           python -m pip install --upgrade pip pipx
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            echo "$APPDATA/Python/Python312/Scripts" >> "$GITHUB_PATH"
+          else
+            echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          fi
 
       # Smoke test the core install from the built wheel in an isolated pipx env.
       - name: pipx install built core wheel
+        shell: bash
         run: |
           WHEEL=$(echo dist/*.whl)
           python -m pipx install --force "$WHEEL"
 
       # Verify console entrypoint and basic no-input CLI paths.
       - name: Smoke test core CLI
+        shell: bash
         run: |
           floodsr --help
           floodsr doctor
@@ -131,10 +143,15 @@ jobs:
 
       # Confirm the built wheel remains importable without GDAL bindings installed.
       - name: Verify optional GDAL import path
+        shell: bash
         run: |
           WHEEL=$(echo dist/*.whl)
           python -m venv .venv-core
-          . .venv-core/bin/activate
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            . .venv-core/Scripts/activate
+          else
+            . .venv-core/bin/activate
+          fi
           python -m pip install --upgrade pip
           python -m pip install "$WHEEL"
           python - <<'PY'

@@ -9,16 +9,36 @@ Purpose:
 - Validate unit tests plus packaging/install smoke checks without any publish privilege.
 
 What it does:
-1. Runs `pytest -m "unit and not local"`.
+1. Runs `pytest -m "fast and not local and not sphinx"`.
 2. Builds `dist/*` with `python -m build`.
 3. Runs `twine check` on the built artifacts.
-4. Smoke tests the built core wheel in isolated envs without GDAL bindings.
+4. Smoke tests the built core wheel in isolated envs on `ubuntu-latest` and `windows-latest` without GDAL bindings.
 5. Smoke tests the built extended wheel after installing system GDAL and matching Python bindings.
 
 Triggers:
 - `pull_request`
 - `push` to `master`
 - `workflow_dispatch`
+
+### force run
+ensure the changes are pushed. 
+
+```bash
+gh workflow run ci.yml --ref master
+```
+
+Run it against the current branch:
+
+```bash
+gh workflow run ci.yml --ref "$(git branch --show-current)"
+```
+
+Watch the most recent CI run:
+
+```bash
+gh run watch "$(gh run list --workflow ci.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
+```
+
 
 ## `release.yml`
 
@@ -43,7 +63,7 @@ From GitHub UI:
 
 Using GitHub CLI:
 ```bash
-gh workflow run ci.yml
+gh workflow run ci.yml --ref master
 ```
 
 ## Interpreting failures
