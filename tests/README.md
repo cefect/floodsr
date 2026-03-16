@@ -21,7 +21,7 @@ pytest -q
 
 
 # fast local suite 
-pytest -q -m "fast"
+pytest -q -m "fast and not sphinx"
 
 # CI test run
 pytest -q -m "fast and not local and not sphinx"
