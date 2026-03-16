@@ -18,7 +18,7 @@ Several ADRs define packaging, testing, and publishing intent, but the GitHub Ac
     - `ci.yaml` for branch CI and PR validation.
     - `release.yaml` for tag-triggered release publishing. 
         - Trusted Publishing
-        - checks out with full history, verifies the tagged commit is reachable from `main`, builds artifacts once, runs validation/tests, publishes, and then creates or updates the GitHub Release for that tag.
+        - checks out with full history, verifies the tagged commit is reachable from `master`, builds artifacts once, runs validation/tests, publishes, and then creates or updates the GitHub Release for that tag.
         - see release semantics in `ADR-0013`.
         - Release versions are derived from Git tags via `setuptools-scm`.
         - - Publish jobs receive `id-token: write` only at the publish step/job boundary; build and test jobs remain read-only.
