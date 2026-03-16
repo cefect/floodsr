@@ -11,12 +11,7 @@ See `docs/dev/adr/0013-publishing.md` and `docs/dev/adr/0017-cicd-workflow-polic
 
 ### local packaging tools
 
-Use the devcontainer image for local release tooling:
-
-```bash
-code .devcontainer/main/devcontainer.json
-python -m pip show setuptools setuptools-scm build twine
-```
+Use the .devcontainer `dev` image. 
 
 ### GitHub repository
 
@@ -49,7 +44,8 @@ Configure GitHub Actions Trusted Publishing in both TestPyPI and PyPI for the `f
 
 `setuptools-scm` is the version source. Do not edit a static package version in `pyproject.toml`.
 
-### pre-release to TestPyPI
+### release to PyPi or TestPyPI
+`.github/workflows/release.yml` will push to the correct repo based on the tag format. 
 
 ```bash
 # 1) start from an up-to-date master branch
@@ -57,53 +53,42 @@ git checkout master
 git pull --ff-only origin master
 
 # 2) optional local sanity check before tagging
+conda activate dev
 python -m build
 python -m twine check dist/*
 
+# check existing tags and decide on yours. tags must look like v0.1.3, v0.1.3rc1, v0.1.3a1, v0.1.3b1
+git tag --sort=-v:refname | grep '^v' | head -n4
+
 # 3) create and push an annotated pre-release tag
-git tag -a v0.1.3rc1 -m "Release v0.1.3rc1"
-git push origin v0.1.3rc1
+git tag -a v0.0.3 -m "Release v0.0.3"
+git push origin v0.0.3
 ```
 
 This triggers `.github/workflows/release.yml`, which:
 - verifies the tagged commit is reachable from `master`
 - builds artifacts once
 - runs unit and install-smoke validation
-- publishes to TestPyPI
+- publishes to TestPyPI or PyPI based on the tag format
 - creates or updates the GitHub Release from the same tag
 
-### stable release to PyPI
-
-```bash
-# 1) start from an up-to-date master branch
-git checkout master
-git pull --ff-only origin master
-
-# 2) create and push an annotated stable tag
-git tag -a v0.0.2 -m "Release v0.0.2"
-git push origin v0.0.2
-```
-
-This triggers the same release workflow, but stable tags publish to PyPI instead of TestPyPI.
+ 
 
 ## validating the trigger
 
 After pushing a tag:
+- Open [GitHub Actions](https://github.com/cefect/floodsr/actions) and confirm the `Release` workflow started from the tag.
+- Check the [GitHub Releases](https://github.com/cefect/floodsr/releases) page for that same tag.
+- Check [PyPI](https://pypi.org/project/floodsr/) or [TestPyPI](https://test.pypi.org/project/floodsr/) for the new release and verify the version matches the tag.
 
-1. Open GitHub Actions and confirm the `Release` workflow started from the tag.
-2. Confirm the `verify tag commit is on master` job passed.
-3. Confirm the built version matches the tag in the build job logs.
-4. Confirm the publish job targeted the correct index:
-   - `testpypi` for `vX.Y.ZrcN`, `vX.Y.ZaN`, `vX.Y.ZbN`
-   - `pypi` for `vX.Y.Z`
-5. Confirm the GitHub Release exists for that same tag.
-
-## quick post-publish checks
+## quick post-publish containerized checks
+NOTE: wont work from inside devcontainer
 
 ### TestPyPI
 
 ```bash
-docker run --rm condaforge/miniforge3:25.3.1-0 bash -lc "
+# `--rm` removes the container after exit; `--init` helps reap child processes cleanly.
+docker run --rm --init condaforge/miniforge3:25.3.1-0 bash -lc "
   set -euo pipefail &&
   export PIPX_HOME=/opt/pipx &&
   export PIPX_BIN_DIR=/usr/local/bin &&
@@ -118,9 +103,15 @@ docker run --rm condaforge/miniforge3:25.3.1-0 bash -lc "
 ### PyPI
 
 ```bash
-python -m pip index versions floodsr
-pipx install floodsr
-floodsr doctor
-floodsr models list
-pipx uninstall floodsr
+docker run --rm --init condaforge/miniforge3:25.3.1-0 bash -lc "
+  set -euo pipefail &&
+  export PIPX_HOME=/opt/pipx &&
+  export PIPX_BIN_DIR=/usr/local/bin &&
+  python -m pip install --upgrade pip pipx &&
+  python -m pip index versions floodsr &&
+  pipx install floodsr &&
+  pipx runpip floodsr show floodsr &&
+  floodsr doctor &&
+  floodsr models list
+"
 ```
