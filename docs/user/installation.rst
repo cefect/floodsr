@@ -17,10 +17,13 @@ System Requirements
 
 Baseline requirements:
 
-- Python 3.10+
-- Linux, macOS, or Windows
+- Python 3.12+
+- Linux or Windows for the documented install paths below
 - Enough RAM/disk for raster tiling workflows
 - For ``floodsr[extended]``: system GDAL plus matching Python GDAL bindings
+
+The core install is exercised in CI on Ubuntu and Windows. The extended GDAL
+install documented below is the Linux path currently documented and tested.
 
 Install Core With pipx (Recommended)
 ------------------------------------
