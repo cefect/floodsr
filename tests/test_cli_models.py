@@ -9,7 +9,7 @@ from conftest import models_manifest_fp
 from floodsr.cli import _parse_arguments, _resolve_log_level, main
 
 
-pytestmark = pytest.mark.unit
+pytestmark = pytest.mark.fast
 
 
 def test_main_models_list_outputs_model_version(models_manifest_fp: Path, capsys: pytest.CaptureFixture[str]):
