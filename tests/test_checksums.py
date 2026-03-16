@@ -7,7 +7,7 @@ import pytest
 from floodsr.checksums import compute_sha256, verify_sha256
 
 
-pytestmark = pytest.mark.unit
+pytestmark = pytest.mark.fast
 
 
 @pytest.fixture(scope="function")
