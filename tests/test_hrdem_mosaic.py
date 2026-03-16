@@ -75,7 +75,7 @@ def _read_output_dem_with_basic_assertions(dem_fp: str | Path):
 # ----- TESTSE -----
 # ------------------
 
-@pytest.mark.unit
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "case_id",
     [
@@ -136,6 +136,7 @@ def test_build_fetch_tile_grid_gdf_and_selection_mask_writes_geojson(
 # -----------------
 
 
+@pytest.mark.fast
 @pytest.mark.network
 @pytest.mark.parametrize(
     "case_id",
@@ -241,7 +242,7 @@ def test_fetch_hrdem_synthetic_cases(
 
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "domain_d",
     [
@@ -316,7 +317,7 @@ def test_write_dem_from_asset_hrefs_synthetic_cases(
         assert not np.any(np.isclose(arr, np.float32(nodata)))
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "asset_coverage_x_frac",
     [

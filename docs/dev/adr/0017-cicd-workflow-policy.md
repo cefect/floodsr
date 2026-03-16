@@ -8,7 +8,7 @@ Several ADRs define packaging, testing, and publishing intent, but the GitHub Ac
 
 - CI owns packaging validation for published artifacts.
 - CI builds release artifacts once and reuses them across downstream workflow steps.
-- GitHub Actions test selection is limited to `unit` tests and excludes `local`.
+- GitHub Actions test selection is limited to `fast` tests and excludes `local`.
 
 
 

@@ -7,7 +7,7 @@ import pytest
 from floodsr.cache_paths import get_cache_dir
 
 
-pytestmark = pytest.mark.unit
+pytestmark = pytest.mark.fast
 
 
 @pytest.mark.parametrize(
