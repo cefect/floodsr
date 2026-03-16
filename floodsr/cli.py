@@ -188,6 +188,18 @@ def _resolve_default_output_path(in_fp: Path) -> Path:
     return (Path.cwd() / f"{in_path.stem}_sr{suffix}").resolve()
 
 
+def _build_doctor_payload() -> dict[str, object]:
+    """Collect one machine-readable runtime diagnostics payload."""
+    ort_info = get_onnxruntime_info()
+    rasterio_info = get_rasterio_info()
+    gdal_info = get_gdal_info()
+    return {
+        "onnxruntime": ort_info,
+        "rasterio": rasterio_info,
+        "gdal": gdal_info,
+    }
+
+
 def main_cli(args: argparse.Namespace) -> int:
     """Run the CLI command selected by parsed arguments."""
     # Route model list command.
@@ -249,9 +261,13 @@ def main_cli(args: argparse.Namespace) -> int:
 
     # Route doctor command.
     if args.command == "doctor":
-        ort_info = get_onnxruntime_info()
-        rasterio_info = get_rasterio_info()
-        gdal_info = get_gdal_info()
+        payload = _build_doctor_payload()
+        if args.json:
+            print(json.dumps(payload, indent=2, sort_keys=True))
+            return 0
+        ort_info = payload["onnxruntime"]
+        rasterio_info = payload["rasterio"]
+        gdal_info = payload["gdal"]
         print(f"onnxruntime_installed={ort_info['installed']}")
         print(f"onnxruntime_version={ort_info['version']}")
         print(f"onnxruntime_available_providers={','.join(ort_info['available_providers'])}")
@@ -448,7 +464,12 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
     )
 
     # Register diagnostic command.
-    subparsers.add_parser("doctor", help="Report runtime dependency diagnostics.")
+    doctor_parser = subparsers.add_parser("doctor", help="Report runtime dependency diagnostics.")
+    doctor_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit machine-readable JSON diagnostics.",
+    )
     return parser.parse_args(_inject_tohr_machine_json_args(argv))
 
 

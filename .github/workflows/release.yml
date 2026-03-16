@@ -155,10 +155,16 @@ jobs:
       - name: Smoke test core CLI
         run: |
           floodsr --help
-          floodsr doctor | tee doctor.txt
+          floodsr doctor --json > doctor.json
           floodsr models list
-          grep -Fx "gdal_python_installed=False" doctor.txt
-          grep -Fx "gdal_vrt_enabled=False" doctor.txt
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("doctor.json").read_text(encoding="utf-8"))
+          assert payload["gdal"]["python_bindings_installed"] is False
+          assert payload["gdal"]["vrt_enabled"] is False
+          PY
 
       # Confirm the built wheel reports the expected core-only GDAL capability state.
       - name: Verify optional GDAL doctor probes
@@ -168,9 +174,15 @@ jobs:
           . .venv-core/bin/activate
           python -m pip install --upgrade pip
           python -m pip install "$WHEEL"
-          floodsr doctor | tee doctor-core.txt
-          grep -Fx "gdal_python_installed=False" doctor-core.txt
-          grep -Fx "gdal_vrt_enabled=False" doctor-core.txt
+          floodsr doctor --json > doctor-core.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("doctor-core.json").read_text(encoding="utf-8"))
+          assert payload["gdal"]["python_bindings_installed"] is False
+          assert payload["gdal"]["vrt_enabled"] is False
+          PY
 
   # extended-install-smoke:
   #   name: extended wheel smoke (ubuntu-latest)
@@ -213,9 +225,15 @@ jobs:
   #     # Verify the extended install can import GDAL-backed HRDEM functionality.
   #     - name: Smoke test extended install
   #       run: |
-  #         floodsr doctor | tee doctor-extended.txt
-  #         grep -Fx "gdal_python_installed=True" doctor-extended.txt
-  #         grep -Fx "gdal_vrt_enabled=True" doctor-extended.txt
+  #         floodsr doctor --json > doctor-extended.json
+  #         python - <<'PY'
+  #         import json
+  #         from pathlib import Path
+  #
+  #         payload = json.loads(Path("doctor-extended.json").read_text(encoding="utf-8"))
+  #         assert payload["gdal"]["python_bindings_installed"] is True
+  #         assert payload["gdal"]["vrt_enabled"] is True
+  #         PY
 
   publish-testpypi:
     name: publish pre-release to TestPyPI
