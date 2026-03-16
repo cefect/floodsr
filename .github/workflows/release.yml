@@ -155,22 +155,22 @@ jobs:
       - name: Smoke test core CLI
         run: |
           floodsr --help
-          floodsr doctor
+          floodsr doctor | tee doctor.txt
           floodsr models list
+          grep -Fx "gdal_python_installed=False" doctor.txt
+          grep -Fx "gdal_vrt_enabled=False" doctor.txt
 
-      # Confirm the built wheel remains importable without GDAL bindings installed.
-      - name: Verify optional GDAL import path
+      # Confirm the built wheel reports the expected core-only GDAL capability state.
+      - name: Verify optional GDAL doctor probes
         run: |
           WHEEL=$(echo dist/*.whl)
           python -m venv .venv-core
           . .venv-core/bin/activate
           python -m pip install --upgrade pip
           python -m pip install "$WHEEL"
-          python - <<'PY'
-          import floodsr.dem_sources.hrdem_mosaic
-          assert floodsr.dem_sources.hrdem_mosaic.gdal is None
-          print("core import validated without osgeo.gdal")
-          PY
+          floodsr doctor | tee doctor-core.txt
+          grep -Fx "gdal_python_installed=False" doctor-core.txt
+          grep -Fx "gdal_vrt_enabled=False" doctor-core.txt
 
   # extended-install-smoke:
   #   name: extended wheel smoke (ubuntu-latest)
@@ -213,12 +213,9 @@ jobs:
   #     # Verify the extended install can import GDAL-backed HRDEM functionality.
   #     - name: Smoke test extended install
   #       run: |
-  #         floodsr doctor
-  #         python - <<'PY'
-  #         import floodsr.dem_sources.hrdem_mosaic
-  #         assert floodsr.dem_sources.hrdem_mosaic.gdal is not None
-  #         print(floodsr.dem_sources.hrdem_mosaic.gdal.VersionInfo("--version"))
-  #         PY
+  #         floodsr doctor | tee doctor-extended.txt
+  #         grep -Fx "gdal_python_installed=True" doctor-extended.txt
+  #         grep -Fx "gdal_vrt_enabled=True" doctor-extended.txt
 
   publish-testpypi:
     name: publish pre-release to TestPyPI
