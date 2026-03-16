@@ -10,7 +10,7 @@ from floodsr.dem_sources.hrdem_mosaic import write_dem_from_asset_hrefs
 from floodsr.preprocessing import write_platform_prepared_rasters, write_prepared_rasters
 
 
-pytestmark = pytest.mark.unit
+pytestmark = pytest.mark.fast
 
 
 def test_write_prepared_rasters_outputs_exist_and_are_float32(

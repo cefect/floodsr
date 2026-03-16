@@ -16,7 +16,7 @@ from floodsr.model_registry import (
 )
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_list_models_returns_non_empty_records(models_manifest_fp: Path):
     """Ensure model listing returns records from manifest."""
     records = list_models(manifest_fp=models_manifest_fp)
@@ -24,7 +24,7 @@ def test_list_models_returns_non_empty_records(models_manifest_fp: Path):
     assert len(records) > 0
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_fetch_model_returns_cached_path(tmp_path: Path, models_manifest_fp: Path):
     """Ensure model fetch stores the artifact in cache."""
     model_fp = fetch_model(
@@ -36,7 +36,7 @@ def test_fetch_model_returns_cached_path(tmp_path: Path, models_manifest_fp: Pat
     assert model_fp.exists()
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_fetch_model_fails_on_checksum_mismatch(tmp_path: Path):
     """Ensure fetch fails when downloaded bytes do not match manifest digest."""
     source_fp = tmp_path / "source_model.onnx"
@@ -64,7 +64,7 @@ def test_fetch_model_fails_on_checksum_mismatch(tmp_path: Path):
     assert "checksum mismatch" in str(exc_info.value)
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_default_manifest_records_include_required_fields():
     """Ensure packaged manifest records expose required registry fields."""
     records = list_models()
@@ -74,7 +74,7 @@ def test_default_manifest_records_include_required_fields():
         assert record.version and record.file_name and record.url and record.sha256
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_list_runnable_model_versions_match_worker_backed_manifest():
     """Ensure runnable versions are exactly manifest entries with worker modules."""
     runnable_versions = list_runnable_model_versions()
@@ -83,7 +83,7 @@ def test_list_runnable_model_versions_match_worker_backed_manifest():
     assert runnable_versions == expected_versions
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 def test_resolve_model_worker_class_returns_model_worker_type(default_model_version: str):
     """Ensure worker resolution loads a concrete worker class from model version."""
     worker_class = resolve_model_worker_class(default_model_version)
@@ -110,7 +110,7 @@ def test_resolve_model_worker_class_returns_model_worker_type(default_model_vers
         ),
     ],
 )
-@pytest.mark.unit
+@pytest.mark.fast
 def test_manifest_injected_bad_values_fail_fetch(
     tmp_path: Path,
     models_manifest_fp: Path,
@@ -140,6 +140,7 @@ def test_manifest_injected_bad_values_fail_fetch(
     assert expected_message in str(exc_info.value)
 
 
+@pytest.mark.fast
 @pytest.mark.network
 def test_default_manifest_http_links_resolve(tmp_path: Path):
     """Ensure HTTP model URLs in the default manifest resolve with project fetch logic."""
