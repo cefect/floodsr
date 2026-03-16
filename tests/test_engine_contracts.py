@@ -69,7 +69,6 @@ def test_engine_base_contract_with_dummy_subclass():
     ],
 )
 @pytest.mark.fast
-@pytest.mark.network
 def test_engine_ort_run_tile_contract(tohr_model_fp, ort_tile_inputs, logger, repeat_run: bool):
     """Ensure ORT predictions are float32, non-empty, and deterministic on repeat."""
     pytest.importorskip("onnxruntime")
