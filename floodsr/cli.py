@@ -5,7 +5,6 @@ from pathlib import Path
 
 from floodsr.cache_paths import get_model_cache_path
 from floodsr.checksums import verify_sha256
-from floodsr.dem_sources import fetch_dem
 from floodsr.engine import get_gdal_info, get_onnxruntime_info, get_rasterio_info
 from floodsr.model_registry import (
     fetch_model,
@@ -14,7 +13,6 @@ from floodsr.model_registry import (
     load_models_manifest,
     model_worker_exists,
 )
-from floodsr.tohr import tohr
 
 
 log = logging.getLogger(__name__)
@@ -212,6 +210,10 @@ def main_cli(args: argparse.Namespace) -> int:
 
     # Route main ToHR command.
     if args.command == "tohr":
+        # Defer heavy raster imports until the ToHR path is actually used.
+        from floodsr.dem_sources import fetch_dem
+        from floodsr.tohr import tohr
+
         if args.fetch_out is not None and not args.fetch_hrdem:
             raise ValueError("--fetch-out requires --fetch-hrdem")
 
