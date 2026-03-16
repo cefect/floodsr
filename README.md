@@ -19,33 +19,20 @@ Implemented backend:
 ## Installation
 
 ```bash
-# recommended core install: isolated CLI install for users
+# basic install
 python -m pip install --user pipx
 pipx ensurepath
 pipx install floodsr
 ```
 
-TestPyPI install:
-
 ```bash
-pipx install --index-url https://test.pypi.org/simple/ --pip-args="--extra-index-url https://pypi.org/simple" floodsr
+# advanced install for VRT workflows
+conda create -n floodsr-gdal -c conda-forge python=3.12 gdal -y
+conda activate floodsr-gdal
+python -m pip install floodsr
 ```
 
-Extended install for GDAL/VRT-dependent workflows:
-
-```bash
-sudo apt-get update
-sudo apt-get install -y gdal-bin libgdal-dev
-python -m pip install "gdal==$(gdal-config --version)"
-python -m pip install "floodsr[extended]"
-```
-
-The default `floodsr` package is the core install. It does not require
-`osgeo.gdal`, and the HRDEM fetcher falls back to the non-windowed path when
-GDAL bindings are missing.
-
-Developer work should use the devcontainer image in
-`.devcontainer/main/devcontainer.json`.
+See `docs/user/installation.rst` for the full installation guide and platform notes.
 
  
 

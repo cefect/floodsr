@@ -1,56 +1,70 @@
 Installation
 ============
 
-Progressive Capability Model
-----------------------------
+``floodsr`` supports two installation paths:
 
-``floodsr`` ships with two install modes:
+- Basic install: no ``osgeo.gdal``, no required system GDAL, supported via ``pip`` and ``pipx`` on wheel-supported platforms.
+- Advanced install: Linux/conda-supported path for VRT workflows, with GDAL installed in the target conda environment before ``floodsr``.
 
-- ``floodsr``: the core install. This is the default package and does not require ``osgeo.gdal``.
-- ``floodsr[extended]``: the GDAL-backed install for VRT-dependent workflows.
 
-The HRDEM fetcher stays available in the core install, but it falls back to the
-non-windowed GeoTIFF path when GDAL Python bindings are missing.
+Basic Install
+-------------
 
-System Requirements
--------------------
+The basic install is the recommended user path. It keeps the CLI isolated and does not require system GDAL or Python GDAL bindings.
 
-Baseline requirements:
+Install ``pipx`` first if you do not already have it:
 
-- Python 3.10+
-- Linux, macOS, or Windows
-- Enough RAM/disk for raster tiling workflows
-- For ``floodsr[extended]``: system GDAL plus matching Python GDAL bindings
+.. code-block:: bash
 
-Install Core With pipx (Recommended)
-------------------------------------
+   python -m pip install --user pipx
+   pipx ensurepath
+
+Then install ``floodsr`` into its own isolated CLI environment:
 
 .. code-block:: bash
 
    pipx install floodsr
 
-Reference: https://pipx.pypa.io/
-
-Install Extended With pip (GDAL/VRT Features)
----------------------------------------------
-
-Install system GDAL first, then install matching Python bindings before the
-``extended`` extra. On Debian or Ubuntu that typically looks like:
+Validate the install:
 
 .. code-block:: bash
 
-   sudo apt-get update
-   sudo apt-get install -y gdal-bin libgdal-dev
-   python -m pip install "gdal==$(gdal-config --version)"
-   python -m pip install "floodsr[extended]"
+   floodsr --help
+   floodsr doctor --json
 
-The Python GDAL version must match the system GDAL version reported by
-``gdal-config --version``.
+The basic install supports the default CLI and non-VRT workflows. If GDAL is present elsewhere on the host, ``floodsr`` should still remain on the non-VRT path unless GDAL is installed inside the active Python environment.
 
-Install Core With pip (Advanced)
---------------------------------
+
+Advanced Install
+----------------
+
+The advanced install enables GDAL-backed VRT workflows, including the tiled HRDEM fetch path that depends on ``osgeo.gdal``.
+
+This path is supported for Linux users managing the environment with conda. Install conda first if needed:
+
+- Conda install guide: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html
+
+Create a dedicated environment with GDAL from ``conda-forge``, activate it, then install ``floodsr`` with ``pip`` into that same environment:
 
 .. code-block:: bash
 
+   conda create -n floodsr-gdal -c conda-forge python=3.12 gdal -y
+   conda activate floodsr-gdal
    python -m pip install --upgrade pip
    python -m pip install floodsr
+
+Validate the advanced install:
+
+.. code-block:: bash
+
+   floodsr doctor --json
+
+In the advanced install, ``floodsr doctor --json`` should report GDAL Python bindings as installed and VRT support as enabled.
+
+
+Support Notes
+-------------
+
+- Basic installs are intended for ``pip`` and ``pipx`` on wheel-supported platforms.
+- Advanced installs are documented and validated as a Linux/conda workflow.
+- ``floodsr`` does not publish a GDAL extra in ``pyproject.toml`` because Python GDAL bindings must match the GDAL version already installed in the target environment.
