@@ -106,7 +106,8 @@ jobs:
           fi
 
       # Simulate host GDAL visibility without installing Python GDAL into the pipx env.
-      - name: Configure host GDAL context
+      - name: Configure host GDAL context (unix)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           if [ "${{ matrix.gdal_context }}" = "no_system_gdal" ]; then
@@ -130,16 +131,35 @@ jobs:
           EOF
           chmod +x fake-bin/gdal-config
 
-          cat > fake-bin/gdal-config.bat <<EOF
+          echo "$PWD/fake-bin" >> "$GITHUB_PATH"
+
+      # Simulate host GDAL visibility using Windows-native command discovery.
+      - name: Configure host GDAL context (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          if ("${{ matrix.gdal_context }}" -eq "no_system_gdal") {
+            exit 0
+          }
+
+          $fakeBin = Join-Path $PWD "fake-bin"
+          New-Item -ItemType Directory -Force -Path $fakeBin | Out-Null
+          if ("${{ matrix.gdal_context }}" -eq "supported_system_gdal") {
+            $gdalVersion = "3.12.2"
+          } else {
+            $gdalVersion = "0.0.0"
+          }
+
+          @"
           @echo off
           if "%1"=="--version" (
-            echo ${GDAL_VERSION}
+            echo $gdalVersion
             exit /b 0
           )
           exit /b 1
-          EOF
+          "@ | Set-Content -Path (Join-Path $fakeBin "gdal-config.cmd") -Encoding ascii
 
-          echo "$PWD/fake-bin" >> "$GITHUB_PATH"
+          $fakeBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       # Smoke test the basic install from the built wheel in an isolated pipx env.
       - name: pipx install built core wheel
@@ -149,7 +169,8 @@ jobs:
           python -m pipx install --force "$WHEEL"
 
       # Verify console entrypoint and basic no-input CLI paths in the requested host context.
-      - name: Smoke test basic CLI
+      - name: Smoke test basic CLI (unix)
+        if: runner.os != 'Windows'
         shell: bash
         env:
           EXPECT_GDAL_CONFIG_INSTALLED: ${{ matrix.expect_gdal_config_installed }}
@@ -174,6 +195,19 @@ jobs:
           else:
               assert payload["gdal"]["gdal_config_version"] == expected_version
           PY
+
+      # Verify console entrypoint and basic no-input CLI paths in the requested Windows host context.
+      - name: Smoke test basic CLI (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          EXPECT_GDAL_CONFIG_INSTALLED: ${{ matrix.expect_gdal_config_installed }}
+          EXPECTED_GDAL_CONFIG_VERSION: ${{ matrix.expected_gdal_config_version }}
+        run: |
+          floodsr --help
+          floodsr doctor --json | Set-Content -Path doctor.json -Encoding utf8
+          floodsr models list
+          python -c "import json, os, pathlib; payload = json.loads(pathlib.Path('doctor.json').read_text(encoding='utf-8')); expect_config = os.environ['EXPECT_GDAL_CONFIG_INSTALLED'] == 'true'; expected_version = os.environ['EXPECTED_GDAL_CONFIG_VERSION']; assert payload['gdal']['python_bindings_installed'] is False; assert payload['gdal']['vrt_enabled'] is False; assert payload['gdal']['gdal_config_installed'] is expect_config; assert (payload['gdal']['gdal_config_version'] is None) if expected_version == '__none__' else (payload['gdal']['gdal_config_version'] == expected_version)"
 
   extended-conda:
     name: extended conda (ubuntu-latest)

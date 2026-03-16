@@ -24,7 +24,7 @@ Triggers:
 Ensure the changes are pushed.
 ```bash
 # Run CI against the current branch:
-gh workflow run ci.yml --ref "$(git branch --show-current)"
+gh workflow run --ref "$(git branch --show-current)"
 
 # Run the manual install matrix against the current branch:
 gh workflow run install-edge.yml --ref "$(git branch --show-current)"
