@@ -1,8 +1,9 @@
+// ONLY settings that apply to all development environments (e.g., main + docs, wsl + devcontainer, walter + Seth)
 {
 	"files.exclude": {
 		"**/__pycache__": true,
 		"**/.pytest_cache": true,
-		"LICENSE": true,
+
 		"*.egg-info": true,
 		"**/build": true,
 		"*.aux.xml": true,
@@ -12,8 +13,7 @@
 		"**/__pycache__": true,
 		"**/.pytest_cache": true,
 		"**/env": true,
-		"**/.snakemake": true,
-		"LICENSE": true,
+
 		"**/build": true,
 		"*.aux.xml": true,
 	},
