@@ -3,5 +3,12 @@ FAQ
 
 What is the maximum resolution `tohr` can handle?
 -------------------------------------------------
-This is depends on the model used:
-- `ResUNet_16x_DEM` provides a 16x enhancement as the name implies.
+In general, `tohr` outputs a hires depth grid at the same resolution as the provided hires DEM.
+How that resolution enhancement is achieved varies by model:
+- `ResUNet_16x_DEM` provides a 16x enhancement with the inference model weights. Any additional resampling needed is achieved with basic bilinear resampling.
+
+
+So, there is no hard-coded *maximum* resolution.
+In theory, `tohr` will resample to any resolution you can find a DEM at.
+However, in standard flood hazard contexts, resolutions finer than 1m are rarely useful.
+
