@@ -7,6 +7,8 @@
 Super-Resolution for flood hazard rasters.
 Ingests lores water grid and hires DEM and infers a hires water grid using the specified model.
 
+![floodsr header](docs/header.png)
+
 - **Documentation**: https://floodsr.readthedocs.io/en/latest/
 - **Contribute**: https://github.com/cefect/floodsr/blob/master/CONTRIBUTING.md
 
