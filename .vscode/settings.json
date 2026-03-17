@@ -20,5 +20,25 @@
 	},
 	"jupyter.notebookFileRoot": "${workspaceFolder}",
 	"python.testing.cwd": "${workspaceFolder}",
+	"cSpell.words": [
+		"bbox",
+		"conda-forge",
+		"CUDA",
+		"floodsr",
+		"GDAL",
+		"GeoPackage",
+		"GeoTIFF",
+		"GPKG",
+		"HRDEM",
+		"LIDAR",
+		"Miniforge",
+		"mosaicking",
+		"ONNX",
+		"rasterio",
+		"ResUNet",
+		"RTD",
+		"Sphinx",
+		"tohr"
+	],
 	
 }
