@@ -11,8 +11,8 @@ This directory contains the active GitHub Actions workflows for this repository.
 Push the branch first, then run a workflow from the GitHub UI or CLI.
 
 ```bash
-gh workflow run ci.yml --ref "$(git branch --show-current)"
-gh workflow run install-edge.yml --ref "$(git branch --show-current)"
+gh workflow run --ref "$(git branch --show-current)"
+ 
 ```
 
 ## `ci.yml`
@@ -24,7 +24,7 @@ gh workflow run install-edge.yml --ref "$(git branch --show-current)"
 ## `install-edge.yml`
 
 - Purpose: manual install-matrix validation without slowing normal CI.
-- Scope: runs one constrained minimum-core test slice, builds `dist/*`, tests the basic `pipx` install on Ubuntu and Windows across host-GDAL contexts, and tests the extended conda install on Ubuntu.
+- Scope: builds `dist/*` on the self-hosted Linux runner fleet, then runs each install smoke case in a fresh `condaforge/miniforge3:25.3.1-0` Docker container on `CEFTOP25M`; the matrix covers Linux-only basic `pipx` host-GDAL contexts plus one extended conda-forge GDAL case.
 - Trigger: None (i.e., `workflow_dispatch`).
 
 ## `release.yml`
