@@ -12,16 +12,7 @@ What Is ``floodsr``?
 Or a super-resolution (SR) tool in machine-speak.
 It takes a low-resolution depth raster as input and reconstructs higher-resolution output, using terrain (DEM) context.
 
-Install
---------------------
 
-``floodsr`` was designed as a CLI-first Python package, so we recommend installing with `pipx <https://pipx.pypa.io/stable/>`_ to ensure environment isolation:
-
-.. code-block:: bash
-
-   pipx install floodsr
-
-For more detailed installation instructions, see :doc:`installation`.
 
 
 Downloading test data
@@ -43,6 +34,19 @@ Use
 ----------
 
 Here we give a quick intro on setting up a model and using it to enhance a flood raster.
+
+Install
+^^^^^^^^^^^
+
+``floodsr`` was designed as a CLI-first Python package, so we recommend installing with `pipx <https://pipx.pypa.io/stable/>`_ to ensure environment isolation:
+
+.. code-block:: bash
+
+   pipx install floodsr
+
+For more detailed installation instructions, see :doc:`installation`.
+
+
 
 Model Setup
 ^^^^^^^^^^^

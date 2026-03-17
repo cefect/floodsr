@@ -1,6 +1,6 @@
 # USER documentation
 
- 
+- [ReadTheDocs](https://app.readthedocs.org/projects/floodsr/)
 
 ## Read the Docs config
 
@@ -23,50 +23,5 @@ python -m sphinx -b html . "_build/manual"
 
 ```
 
-## open built html in VS Code (quick check)
-
-```bash
-# 5) open the built html file directly in the current VS Code window
-code "${BUILD_DIR}/html/readme.html"
-```
-
-## launch built html in a Windows web browser
-
-### from WSL (outside container)
-
-```bash
-# 6) launch the html file in the default Windows browser
-cmd.exe /C start "" "$(wslpath -w "${BUILD_DIR}/html/readme.html")"
-```
-
-### from the docs devcontainer (`.devcontainer/docs`)
-
-```bash
-# 7) serve docs on port 8000 (VS Code auto-forwards and opens Windows browser)
-python -m http.server 8000 --directory "${BUILD_DIR}/html"
-```
-
-Then open `http://127.0.0.1:8000/readme.html` if it does not open automatically.
-
-
-
-
-
-
-# PLAN
-
-
-- getting started
-    -  'what is', 
-    - 'installation' (just the basic pipx command and a link to the install page), 
-    -  'quickstart' (with a very simple example of running `floodsr tohr` on the test 'tests/data/2407_FHIMP_tile')
-    - `FAQ`: blank for now
-- installation
-    - system requirements (hardware, OS, etc)
-    - install with pipx (recommended)
-    - install with pip (advanced)
-    - install from source (advanced)
-- User Guide
-    - introduction: paragraph on resolution enhamcenet, terminology, what the tool does, how it might be used
-    - CLI reference (auto-generated from `floodsr --help` and subcommands)
-    - models: one sub-section for each model. 
+ 
+ 

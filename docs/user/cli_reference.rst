@@ -1,7 +1,7 @@
 CLI Reference
 =============
 
-Auto-generated from live command help output.
+
 
 Main Command
 ------------

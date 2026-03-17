@@ -19,7 +19,7 @@ Digital Elevation Models (DEMs)
 -------------------------------
 Unlike some other super-resolution tools, ``floodsr`` leverages terrain information to provide more physically based flood reconstructions.
 This information is supplied as a high-resolution DEM.
-``floodsr tohr`` will propagate water water across whatever DEM grid is provided, so a user must take care to ensure the DEM reflects the intended propagation surface.
+``floodsr tohr`` will propagate water across whatever DEM grid is provided, so a user must take care to ensure the DEM reflects the intended propagation surface.
 For example, removing buildings or burning flowpaths through roads.
 
 .. image:: img/1280px-The_difference_between_Digital_Surface_Model_(DSM)_and_Digital_Terrain_Models_(DTM)_when_talking_about_Digital_Elevation_models_(DEM).svg.png
@@ -33,9 +33,9 @@ The hi-res DEM input can be specified with the ``--dem`` flag.
 
 HRDEM Mosaic
 ~~~~~~~~~~~~
-Natural Resources Canada develops and hosts the `High Resolution Digital Elevation Model Mosaic <https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b>`_, which provides a unique and continuous representation of the high resolution elevation data available across Canada.
+For Canadian work, Natural Resources Canada develops and hosts the `High Resolution Digital Elevation Model Mosaic <https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b>`_, which provides a unique and continuous representation of the high resolution elevation data available across Canada.
 In Southern Canada, this is built mainly from fixed wing LiDAR, providing an awesome resource for fetchable terrain data via their Web Coverage Services (WCS).
-Coverage circa 2026 is shown below:
+Coverage circa Feb 2026 is shown below:
 
 
 .. image:: img/HRDEM_coverage.png
@@ -47,7 +47,7 @@ To automate the use of HRDEM data for resolution enhancement of flood grids in C
 
 Models
 ------
-To support a wide range of use-cases and adaptability, ``floodsr`` facilitates resolution enhancement via various *models*.
+To support a wide range of use-cases and adaptability, ``floodsr`` employs *models* to perform resolution enhancement.
 To see the supported models, use the ``floodsr models list`` command.
 
 ResUNet_16x_DEM

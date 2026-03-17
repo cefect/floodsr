@@ -28,7 +28,6 @@ If you see a warning about needing to do something for *PATH changes to take eff
 
 Basic Install
 -----------------
-The recomended install method is with ``pipx`` to ensure environment isolation and avoid dependency conflicts with other Python projects on the same host.
 Check pipx is installed and on the PATH:
 
 .. code-block:: bash
@@ -79,5 +78,5 @@ Now the ``doctor`` command should report GDAL Python bindings as installed and V
 
    floodsr doctor
 
-Now you're ready to start enhancing!
+Good job. you deserve some hi-res flood rasters now.
 
