@@ -3,13 +3,18 @@ Tutorials
 
 This page collects hands-on ``floodsr`` walkthroughs.
 
-Tutorial 1: Quick Start
------------------------
+Running Tutorials
+-----------------
+To best use the tutorials, we recommend running them in a Jupyter environment. For example, you can:
 
-This tutorial mirrors the quick-start flow from :doc:`getting_started`.
-The notebook is authored as a real Jupyter notebook and rendered by MyST-NB as a standalone page.
+.. raw:: html
 
-Open the tutorial here: :doc:`notebooks/tutorial_1`
+   <p><i class="fas fa-download"></i> Download the notebook as an <code>.ipynb</code> file, save it to your local machine, and open it with your local Jupyter kernel. If you need Jupyter, see <a href="https://jupyter.org/install">jupyter.org/install</a>.</p>
+   <p><i class="fas fa-rocket"></i> Launch the same notebook directly in Google Colab for a browser-based interactive session.</p>
+
+Alternatively, you can copy/paste the commands from the tutorials into your terminal.
+
+Click *next* below to get started with the first tutorial.
 
 .. toctree::
    :maxdepth: 1

@@ -40,7 +40,19 @@ nb_execution_mode = "off"
 
 # -- Options for HTML output -------------------------------------------------
 
-html_theme = "sphinx_rtd_theme"
+html_theme = "sphinx_book_theme"
 html_title = "floodsr docs"
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
+html_theme_options = {
+    "repository_url": "https://github.com/cefect/floodsr",
+    "repository_branch": "master",
+    "path_to_docs": "docs/user",
+    "use_download_button": True,
+    "launch_buttons": {
+        "colab_url": "https://colab.research.google.com",
+    },
+}
+html_context = {
+    "default_mode": "light",
+}
