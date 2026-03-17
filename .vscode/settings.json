@@ -17,14 +17,7 @@
 		"**/build": true,
 		"*.aux.xml": true,
 	},
-"jupyter.notebookFileRoot": "${workspaceFolder}",
-"python.testing.cwd": "${workspaceFolder}",
-"python-envs.pythonProjects": [
-	{
-		"path": ".",
-		"envManager": "ms-python.python:conda",
-		"packageManager": "ms-python.python:conda"
-	}
-],
-
+	"jupyter.notebookFileRoot": "${workspaceFolder}",
+	"python.testing.cwd": "${workspaceFolder}",
+	
 }
