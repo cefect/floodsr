@@ -16,6 +16,7 @@
 
 		"**/build": true,
 		"*.aux.xml": true,
+		"docs/user/_build": true,
 	},
 	"jupyter.notebookFileRoot": "${workspaceFolder}",
 	"python.testing.cwd": "${workspaceFolder}",
