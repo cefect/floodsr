@@ -7,6 +7,7 @@
 
    getting_started
    installation
+   faq
    user_guide
    cli_reference
    models
