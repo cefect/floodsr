@@ -29,12 +29,15 @@ Because of that, the package should expose one progressive capability model rath
     - Is supported via `pip` and `pipx` on wheel-supported platforms.
     - Provides the default CLI and library surface for users who only need the non-VRT path.
     - VRT-dependent commands are unavailable.
+    - Lower bounds in `pyproject.toml` should match one explicitly tested minimum core stack rather than a broad historical compatibility promise.
   - **Extended install**
     - Is a Linux/conda-supported environment recipe rather than a PyPI extra.
     - Requires GDAL to be installed in the target conda environment before `pip install floodsr`.
     - Requires matching Python bindings in that same environment.
     - Enables VRT-dependent commands and any future direct-GDAL features.
 - Do not publish a `pyproject.toml` GDAL extra because the Python GDAL binding version must track the environment-provided GDAL version.
+- Keep the tested minimum core stack in a constraints file and validate it in CI.
+- Treat the extended path as a pinned conda stack, not an open-ended dependency range.
 - Keep publishing target as PyPI/TestPyPI wheels and source distributions.
 - Validate published artifacts against the capability level they claim to support.
 
