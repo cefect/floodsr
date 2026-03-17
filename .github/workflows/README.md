@@ -2,7 +2,7 @@
 
 This directory contains the active GitHub Actions workflows for this repository.
 
-## Cross-Reference
+## See Also
 
 - See [`docs/dev/adr/0017-cicd-workflow-policy.md`](../../docs/dev/adr/0017-cicd-workflow-policy.md) for the CI/CD policy that defines the intent behind these workflows.
 
