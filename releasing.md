@@ -61,8 +61,9 @@ python -m twine check dist/*
 git tag --sort=-v:refname | grep '^v' | head -n4
 
 # 3) create and push an annotated pre-release tag
-git tag -a v0.0.3 -m "Release v0.0.3"
-git push origin v0.0.3
+tag="v0.0.4"
+git tag -a $tag -m "Release $tag"
+git push origin $tag
 ```
 
 This triggers `.github/workflows/release.yml`, which:

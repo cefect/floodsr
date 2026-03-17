@@ -5,10 +5,7 @@ on:
   pull_request:
     branches:
       - master
-  # Keep default branch healthy after merge.
-  push:
-    branches:
-      - master
+
   # Allow manual reruns from the Actions UI.
   workflow_dispatch:
 
