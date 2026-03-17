@@ -27,6 +27,7 @@ Several ADRs define packaging, testing, and publishing intent, but the GitHub Ac
 
 - Prefer `push.tags` for release triggers rather than `workflow_run` chaining for publishing.
 - Reuse artifacts within the same workflow run via `upload-artifact` and `download-artifact`.
+- Manual edge-install validation may run on the repository self-hosted Linux runner fleet and use a fresh job container per matrix case for reproducible install smoke coverage.
 - Use GitHub environments for `testpypi` and `pypi` publish jobs.
  
 
