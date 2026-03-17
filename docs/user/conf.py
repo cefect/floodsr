@@ -1,6 +1,7 @@
 """Sphinx configuration for floodsr documentation."""
 
 from datetime import datetime
+from setuptools_scm import get_version
 
 # -- Project information -----------------------------------------------------
 
@@ -8,7 +9,9 @@ project = "floodsr"
 author = "floodsr developers"
 current_year = datetime.now().year
 copyright = f"{current_year}, {author}"
-release = "0.0.1"
+
+# Derive the docs version from SCM tags so RTD stays aligned with releases.
+release = get_version(root="../..", relative_to=__file__)
 version = release
 
 # -- General configuration ---------------------------------------------------
