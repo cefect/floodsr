@@ -1,7 +1,7 @@
 Installation
 ============
 
-A-bit-too-simple moonshot install:
+A bit-too-simple moonshot install:
 
 .. code-block:: bash
 
@@ -12,9 +12,9 @@ pipx command not found? Check :ref:`system_requirements`.
 .. _system_requirements:
 
 System Requirements
----------------------
+-------------------
 ``floodsr`` was designed as a CLI-first Python package, so we recommend installing with `pipx <https://pipx.pypa.io/stable/>`_ to ensure environment isolation.
-`pipx requirements <https://pipx.pypa.io/stable/installation/>`_ are currently `Python 3.9+ <https://realpython.com/installing-python/>`_ and pip (which  usually comes shipped with Ptyhon).
+`pipx requirements <https://pipx.pypa.io/stable/installation/>`_ are currently `Python 3.9+ <https://realpython.com/installing-python/>`_ and pip (which usually comes shipped with Python).
 If you have a modern Python setup, installing pipx is easy:
 
 
@@ -27,7 +27,7 @@ If you see a warning about needing to do something for *PATH changes to take eff
 
 
 Basic Install
------------------
+-------------
 Check pipx is installed and on the PATH:
 
 .. code-block:: bash
@@ -78,5 +78,4 @@ Now the ``doctor`` command should report GDAL Python bindings as installed and V
 
    floodsr doctor
 
-Good job. you deserve some hi-res flood rasters now.
-
+Good job. You deserve some hi-res flood rasters now.

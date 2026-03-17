@@ -20,7 +20,7 @@ Digital Elevation Models (DEMs)
 Unlike some other super-resolution tools, ``floodsr`` leverages terrain information to provide more physically based flood reconstructions.
 This information is supplied as a high-resolution DEM.
 ``floodsr tohr`` will propagate water across whatever DEM grid is provided, so a user must take care to ensure the DEM reflects the intended propagation surface.
-For example, removing buildings or burning flowpaths through roads.
+For example, removing buildings or burning flow paths through roads.
 
 .. image:: img/1280px-The_difference_between_Digital_Surface_Model_(DSM)_and_Digital_Terrain_Models_(DTM)_when_talking_about_Digital_Elevation_models_(DEM).svg.png
    :alt: Difference between a digital surface model and a digital terrain model
@@ -47,13 +47,13 @@ To automate the use of HRDEM data for resolution enhancement of flood grids in C
 
 Models
 ------
-To support a wide range of use-cases and adaptability, ``floodsr`` employs *models* to perform resolution enhancement.
+To support a wide range of use cases and adaptability, ``floodsr`` employs *models* to perform resolution enhancement.
 To see the supported models, use the ``floodsr models list`` command.
 
 ResUNet_16x_DEM
 ~~~~~~~~~~~~~~~
 
-This is the original machine-learning based model implemented in `floodsr`.
+This is the original machine-learning-based model implemented in `floodsr`.
 It uses a DEM-aware ResUNet that fuses low-resolution depth with high-resolution terrain context, reconstructs features on the low-resolution grid, and upsamples them by 16x to predict high-resolution depth.
 
 Training
@@ -74,5 +74,4 @@ Inference
 CostGrow
 ~~~~~~~~~~~~~~~
 
-rules-based. not implemented yet. 
-
+Rules-based. Not implemented yet.

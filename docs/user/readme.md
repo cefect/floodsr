@@ -6,7 +6,7 @@
 
 - `.readthedocs.yaml`
 
-## local build with sphinx
+## Local build with Sphinx
 
 ```bash
 # 1) go to the docs source directory

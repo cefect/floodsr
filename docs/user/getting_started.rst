@@ -1,7 +1,7 @@
 Getting Started
 ===============
 
-This page contains minimial info to get you up and flooding with ``floodsr``.
+This page contains minimal info to get you up and flooding with ``floodsr``.
 For more detailed information, see the :doc:`user_guide`.
 For common questions, see :doc:`faq`.
 
@@ -18,7 +18,7 @@ It takes a low-resolution depth raster as input and reconstructs higher-resoluti
 Downloading test data
 ---------------------
 
-Before running commands, its nice to have some data to play with.
+Before running commands, it's nice to have some data to play with.
 If you don't have your own data yet, you can download a test tile from the project.
 
 To download manually, browse to `this release <https://github.com/cefect/floodsr/releases/tag/v0.0.3>`_ and download the assets into your current working directory.
@@ -31,7 +31,7 @@ Alternatively, ``bash`` users with ``curl`` can run:
 
 
 Use
-----------
+---
 
 Here we give a quick intro on setting up a model and using it to enhance a flood raster.
 
