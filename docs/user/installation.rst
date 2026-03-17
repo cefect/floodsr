@@ -1,7 +1,7 @@
 Installation
 ============
 
-Too-simple standard install:
+A bit-too-simple moonshot install:
 
 .. code-block:: bash
 
@@ -12,9 +12,9 @@ pipx command not found? Check :ref:`system_requirements`.
 .. _system_requirements:
 
 System Requirements
----------------------
-``floodsr`` was designed as a CLI-first Python package, so we recommend installing with ``pipx`` to ensure environment isolation.
-`pipx requirements <https://pipx.pypa.io/stable/installation/>`_ are currently `Python 3.9+ <https://realpython.com/installing-python/>`_ and pip (which  usually comes shipped with Ptyhon).
+-------------------
+``floodsr`` was designed as a CLI-first Python package, so we recommend installing with `pipx <https://pipx.pypa.io/stable/>`_ to ensure environment isolation.
+`pipx requirements <https://pipx.pypa.io/stable/installation/>`_ are currently `Python 3.9+ <https://realpython.com/installing-python/>`_ and pip (which usually comes shipped with Python).
 If you have a modern Python setup, installing pipx is easy:
 
 
@@ -27,8 +27,7 @@ If you see a warning about needing to do something for *PATH changes to take eff
 
 
 Basic Install
------------------
-The recomended install method is with ``pipx`` to ensure environment isolation and avoid dependency conflicts with other Python projects on the same host.
+-------------
 Check pipx is installed and on the PATH:
 
 .. code-block:: bash
@@ -62,7 +61,7 @@ Extended Install
 For handling rasters too large for memory, floodsr uses GDAL backends.
 To enable these features, install `floodsr` into an environment with `GDAL <https://gdal.org/en/stable/>`_.
 The popular `conda <https://docs.conda.io/en/latest/>`_ package manager is the easiest way to do this.
-The best way to install conda is via the open-source `Miniforge <https://github.com/conda-forge/miniforge?tab=readme-ov-file#install>`_ project, NOT the proprietary Anaconda distribution.
+The best way to install conda is via the open-source `Miniforge <https://github.com/conda-forge/miniforge?tab=readme-ov-file#install>`_ project, NOT the `proprietary Anaconda distribution <https://www.theregister.com/2024/08/08/anaconda_puts_the_squeeze_on/>`_.
 
 
 Once you have conda installed, use it to create a dedicated environment with GDAL, activate it, then install ``floodsr`` with ``pip`` into that same environment:
@@ -79,5 +78,4 @@ Now the ``doctor`` command should report GDAL Python bindings as installed and V
 
    floodsr doctor
 
-Now you're ready to start enhancing!
-
+Good job. You deserve some hi-res flood rasters now.
