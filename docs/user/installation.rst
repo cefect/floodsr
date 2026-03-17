@@ -61,7 +61,7 @@ Extended Install
 For handling rasters too large for memory, floodsr uses GDAL backends.
 To enable these features, install `floodsr` into an environment with `GDAL <https://gdal.org/en/stable/>`_.
 The popular `conda <https://docs.conda.io/en/latest/>`_ package manager is the easiest way to do this.
-The best way to install conda is via the open-source `Miniforge <https://github.com/conda-forge/miniforge?tab=readme-ov-file#install>`_ project, NOT the proprietary Anaconda distribution.
+The best way to install conda is via the open-source `Miniforge <https://github.com/conda-forge/miniforge?tab=readme-ov-file#install>`_ project, NOT the `proprietary Anaconda distribution <https://www.theregister.com/2024/08/08/anaconda_puts_the_squeeze_on/>`_.
 
 
 Once you have conda installed, use it to create a dedicated environment with GDAL, activate it, then install ``floodsr`` with ``pip`` into that same environment:

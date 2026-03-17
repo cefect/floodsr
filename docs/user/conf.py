@@ -20,7 +20,7 @@ version = release
 extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.githubpages",
-    "myst_parser",
+    "myst_nb",
     "sphinx_copybutton",
 ]
 
@@ -34,6 +34,9 @@ source_suffix = {
     ".rst": "restructuredtext",
     ".md": "markdown",
 }
+
+# Keep notebook examples source-only in docs builds.
+nb_execution_mode = "off"
 
 # -- Options for HTML output -------------------------------------------------
 
