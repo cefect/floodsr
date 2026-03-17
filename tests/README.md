@@ -96,3 +96,16 @@ pytest -q -m "sphinx"
 | `test_preprocessing.py::test_write_dem_from_asset_hrefs_outputs_float32_non_empty` | X |  |  |  |  |
 | `test_tohr_regression.py::test_tohr_regression_matches_case_spec_metrics` |  |  | X |  | X |
 | `test_tohr_regression.py::test_tohr_on_the_fly_synthetic_tiles` |  |  | X |  |  |
+
+
+# simple container tests
+
+## miniforge3
+```bash
+docker run --rm --init -it -v "$(mktemp -d):/tmp/work" -w /tmp/work condaforge/miniforge3:25.3.1-0 bash
+```
+
+## ubuntu:24.04
+```bash
+docker run --rm --init -it -v "$(mktemp -d):/tmp/work" -w /tmp/work ubuntu:24.04 bash
+```

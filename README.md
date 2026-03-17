@@ -6,61 +6,54 @@
 Super-Resolution for flood hazard rasters.
 Ingests lores water grid and hires DEM and infers a hires water grid using the specified model.
 
-Documentation: https://floodsr.readthedocs.io/en/latest/
+- **Documentation**: https://floodsr.readthedocs.io/en/latest/
+- **Contribute**: https://github.com/cefect/floodsr/blob/master/CONTRIBUTING.md
 
 Implemented models (see `floodsr/models.json`):
 - **ResUNet_16x_DEM**: 16x DEM-conditioned ResUNet
-- **CostGrow** (future)
-
-Implemented backend:
-- **ONNX Runtime**
-
+ 
 
 ## Installation
 
+see [documentation](https://floodsr.readthedocs.io/en/latest/installation.html) for details.
+
+### basic install
+
 ```bash
-# basic install
-python -m pip install --user pipx
-pipx ensurepath
 pipx install floodsr
 ```
-
+ 
+### extended install
+for handling rasters too large for memory, floodsr requires GDAL backends.
 ```bash
 # advanced install for VRT workflows
 conda create -n floodsr-gdal -c conda-forge python=3.12 gdal -y
 conda activate floodsr-gdal
 python -m pip install floodsr
 ```
-
-See `docs/user/installation.rst` for the full installation guide and platform notes.
-
  
 
 ## Use
 
-Current CLI surface includes model registry, `tohr` raster execution, and runtime diagnostics.
-
+ 
 List available model versions:
 
 ```bash
-# source checkout shortcut for the CLI
-alias floodsr='python -m floodsr.cli'
-
 floodsr models list
 ```
 
 Fetch a model by version into the default cache:
 
 ```bash
-floodsr models fetch ResUNet_16x_DEM --force
+floodsr models fetch ResUNet_16x_DEM 
 ```
 
-tohr using HRDEM as DEM
+Enhance the provided test raster *to high resolution* (``tohr``), fetching the DEM from the [HRDEM Mosaic](https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b) data source:
 ```bash
-floodsr tohr -f --in tests/data/2407_FHIMP_tile/lowres032.tif 
+floodsr tohr --in tests/data/2407_FHIMP_tile/lowres032.tif 
 ```
 
-Run one ToHR pass from raster inputs:
+Run one tohr pass from raster inputs:
 
 ```bash
 # simple tile
