@@ -1,3 +1,13 @@
 # sandbox environments in devcontainer
-- for notebooks, always use `conda env analysis`. This layers on plots and other dev tools.
-- for everything else, use `conda env base` (which reflects `pyproject.toml`)
+
+we use two devcontainer environments:
+- `main` for dev and source code (`.devcontainer/main/devcontainer.json` points to `container/miniforge/Dockerfile`)
+- `docs` for sphinx documentation work (`.devcontainer/docs/devcontainer.json` points to `container/docs/Dockerfile`)
+
+Also, some dev work may happen outside of the containers (e.g., in simple `wsl`). 
+
+Before running any command, probe your sandbox to understand which environment you are in.
+
+## main environment
+- all code and tests should run here with the `deploy` conda environment. (see `container/miniforge/conda-env-deploy.lock.yml`). This mirrors the production environment and should be used for all development work, including running tests.
+- the `dev` conda environment is layered on top of this and should only be used for running notebooks (see `container/miniforge/conda-env-dev.lock.yml`)
