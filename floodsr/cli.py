@@ -1,25 +1,13 @@
-"""Command line interface for FloodSR operations."""
+"""Command-line entrypoints for FloodSR user and machine interfaces."""
 
 import argparse, json, logging, sys
 from pathlib import Path
-
-from floodsr.cache_paths import get_model_cache_path
-from floodsr.checksums import verify_sha256
-from floodsr.engine import get_gdal_info, get_onnxruntime_info, get_rasterio_info
-from floodsr.model_registry import (
-    fetch_model,
-    list_models,
-    list_runnable_model_versions,
-    load_models_manifest,
-    model_worker_exists,
-)
-
 
 log = logging.getLogger(__name__)
 
 
 def _resolve_log_level(args: argparse.Namespace) -> int:
-    """Resolve effective logging level from explicit level or verbosity flags."""
+    """Resolve the effective log level from `--log-level`, `-v`, and `-q`."""
     if args.log_level is not None:
         return getattr(logging, args.log_level)
 
@@ -29,7 +17,7 @@ def _resolve_log_level(args: argparse.Namespace) -> int:
 
 
 def _configure_logging(args: argparse.Namespace) -> None:
-    """Configure stdlib logging using Python default handler routing."""
+    """Configure root logging for the parsed CLI arguments."""
     effective_level = _resolve_log_level(args)
     root_logger = logging.getLogger()
     root_logger.setLevel(effective_level)
@@ -38,7 +26,11 @@ def _configure_logging(args: argparse.Namespace) -> None:
 
 
 def _resolve_tohr_model_spec(args: argparse.Namespace) -> tuple[str, Path]:
-    """Resolve ToHR model version/path from explicit file path or manifest/cache policy."""
+    """Resolve the model worker version and ONNX path for `floodsr tohr`."""
+    from floodsr.cache_paths import get_model_cache_path
+    from floodsr.checksums import verify_sha256
+    from floodsr.model_registry import fetch_model, list_runnable_model_versions, load_models_manifest, model_worker_exists
+
     if args.model_path is not None:
         model_fp = Path(args.model_path).expanduser().resolve()
         assert model_fp.exists(), f"model path does not exist: {model_fp}"
@@ -87,7 +79,7 @@ def _resolve_tohr_model_spec(args: argparse.Namespace) -> tuple[str, Path]:
 
 
 def _find_flag_value(argv: list[str], flag: str) -> str | None:
-    """Return the raw value for a CLI flag, supporting '--flag value' and '--flag=value'."""
+    """Return one raw CLI flag value from `argv`."""
     for idx, token in enumerate(argv):
         if token == flag:
             return argv[idx + 1] if idx + 1 < len(argv) else None
@@ -97,12 +89,12 @@ def _find_flag_value(argv: list[str], flag: str) -> str | None:
 
 
 def _flag_present(argv: list[str], flag: str) -> bool:
-    """Return True when a CLI flag is already present in argv."""
+    """Return whether one CLI flag is already present in `argv`."""
     return any(token == flag or token.startswith(f"{flag}=") for token in argv)
 
 
 def _read_tohr_machine_json(machine_json_fp: Path) -> dict[str, object]:
-    """Load ToHR machine-interface JSON payload."""
+    """Load a `tohr` machine-json payload from disk."""
     machine_json_path = machine_json_fp.expanduser().resolve()
     assert machine_json_path.exists(), f"machine json does not exist: {machine_json_path}"
     payload = json.loads(machine_json_path.read_text(encoding="utf-8"))
@@ -116,12 +108,12 @@ def _read_tohr_machine_json(machine_json_fp: Path) -> dict[str, object]:
 
 
 def _normalize_machine_key(raw_key: str) -> str:
-    """Normalize machine-interface keys to argparse destination style."""
+    """Normalize one machine-json key to an argparse destination name."""
     return raw_key.strip().lstrip("-").replace("-", "_")
 
 
 def _build_tohr_machine_cli_tokens(payload: dict[str, object], argv: list[str]) -> list[str]:
-    """Translate machine-interface ToHR payload into CLI tokens that parser already understands."""
+    """Translate supported machine-json `tohr` keys into CLI tokens."""
     # Keep this mapping aligned with `_parse_arguments()` ToHR option destinations.
     machine_key_to_flag = {
         "in": "--in",
@@ -167,7 +159,7 @@ def _build_tohr_machine_cli_tokens(payload: dict[str, object], argv: list[str]) 
 
 
 def _inject_tohr_machine_json_args(argv: list[str] | None) -> list[str] | None:
-    """Inject ToHR args from machine-interface JSON before strict argparse validation."""
+    """Expand `--machine-json` into parser-ready `tohr` CLI arguments."""
     if argv is None:
         argv_tokens = list(sys.argv[1:])
     else:
@@ -182,14 +174,16 @@ def _inject_tohr_machine_json_args(argv: list[str] | None) -> list[str] | None:
 
 
 def _resolve_default_output_path(in_fp: Path) -> Path:
-    """Resolve default output in cwd from input filename."""
+    """Build the default output path in the current working directory."""
     in_path = Path(in_fp).expanduser()
     suffix = in_path.suffix or ".tif"
     return (Path.cwd() / f"{in_path.stem}_sr{suffix}").resolve()
 
 
 def _build_doctor_payload() -> dict[str, object]:
-    """Collect one machine-readable runtime diagnostics payload."""
+    """Collect runtime dependency diagnostics for the `doctor` command."""
+    from floodsr.engine import get_gdal_info, get_onnxruntime_info, get_rasterio_info
+
     ort_info = get_onnxruntime_info()
     rasterio_info = get_rasterio_info()
     gdal_info = get_gdal_info()
@@ -201,15 +195,19 @@ def _build_doctor_payload() -> dict[str, object]:
 
 
 def main_cli(args: argparse.Namespace) -> int:
-    """Run the CLI command selected by parsed arguments."""
+    """Dispatch the parsed CLI command and return its exit status."""
     # Route model list command.
     if args.command == "models" and args.models_command == "list":
+        from floodsr.model_registry import list_models
+
         for model in list_models(manifest_fp=args.manifest):
             print(f"{model.version}\t{model.file_name}\t{model.url}")
         return 0
 
     # Route model fetch command.
     if args.command == "models" and args.models_command == "fetch":
+        from floodsr.model_registry import fetch_model
+
         model_fp = fetch_model(
             args.version,
             cache_dir=args.cache_dir,
@@ -284,7 +282,7 @@ def main_cli(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Run the floodsr CLI and return an exit code."""
+    """Run the FloodSR CLI and return a process exit code."""
     args = _parse_arguments(argv)
     _configure_logging(args)
     try:
@@ -296,8 +294,11 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
-    """Parse CLI arguments for floodsr."""
-    parser = argparse.ArgumentParser(prog="floodsr", description="FloodSR command line interface.")
+    """Parse CLI arguments after optional `tohr --machine-json` expansion."""
+    parser = argparse.ArgumentParser(
+        prog="floodsr",
+        description="Run FloodSR model, cache, and runtime utility commands.",
+    )
     parser.add_argument(
         "-v",
         "--verbose",
@@ -321,154 +322,174 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # Register model-related commands.
-    models_parser = subparsers.add_parser("models", help="Model registry commands.")
+    models_parser = subparsers.add_parser(
+        "models",
+        help="List manifest models or fetch cached model weights.",
+        description="List manifest models or fetch cached model weights.",
+    )
     models_subparsers = models_parser.add_subparsers(dest="models_command", required=True)
 
-    models_list_parser = models_subparsers.add_parser("list", help="List available model versions.")
+    models_list_parser = models_subparsers.add_parser(
+        "list",
+        help="List model versions defined in the manifest.",
+        description="List model versions defined in the manifest.",
+    )
     models_list_parser.add_argument(
         "--manifest",
         type=Path,
         default=None,
-        help="Optional path to an alternate models.json manifest.",
+        help="Read models from an alternate `models.json` manifest.",
     )
 
-    models_fetch_parser = models_subparsers.add_parser("fetch", help="Fetch model weights by version.")
-    models_fetch_parser.add_argument("version", help="Model version key from the manifest.")
+    models_fetch_parser = models_subparsers.add_parser(
+        "fetch",
+        help="Fetch one manifest model into the local cache.",
+        description="Fetch one manifest model into the local cache.",
+    )
+    models_fetch_parser.add_argument("version", help="Model version key to fetch from the manifest.")
     models_fetch_parser.add_argument(
         "--manifest",
         type=Path,
         default=None,
-        help="Optional path to an alternate models.json manifest.",
+        help="Read models from an alternate `models.json` manifest.",
     )
     models_fetch_parser.add_argument(
         "--cache-dir",
         type=Path,
         default=None,
-        help="Optional cache directory for downloaded weights.",
+        help="Store downloaded weights in an alternate cache directory.",
     )
     models_fetch_parser.add_argument(
         "--backend",
         choices=("http", "file"),
         default=None,
-        help="Override retrieval backend selection.",
+        help="Override weight retrieval backend selection.",
     )
     models_fetch_parser.add_argument(
         "--force",
         action="store_true",
-        help="Force redownload even when a valid cache file exists.",
+        help="Redownload even when a valid cached weight file already exists.",
     )
 
     # Register ToHR command.
-    tohr_parser = subparsers.add_parser("tohr", help="Run one raster ToHR pass.")
+    tohr_parser = subparsers.add_parser(
+        "tohr",
+        help="Run one super-resolution pass for a low-res depth raster.",
+        description="Run one super-resolution pass for a low-res depth raster.",
+    )
     tohr_parser.add_argument(
         "--machine-json",
         type=Path,
         default=None,
-        help="Optional machine-interface JSON with CLI-equivalent ToHR params.",
+        help="Load `tohr` parameters from JSON; explicit CLI flags still take precedence.",
     )
-    tohr_parser.add_argument("--in", dest="in_fp", type=Path, required=True, help="Low-res depth raster path.")
+    tohr_parser.add_argument("--in", dest="in_fp", type=Path, required=True, help="Input low-res depth raster path.")
     dem_group = tohr_parser.add_mutually_exclusive_group(required=True)
-    dem_group.add_argument("--dem", type=Path, default=None, help="High-res DEM raster path.")
+    dem_group.add_argument("--dem", type=Path, default=None, help="Input high-res DEM raster path.")
     dem_group.add_argument(
         "-f",
         "--fetch-hrdem",
         action="store_true",
-        help="Fetch HRDEM from STAC using the low-res raster footprint.",
+        help="Fetch HRDEM for the low-res raster footprint instead of passing `--dem`.",
     )
     tohr_parser.add_argument(
         "--fetch-out",
         type=Path,
         default=None,
-        help="Optional output path for fetched HRDEM tile. Defaults to temp directory.",
+        help="Write a fetched HRDEM raster to this path instead of a temporary location.",
     )
     tohr_parser.add_argument(
         "--fetch-force-tiling",
         action="store_true",
-        help="Force tiled HRDEM fetch windows (default auto-triggers when estimated fetch exceeds memory limit).",
+        help="Force tiled HRDEM fetch windows instead of relying on automatic tiling.",
     )
     tohr_parser.add_argument(
         "--out",
         type=Path,
         default=None,
-        help="Output high-res depth raster path. Defaults to ./<input_stem>_sr with input extension",
+        help="Output raster path. Defaults to `./<input_stem>_sr<input_suffix>` in the current working directory.",
     )
     tohr_parser.add_argument(
         "--model-version",
         default=None,
-        help="Model version key from manifest when --model-path is not provided.",
+        help="Manifest model version to run or fetch when `--model-path` is not provided.",
     )
     tohr_parser.add_argument(
         "--model-path",
         type=Path,
         default=None,
-        help="Explicit local ONNX model path.",
+        help="Use an explicit local ONNX model file instead of resolving from cache/manifest.",
     )
     tohr_parser.add_argument(
         "--manifest",
         type=Path,
         default=None,
-        help="Optional path to an alternate models.json manifest.",
+        help="Read model metadata from an alternate `models.json` manifest.",
     )
     tohr_parser.add_argument(
         "--cache-dir",
         type=Path,
         default=None,
-        help="Optional cache directory for downloaded weights.",
+        help="Use an alternate cache directory for resolved model weights.",
     )
     tohr_parser.add_argument(
         "--backend",
         choices=("http", "file"),
         default=None,
-        help="Override retrieval backend selection for model fetch.",
+        help="Override model weight retrieval backend selection.",
     )
     tohr_parser.add_argument(
         "--force",
         action="store_true",
-        help="Force redownload when fetching a versioned model.",
+        help="Redownload a versioned model when cache resolution would otherwise reuse it.",
     )
     tohr_parser.add_argument(
         "--max-depth",
         type=float,
         default=None,
-        help="Optional max depth override for log-space scaling.",
+        help="Override the max-depth value used during log-space scaling.",
     )
     tohr_parser.add_argument(
         "--dem-pct-clip",
         type=float,
         default=None,
-        help="Optional DEM percentile clip override when train stats are incomplete.",
+        help="Override the DEM percentile clip used when training stats are incomplete.",
     )
     tohr_parser.add_argument(
         "--window-method",
         choices=("hard", "feather"),
         default="feather",
-        help="Tile mosaicing method for ToHR.",
+        help="Tile mosaicing method used when stitching model windows.",
     )
     tohr_parser.add_argument(
         "--tile-overlap",
         type=int,
         default=None,
-        help="Feather overlap in low-res pixels. Ignored unless --window-method=feather.",
+        help="Feather overlap in low-res pixels. Ignored unless `--window-method=feather`.",
     )
     tohr_parser.add_argument(
         "--tile-size",
         type=int,
         default=None,
-        help="LR tile size override (must match model LR input size).",
+        help="Override the low-res tile size; must match the model LR input size.",
     )
     tohr_parser.add_argument(
         "--crs-policy",
         choices=("strict", "use-dem", "use-lores"),
         default="strict",
-        help="CRS mismatch policy between low-res depth and DEM.",
+        help="Policy for CRS mismatches between the low-res depth raster and DEM.",
     )
 
     # Register diagnostic command.
-    doctor_parser = subparsers.add_parser("doctor", help="Report runtime dependency diagnostics.")
+    doctor_parser = subparsers.add_parser(
+        "doctor",
+        help="Report runtime dependency and provider diagnostics.",
+        description="Report runtime dependency and provider diagnostics.",
+    )
     doctor_parser.add_argument(
         "--json",
         action="store_true",
-        help="Emit machine-readable JSON diagnostics.",
+        help="Emit machine-readable JSON instead of line-oriented text.",
     )
     return parser.parse_args(_inject_tohr_machine_json_args(argv))
 
