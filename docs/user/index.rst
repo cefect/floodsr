@@ -1,5 +1,5 @@
-floodSR documentation
-=====================
+``floodsr`` documentation
+=========================
 
 .. toctree::
    :maxdepth: 2
