@@ -3,8 +3,8 @@ Tutorials
 
 This page collects hands-on ``floodsr`` walkthroughs.
 
-Getting Started Notebook
-------------------------
+Tutorial 1: Quick Start
+-----------------------
 
 This tutorial mirrors the quick-start flow from :doc:`getting_started`.
 The notebook is authored as a real Jupyter notebook and rendered by MyST-NB as a standalone page.
