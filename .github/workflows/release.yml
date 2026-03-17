@@ -245,24 +245,19 @@ jobs:
 
       # Install GDAL first in the target conda environment, then install floodsr with pip.
       - name: Install extended dependencies and wheel
+        shell: pwsh
         run: |
           conda install -n floodsr-gdal -c conda-forge gdal -y
-          WHEEL=$(echo dist/*.whl)
+          $wheel = (Get-ChildItem dist/*.whl | Select-Object -First 1).FullName
           conda run -n floodsr-gdal python -m pip install --upgrade pip
-          conda run -n floodsr-gdal python -m pip install "$WHEEL"
+          conda run -n floodsr-gdal python -m pip install "$wheel"
 
       # Verify the extended install reports GDAL-backed VRT support.
       - name: Smoke test extended CLI
+        shell: pwsh
         run: |
           conda run -n floodsr-gdal floodsr doctor --json > doctor-extended.json
-          python - <<'PY'
-          import json
-          from pathlib import Path
-
-          payload = json.loads(Path("doctor-extended.json").read_text(encoding="utf-8"))
-          assert payload["gdal"]["python_bindings_installed"] is True
-          assert payload["gdal"]["vrt_enabled"] is True
-          PY
+          python -c "import json; from pathlib import Path; payload = json.loads(Path('doctor-extended.json').read_text(encoding='utf-8')); assert payload['gdal']['python_bindings_installed'] is True; assert payload['gdal']['vrt_enabled'] is True"
 
   publish-testpypi:
     name: publish pre-release to TestPyPI
