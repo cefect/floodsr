@@ -7,6 +7,8 @@
 Super-Resolution for flood hazard rasters.
 Ingests lores water grid and hires DEM and infers a hires water grid using the specified model.
 
+![floodsr header](docs/user/img/header.png)
+
 - **Documentation**: https://floodsr.readthedocs.io/en/latest/
 - **Contribute**: https://github.com/cefect/floodsr/blob/master/CONTRIBUTING.md
 
@@ -36,13 +38,9 @@ python -m pip install floodsr
 
 ## Use
 
-
+See the [Getting Started](https://floodsr.readthedocs.io/en/latest/getting_started.html) guide for a quick intro to using the CLI.
  
 List available model versions:
-
-```bash
-floodsr models list
-```
 
 Fetch a model by version into the default cache:
 
@@ -51,7 +49,6 @@ floodsr models fetch ResUNet_16x_DEM
 ```
 
 Enhance a low-resolution flood hazard raster *to high resolution* (``tohr``), fetching the DEM from the [HRDEM Mosaic](https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b) data source.
-NOTE: this requires downloading the test data (see below) or replacing the *.tif paths with your own data paths.
 
 ```bash
 floodsr tohr --in lowres032.tif --fetch-hrdem 
@@ -72,13 +69,5 @@ floodsr doctor
 
 For more details, see the [User Guide](https://floodsr.readthedocs.io/en/latest/user_guide.html).
 
- 
-### downloading test data
-To download manually, browse to [this release](https://github.com/cefect/floodsr/releases/tag/v0.0.3) and download the assets into your current working directory.
-
-Alternatively, `bash` users with `curl`:
-```bash
-curl -L -O https://github.com/cefect/floodsr/releases/download/v0.0.3/hires002_dem.tif -O https://github.com/cefect/floodsr/releases/download/v0.0.3/lowres032.tif
-```
-
+  
  

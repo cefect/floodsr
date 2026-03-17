@@ -1,6 +1,7 @@
 """Sphinx configuration for floodsr documentation."""
 
 from datetime import datetime
+from setuptools_scm import get_version
 
 # -- Project information -----------------------------------------------------
 
@@ -8,7 +9,9 @@ project = "floodsr"
 author = "floodsr developers"
 current_year = datetime.now().year
 copyright = f"{current_year}, {author}"
-release = "0.0.1"
+
+# Derive the docs version from SCM tags so RTD stays aligned with releases.
+release = get_version(root="../..", relative_to=__file__)
 version = release
 
 # -- General configuration ---------------------------------------------------
@@ -17,7 +20,7 @@ version = release
 extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.githubpages",
-    "myst_parser",
+    "myst_nb",
     "sphinx_copybutton",
 ]
 
@@ -32,9 +35,24 @@ source_suffix = {
     ".md": "markdown",
 }
 
+# Keep notebook examples source-only in docs builds.
+nb_execution_mode = "off"
+
 # -- Options for HTML output -------------------------------------------------
 
-html_theme = "sphinx_rtd_theme"
+html_theme = "sphinx_book_theme"
 html_title = "floodsr docs"
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
+html_theme_options = {
+    "repository_url": "https://github.com/cefect/floodsr",
+    "repository_branch": "master",
+    "path_to_docs": "docs/user",
+    "use_download_button": True,
+    "launch_buttons": {
+        "colab_url": "https://colab.research.google.com",
+    },
+}
+html_context = {
+    "default_mode": "light",
+}

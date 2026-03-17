@@ -1,6 +1,6 @@
 """Build docs/user/cli_reference.rst from live CLI --help output."""
 
-import argparse, shlex, subprocess
+import argparse, shlex, subprocess, sys
 from pathlib import Path
 
 
@@ -36,11 +36,12 @@ def main_build_cli_reference(output_fp: Path, cli_cmd: str = "floodsr") -> Path:
     blocks = ["CLI Reference", "=============", "", "Auto-generated from live command help output.", ""]
     for section_name, cmd in command_groups:
         # Capture help output directly from the command path.
-        run_result = subprocess.run(cmd, text=True, capture_output=True)
-        if run_result.returncode != 0 and "No such file or directory" in (run_result.stderr or ""):
+        try:
+            run_result = subprocess.run(cmd, text=True, capture_output=True, check=False)
+        except FileNotFoundError:
             # Fallback to module invocation if floodsr binary is unavailable.
-            fallback_cmd = ["python", "-m", "floodsr.cli"] + cmd[1:]
-            run_result = subprocess.run(fallback_cmd, text=True, capture_output=True)
+            fallback_cmd = [sys.executable, "-m", "floodsr.cli"] + cmd[1:]
+            run_result = subprocess.run(fallback_cmd, text=True, capture_output=True, check=False)
             cmd = fallback_cmd
         if run_result.returncode != 0:
             raise RuntimeError(

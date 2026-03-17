@@ -1,7 +1,7 @@
 CLI Reference
 =============
 
-Auto-generated from live command help output.
+
 
 Main Command
 ------------
@@ -11,13 +11,14 @@ Main Command
    usage: floodsr [-h] [-v] [-q] [--log-level {DEBUG,INFO,WARNING,ERROR}]
                   {models,tohr,doctor} ...
    
-   FloodSR command line interface.
+   Run FloodSR model, cache, and runtime utility commands.
    
    positional arguments:
      {models,tohr,doctor}
-       models              Model registry commands.
-       tohr                Run one raster ToHR pass.
-       doctor              Report runtime dependency diagnostics.
+       models              List manifest models or fetch cached model weights.
+       tohr                Run one super-resolution pass for a low-res depth
+                           raster.
+       doctor              Report runtime dependency and provider diagnostics.
    
    options:
      -h, --help            show this help message and exit
@@ -31,49 +32,69 @@ tohr
 
 .. code-block:: text
 
-   usage: floodsr tohr [-h] --in IN_FP (--dem DEM | -f) [--fetch-out FETCH_OUT]
-                       [--out OUT] [--model-version MODEL_VERSION]
-                       [--model-path MODEL_PATH] [--manifest MANIFEST]
-                       [--cache-dir CACHE_DIR] [--backend {http,file}] [--force]
-                       [--max-depth MAX_DEPTH] [--dem-pct-clip DEM_PCT_CLIP]
+   usage: floodsr tohr [-h] [--machine-json MACHINE_JSON] --in IN_FP
+                       (--dem DEM | -f) [--fetch-out FETCH_OUT]
+                       [--fetch-force-tiling] [--out OUT]
+                       [--model-version MODEL_VERSION] [--model-path MODEL_PATH]
+                       [--manifest MANIFEST] [--cache-dir CACHE_DIR]
+                       [--backend {http,file}] [--force] [--max-depth MAX_DEPTH]
+                       [--dem-pct-clip DEM_PCT_CLIP]
                        [--window-method {hard,feather}]
                        [--tile-overlap TILE_OVERLAP] [--tile-size TILE_SIZE]
+                       [--crs-policy {strict,use-dem,use-lores}]
+   
+   Run one super-resolution pass for a low-res depth raster.
    
    options:
      -h, --help            show this help message and exit
-     --in IN_FP            Low-res depth raster path.
-     --dem DEM             High-res DEM raster path.
-     -f, --fetch-hrdem     Fetch HRDEM from STAC using the low-res raster
-                           footprint.
+     --machine-json MACHINE_JSON
+                           Load `tohr` parameters from JSON; explicit CLI flags
+                           still take precedence.
+     --in IN_FP            Input low-res depth raster path.
+     --dem DEM             Input high-res DEM raster path.
+     -f, --fetch-hrdem     Fetch HRDEM for the low-res raster footprint instead
+                           of passing `--dem`.
      --fetch-out FETCH_OUT
-                           Optional output path for fetched HRDEM tile. Defaults
-                           to temp directory.
-     --out OUT             Output high-res depth raster path. Defaults to
-                           ./<input_stem>_sr with input extension
+                           Write a fetched HRDEM raster to this path instead of a
+                           temporary location.
+     --fetch-force-tiling  Force tiled HRDEM fetch windows instead of relying on
+                           automatic tiling.
+     --out OUT             Output raster path. Defaults to
+                           `./<input_stem>_sr<input_suffix>` in the current
+                           working directory.
      --model-version MODEL_VERSION
-                           Model version key from manifest when --model-path is
-                           not provided.
+                           Manifest model version to run or fetch when `--model-
+                           path` is not provided.
      --model-path MODEL_PATH
-                           Explicit local ONNX model path.
-     --manifest MANIFEST   Optional path to an alternate models.json manifest.
+                           Use an explicit local ONNX model file instead of
+                           resolving from cache/manifest.
+     --manifest MANIFEST   Read model metadata from an alternate `models.json`
+                           manifest.
      --cache-dir CACHE_DIR
-                           Optional cache directory for downloaded weights.
+                           Use an alternate cache directory for resolved model
+                           weights.
      --backend {http,file}
-                           Override retrieval backend selection for model fetch.
-     --force               Force redownload when fetching a versioned model.
+                           Override model weight retrieval backend selection.
+     --force               Redownload a versioned model when cache resolution
+                           would otherwise reuse it.
      --max-depth MAX_DEPTH
-                           Optional max depth override for log-space scaling.
+                           Override the max-depth value used during log-space
+                           scaling.
      --dem-pct-clip DEM_PCT_CLIP
-                           Optional DEM percentile clip override when train stats
-                           are incomplete.
+                           Override the DEM percentile clip used when training
+                           stats are incomplete.
      --window-method {hard,feather}
-                           Tile mosaicing method for ToHR.
+                           Tile mosaicing method used when stitching model
+                           windows.
      --tile-overlap TILE_OVERLAP
                            Feather overlap in low-res pixels. Ignored unless
-                           --window-method=feather.
+                           `--window-method=feather`.
      --tile-size TILE_SIZE
-                           LR tile size override (must match model LR input
-                           size).
+                           Override the low-res tile size; must match the model
+                           LR input size.
+     --crs-policy {strict,use-dem,use-lores}
+                           Policy for CRS mismatches between the low-res depth
+                           raster and DEM.
 
 models
 ------
@@ -82,10 +103,12 @@ models
 
    usage: floodsr models [-h] {list,fetch} ...
    
+   List manifest models or fetch cached model weights.
+   
    positional arguments:
      {list,fetch}
-       list        List available model versions.
-       fetch       Fetch model weights by version.
+       list        List model versions defined in the manifest.
+       fetch       Fetch one manifest model into the local cache.
    
    options:
      -h, --help    show this help message and exit
@@ -97,9 +120,11 @@ models list
 
    usage: floodsr models list [-h] [--manifest MANIFEST]
    
+   List model versions defined in the manifest.
+   
    options:
      -h, --help           show this help message and exit
-     --manifest MANIFEST  Optional path to an alternate models.json manifest.
+     --manifest MANIFEST  Read models from an alternate `models.json` manifest.
 
 models fetch
 ------------
@@ -110,24 +135,31 @@ models fetch
                                [--backend {http,file}] [--force]
                                version
    
+   Fetch one manifest model into the local cache.
+   
    positional arguments:
-     version               Model version key from the manifest.
+     version               Model version key to fetch from the manifest.
    
    options:
      -h, --help            show this help message and exit
-     --manifest MANIFEST   Optional path to an alternate models.json manifest.
+     --manifest MANIFEST   Read models from an alternate `models.json` manifest.
      --cache-dir CACHE_DIR
-                           Optional cache directory for downloaded weights.
+                           Store downloaded weights in an alternate cache
+                           directory.
      --backend {http,file}
-                           Override retrieval backend selection.
-     --force               Force redownload even when a valid cache file exists.
+                           Override weight retrieval backend selection.
+     --force               Redownload even when a valid cached weight file
+                           already exists.
 
 doctor
 ------
 
 .. code-block:: text
 
-   usage: floodsr doctor [-h]
+   usage: floodsr doctor [-h] [--json]
+   
+   Report runtime dependency and provider diagnostics.
    
    options:
      -h, --help  show this help message and exit
+     --json      Emit machine-readable JSON instead of line-oriented text.
