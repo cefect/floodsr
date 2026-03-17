@@ -14,10 +14,9 @@ To best use the tutorials, we recommend running them in a Jupyter environment. F
 
 Alternatively, you can copy/paste the commands from the tutorials into your terminal.
 
-Click *next* below to get started with the first tutorial.
+Select ``Tutorial 1: Quick Start`` from the list below to get started.
 
 .. toctree::
    :maxdepth: 1
-   :hidden:
 
    notebooks/tutorial_1
