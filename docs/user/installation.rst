@@ -14,7 +14,7 @@ pipx command not found? Check :ref:`system_requirements`.
 System Requirements
 -------------------
 ``floodsr`` was designed as a CLI-first Python package, so we recommend installing with `pipx <https://pipx.pypa.io/stable/>`_ to ensure environment isolation.
-`pipx requirements <https://pipx.pypa.io/stable/installation/>`_ are currently `Python 3.9+ <https://realpython.com/installing-python/>`_ and pip (which usually comes shipped with Python).
+This project requires `Python 3.12+ <https://realpython.com/installing-python/>`_ and pip (which usually comes shipped with Python). Once you have a compatible Python install, installing `pipx <https://pipx.pypa.io/stable/installation/>`_ is easy.
 If you have a modern Python setup, installing pipx is easy:
 
 
