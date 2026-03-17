@@ -123,7 +123,17 @@ jobs:
 
           echo "$PWD/fake-bin" >> "$GITHUB_PATH"
 
-      # Smoke test the basic install from the built wheel in an isolated pipx env.
+      # Install the built wheel with pipx and publish the bin directory for later steps.
+      - name: Install basic pipx wheel
+        if: matrix.install_mode == 'pipx'
+        shell: bash
+        run: |
+          WHEEL=$(echo dist/*.whl)
+          python -m pip install --upgrade pip pipx
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          python -m pipx install --force "$WHEEL"
+
+      # Smoke test the basic install from the built wheel after PATH updates take effect.
       - name: Smoke test basic pipx CLI
         if: matrix.install_mode == 'pipx'
         shell: bash
@@ -131,10 +141,6 @@ jobs:
           EXPECT_GDAL_CONFIG_INSTALLED: ${{ matrix.expect_gdal_config_installed }}
           EXPECTED_GDAL_CONFIG_VERSION: ${{ matrix.expected_gdal_config_version }}
         run: |
-          WHEEL=$(echo dist/*.whl)
-          python -m pip install --upgrade pip pipx
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          python -m pipx install --force "$WHEEL"
           floodsr --help
           floodsr doctor --json > doctor.json
           floodsr models list
