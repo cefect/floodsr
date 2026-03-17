@@ -1,70 +1,83 @@
 Installation
 ============
 
-``floodsr`` supports two installation paths:
-
-- Basic install: no ``osgeo.gdal``, no required system GDAL, supported via ``pip`` and ``pipx`` on wheel-supported platforms.
-- Advanced install: Linux/conda-supported path for VRT workflows, with GDAL installed in the target conda environment before ``floodsr``.
-
-
-Basic Install
--------------
-
-The basic install is the recommended user path. It keeps the CLI isolated and does not require system GDAL or Python GDAL bindings.
-
-Install ``pipx`` first if you do not already have it:
-
-.. code-block:: bash
-
-   python -m pip install --user pipx
-   pipx ensurepath
-
-Then install ``floodsr`` into its own isolated CLI environment:
+Too-simple standard install:
 
 .. code-block:: bash
 
    pipx install floodsr
 
-Validate the install:
+pipx command not found? Check :ref:`system_requirements`.
+
+.. _system_requirements:
+
+System Requirements
+---------------------
+``floodsr`` was designed as a CLI-first Python package, so we recommend installing with ``pipx`` to ensure environment isolation.
+`pipx requirements <https://pipx.pypa.io/stable/installation/>`_ are currently `Python 3.9+ <https://realpython.com/installing-python/>`_ and pip (which  usually comes shipped with Ptyhon).
+If you have a modern Python setup, installing pipx is easy:
+
+
+.. code-block:: bash
+
+   python -m pip install --user pipx
+   python -m pipx ensurepath
+
+If you see a warning about needing to do something for *PATH changes to take effect*, follow the instructions.
+
+
+Basic Install
+-----------------
+The recomended install method is with ``pipx`` to ensure environment isolation and avoid dependency conflicts with other Python projects on the same host.
+Check pipx is installed and on the PATH:
+
+.. code-block:: bash
+
+   pipx --version
+
+Then install ``floodsr`` with pipx:
+
+.. code-block:: bash
+
+   pipx install floodsr
+
+If you see a message like *installed package floodsr*, you're g2g and should have access to the ``floodsr`` CLI, which you can use to validate the install.
+Start with the help command to confirm the CLI is working:
 
 .. code-block:: bash
 
    floodsr --help
-   floodsr doctor --json
 
-The basic install supports the default CLI and non-VRT workflows. If GDAL is present elsewhere on the host, ``floodsr`` should still remain on the non-VRT path unless GDAL is installed inside the active Python environment.
+You can also try the ``doctor`` command to echo the current environment and ``floodsr`` configuration:
+
+.. code-block:: bash
+
+   floodsr doctor
+
+This should show the version and status of the backends used by ``floodsr``.
 
 
-Advanced Install
+Extended Install
 ----------------
+For handling rasters too large for memory, floodsr uses GDAL backends.
+To enable these features, install `floodsr` into an environment with `GDAL <https://gdal.org/en/stable/>`_.
+The popular `conda <https://docs.conda.io/en/latest/>`_ package manager is the easiest way to do this.
+The best way to install conda is via the open-source `Miniforge <https://github.com/conda-forge/miniforge?tab=readme-ov-file#install>`_ project, NOT the proprietary Anaconda distribution.
 
-The advanced install enables GDAL-backed VRT workflows, including the tiled HRDEM fetch path that depends on ``osgeo.gdal``.
 
-This path is supported for Linux users managing the environment with conda. Install conda first if needed:
-
-- Conda install guide: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html
-
-Create a dedicated environment with GDAL from ``conda-forge``, activate it, then install ``floodsr`` with ``pip`` into that same environment:
+Once you have conda installed, use it to create a dedicated environment with GDAL, activate it, then install ``floodsr`` with ``pip`` into that same environment:
 
 .. code-block:: bash
 
    conda create -n floodsr-gdal -c conda-forge python=3.12 gdal -y
    conda activate floodsr-gdal
-   python -m pip install --upgrade pip
    python -m pip install floodsr
 
-Validate the advanced install:
+Now the ``doctor`` command should report GDAL Python bindings as installed and VRT support as enabled:
 
 .. code-block:: bash
 
-   floodsr doctor --json
+   floodsr doctor
 
-In the advanced install, ``floodsr doctor --json`` should report GDAL Python bindings as installed and VRT support as enabled.
+Now you're ready to start enhancing!
 
-
-Support Notes
--------------
-
-- Basic installs are intended for ``pip`` and ``pipx`` on wheel-supported platforms.
-- Advanced installs are documented and validated as a Linux/conda workflow.
-- ``floodsr`` does not publish a GDAL extra in ``pyproject.toml`` because Python GDAL bindings must match the GDAL version already installed in the target environment.

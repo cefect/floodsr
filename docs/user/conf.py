@@ -18,6 +18,7 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.githubpages",
     "myst_parser",
+    "sphinx_copybutton",
 ]
 
 # Prefix section labels with document path to avoid collisions as docs grow.

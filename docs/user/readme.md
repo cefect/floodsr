@@ -16,11 +16,11 @@ cd /workspace/docs/user
 python -m sphinx --version
 
 # 3) build html docs from this directory into BUILD_DIR/html
-export BUILD_DIR=/home/cefect/LS/10_IO/floodsr/docs
-python -m sphinx -b html . "${BUILD_DIR}/html"
+python -m sphinx -b html . "_build/manual"
 
-# 4) verify the main html output exists
-ls -lh "${BUILD_DIR}/html/index.html"
+# launch index.html in the default Windows browser (from WSL)
+"\\wsl.localhost\Ubuntu\home\cefect\LS\09_REPOS\04_TOOLS\floodsr\docs\user\_build\manual\index.html"
+
 ```
 
 ## open built html in VS Code (quick check)

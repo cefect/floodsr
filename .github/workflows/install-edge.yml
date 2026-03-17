@@ -15,25 +15,33 @@ concurrency:
 
 jobs:
   build-artifacts:
-    name: build wheel and sdist (ubuntu-latest)
-    runs-on: ubuntu-latest
+    name: build wheel and sdist (self-hosted container)
+    # Target the current self-hosted Linux runner fleet, which is presently CEFTOP25M.
+    runs-on:
+      - self-hosted
+      - Linux
+      - X64
+    container:
+      image: condaforge/miniforge3:25.3.1-0
     timeout-minutes: 20
 
     steps:
+      # Install git inside the fresh container before checkout.
+      - name: Install checkout dependency
+        shell: bash
+        run: |
+          apt-get update
+          apt-get install -y git
+
       # Fetch repository contents for packaging.
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      # Install a consistent Python runtime for packaging.
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
       # Build artifacts once and reuse them across install-context jobs.
       - name: Build artifacts
+        shell: bash
         run: |
           python -m pip install --upgrade pip build twine
           python -m build
@@ -46,47 +54,40 @@ jobs:
           name: python-dist
           path: dist/*
 
-  basic-pipx:
-    name: basic pipx (${{ matrix.os }} / ${{ matrix.gdal_context }})
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+  install-smoke:
+    name: ${{ matrix.case_name }} (self-hosted container)
+    # Run each case in its own fresh container on the self-hosted Linux runner.
+    runs-on:
+      - self-hosted
+      - Linux
+      - X64
+    container:
+      image: condaforge/miniforge3:25.3.1-0
+    timeout-minutes: 20
     needs: build-artifacts
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - case_name: basic pipx / no_system_gdal
+            install_mode: pipx
             gdal_context: no_system_gdal
             expect_gdal_config_installed: "false"
             expected_gdal_config_version: "__none__"
-          - os: ubuntu-latest
+          - case_name: basic pipx / unsupported_system_gdal
+            install_mode: pipx
             gdal_context: unsupported_system_gdal
             expect_gdal_config_installed: "true"
             expected_gdal_config_version: "0.0.0"
-          - os: ubuntu-latest
+          - case_name: basic pipx / supported_system_gdal
+            install_mode: pipx
             gdal_context: supported_system_gdal
             expect_gdal_config_installed: "true"
             expected_gdal_config_version: "3.12.2"
-          - os: windows-latest
-            gdal_context: no_system_gdal
-            expect_gdal_config_installed: "false"
-            expected_gdal_config_version: "__none__"
-          - os: windows-latest
-            gdal_context: unsupported_system_gdal
-            expect_gdal_config_installed: "true"
-            expected_gdal_config_version: "0.0.0"
-          - os: windows-latest
-            gdal_context: supported_system_gdal
-            expect_gdal_config_installed: "true"
-            expected_gdal_config_version: "3.12.2"
+          - case_name: extended conda / conda-forge gdal
+            install_mode: conda
 
     steps:
-      # Install a consistent Python runtime for isolated smoke envs.
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
       # Fetch the previously built artifacts instead of rebuilding from source.
       - name: Download dist artifacts
         uses: actions/download-artifact@v5
@@ -94,20 +95,9 @@ jobs:
           name: python-dist
           path: dist
 
-      # Install pipx and expose the default local bin path for this job.
-      - name: Install pipx
-        shell: bash
-        run: |
-          python -m pip install --upgrade pip pipx
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            echo "$APPDATA/Python/Python312/Scripts" >> "$GITHUB_PATH"
-          else
-            echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          fi
-
       # Simulate host GDAL visibility without installing Python GDAL into the pipx env.
-      - name: Configure host GDAL context (unix)
-        if: runner.os != 'Windows'
+      - name: Configure host GDAL context
+        if: matrix.install_mode == 'pipx'
         shell: bash
         run: |
           if [ "${{ matrix.gdal_context }}" = "no_system_gdal" ]; then
@@ -133,44 +123,19 @@ jobs:
 
           echo "$PWD/fake-bin" >> "$GITHUB_PATH"
 
-      # Simulate host GDAL visibility using Windows-native command discovery.
-      - name: Configure host GDAL context (windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          if ("${{ matrix.gdal_context }}" -eq "no_system_gdal") {
-            exit 0
-          }
-
-          $fakeBin = Join-Path $PWD "fake-bin"
-          New-Item -ItemType Directory -Force -Path $fakeBin | Out-Null
-          if ("${{ matrix.gdal_context }}" -eq "supported_system_gdal") {
-            $gdalVersion = "3.12.2"
-          } else {
-            $gdalVersion = "0.0.0"
-          }
-
-          @"
-          @echo off
-          if "%1"=="--version" (
-            echo $gdalVersion
-            exit /b 0
-          )
-          exit /b 1
-          "@ | Set-Content -Path (Join-Path $fakeBin "gdal-config.cmd") -Encoding ascii
-
-          $fakeBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-      # Smoke test the basic install from the built wheel in an isolated pipx env.
-      - name: pipx install built core wheel
+      # Install the built wheel with pipx and publish the bin directory for later steps.
+      - name: Install basic pipx wheel
+        if: matrix.install_mode == 'pipx'
         shell: bash
         run: |
           WHEEL=$(echo dist/*.whl)
+          python -m pip install --upgrade pip pipx
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           python -m pipx install --force "$WHEEL"
 
-      # Verify console entrypoint and basic no-input CLI paths in the requested host context.
-      - name: Smoke test basic CLI (unix)
-        if: runner.os != 'Windows'
+      # Smoke test the basic install from the built wheel after PATH updates take effect.
+      - name: Smoke test basic pipx CLI
+        if: matrix.install_mode == 'pipx'
         shell: bash
         env:
           EXPECT_GDAL_CONFIG_INSTALLED: ${{ matrix.expect_gdal_config_installed }}
@@ -196,53 +161,15 @@ jobs:
               assert payload["gdal"]["gdal_config_version"] == expected_version
           PY
 
-      # Verify console entrypoint and basic no-input CLI paths in the requested Windows host context.
-      - name: Smoke test basic CLI (windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        env:
-          EXPECT_GDAL_CONFIG_INSTALLED: ${{ matrix.expect_gdal_config_installed }}
-          EXPECTED_GDAL_CONFIG_VERSION: ${{ matrix.expected_gdal_config_version }}
+      # Smoke test the documented conda-backed extended install path.
+      - name: Smoke test extended conda CLI
+        if: matrix.install_mode == 'conda'
+        shell: bash
         run: |
-          floodsr --help
-          floodsr doctor --json | Set-Content -Path doctor.json -Encoding utf8
-          floodsr models list
-          python -c "import json, os, pathlib; payload = json.loads(pathlib.Path('doctor.json').read_text(encoding='utf-8')); expect_config = os.environ['EXPECT_GDAL_CONFIG_INSTALLED'] == 'true'; expected_version = os.environ['EXPECTED_GDAL_CONFIG_VERSION']; assert payload['gdal']['python_bindings_installed'] is False; assert payload['gdal']['vrt_enabled'] is False; assert payload['gdal']['gdal_config_installed'] is expect_config; assert (payload['gdal']['gdal_config_version'] is None) if expected_version == '__none__' else (payload['gdal']['gdal_config_version'] == expected_version)"
-
-  extended-conda:
-    name: extended conda (ubuntu-latest)
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: build-artifacts
-
-    steps:
-      # Fetch the previously built artifacts instead of rebuilding from source.
-      - name: Download dist artifacts
-        uses: actions/download-artifact@v5
-        with:
-          name: python-dist
-          path: dist
-
-      # Provide a Linux conda environment for the documented extended install path.
-      - name: Setup Miniconda
-        uses: conda-incubator/setup-miniconda@v3
-        with:
-          activate-environment: floodsr-gdal
-          auto-activate-base: false
-          channels: conda-forge
-          python-version: "3.12"
-
-      # Install GDAL first in the target conda environment, then install floodsr with pip.
-      - name: Install extended dependencies and wheel
-        run: |
-          conda install -n floodsr-gdal -c conda-forge gdal -y
           WHEEL=$(echo dist/*.whl)
+          conda create -n floodsr-gdal -c conda-forge python=3.12 gdal pip -y
           conda run -n floodsr-gdal python -m pip install --upgrade pip
           conda run -n floodsr-gdal python -m pip install "$WHEEL"
-
-      # Verify the extended install reports GDAL-backed VRT support.
-      - name: Smoke test extended CLI
-        run: |
           conda run -n floodsr-gdal floodsr doctor --json > doctor-extended.json
           python - <<'PY'
           import json
