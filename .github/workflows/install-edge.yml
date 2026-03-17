@@ -1,0 +1,181 @@
+name: Install Edge
+
+on:
+  # Run the expanded install-context matrix only when requested.
+  workflow_dispatch:
+
+permissions:
+  # Read-only is sufficient for checkout and artifact reuse.
+  contents: read
+
+concurrency:
+  # Keep one manual edge run per ref active at a time.
+  group: install-edge-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-artifacts:
+    name: build wheel and sdist (self-hosted container)
+    # Target the current self-hosted Linux runner fleet, which is presently CEFTOP25M.
+    runs-on:
+      - self-hosted
+      - Linux
+      - X64
+    container:
+      image: condaforge/miniforge3:25.3.1-0
+    timeout-minutes: 20
+
+    steps:
+      # Install git inside the fresh container before checkout.
+      - name: Install checkout dependency
+        shell: bash
+        run: |
+          apt-get update
+          apt-get install -y git
+
+      # Fetch repository contents for packaging.
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      # Build artifacts once and reuse them across install-context jobs.
+      - name: Build artifacts
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip build twine
+          python -m build
+          python -m twine check dist/*
+
+      # Upload the wheel and sdist for downstream smoke jobs.
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-dist
+          path: dist/*
+
+  install-smoke:
+    name: ${{ matrix.case_name }} (self-hosted container)
+    # Run each case in its own fresh container on the self-hosted Linux runner.
+    runs-on:
+      - self-hosted
+      - Linux
+      - X64
+    container:
+      image: condaforge/miniforge3:25.3.1-0
+    timeout-minutes: 20
+    needs: build-artifacts
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - case_name: basic pipx / no_system_gdal
+            install_mode: pipx
+            gdal_context: no_system_gdal
+            expect_gdal_config_installed: "false"
+            expected_gdal_config_version: "__none__"
+          - case_name: basic pipx / unsupported_system_gdal
+            install_mode: pipx
+            gdal_context: unsupported_system_gdal
+            expect_gdal_config_installed: "true"
+            expected_gdal_config_version: "0.0.0"
+          - case_name: basic pipx / supported_system_gdal
+            install_mode: pipx
+            gdal_context: supported_system_gdal
+            expect_gdal_config_installed: "true"
+            expected_gdal_config_version: "3.12.2"
+          - case_name: extended conda / conda-forge gdal
+            install_mode: conda
+
+    steps:
+      # Fetch the previously built artifacts instead of rebuilding from source.
+      - name: Download dist artifacts
+        uses: actions/download-artifact@v5
+        with:
+          name: python-dist
+          path: dist
+
+      # Simulate host GDAL visibility without installing Python GDAL into the pipx env.
+      - name: Configure host GDAL context
+        if: matrix.install_mode == 'pipx'
+        shell: bash
+        run: |
+          if [ "${{ matrix.gdal_context }}" = "no_system_gdal" ]; then
+            exit 0
+          fi
+
+          mkdir -p fake-bin
+          if [ "${{ matrix.gdal_context }}" = "supported_system_gdal" ]; then
+            GDAL_VERSION="3.12.2"
+          else
+            GDAL_VERSION="0.0.0"
+          fi
+
+          cat > fake-bin/gdal-config <<EOF
+          #!/usr/bin/env bash
+          if [ "\$1" = "--version" ]; then
+            echo "${GDAL_VERSION}"
+            exit 0
+          fi
+          exit 1
+          EOF
+          chmod +x fake-bin/gdal-config
+
+          echo "$PWD/fake-bin" >> "$GITHUB_PATH"
+
+      # Install the built wheel with pipx and publish the bin directory for later steps.
+      - name: Install basic pipx wheel
+        if: matrix.install_mode == 'pipx'
+        shell: bash
+        run: |
+          WHEEL=$(echo dist/*.whl)
+          python -m pip install --upgrade pip pipx
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          python -m pipx install --force "$WHEEL"
+
+      # Smoke test the basic install from the built wheel after PATH updates take effect.
+      - name: Smoke test basic pipx CLI
+        if: matrix.install_mode == 'pipx'
+        shell: bash
+        env:
+          EXPECT_GDAL_CONFIG_INSTALLED: ${{ matrix.expect_gdal_config_installed }}
+          EXPECTED_GDAL_CONFIG_VERSION: ${{ matrix.expected_gdal_config_version }}
+        run: |
+          floodsr --help
+          floodsr doctor --json > doctor.json
+          floodsr models list
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+
+          payload = json.loads(Path("doctor.json").read_text(encoding="utf-8"))
+          expect_config = os.environ["EXPECT_GDAL_CONFIG_INSTALLED"] == "true"
+          expected_version = os.environ["EXPECTED_GDAL_CONFIG_VERSION"]
+
+          assert payload["gdal"]["python_bindings_installed"] is False
+          assert payload["gdal"]["vrt_enabled"] is False
+          assert payload["gdal"]["gdal_config_installed"] is expect_config
+          if expected_version == "__none__":
+              assert payload["gdal"]["gdal_config_version"] is None
+          else:
+              assert payload["gdal"]["gdal_config_version"] == expected_version
+          PY
+
+      # Smoke test the documented conda-backed extended install path.
+      - name: Smoke test extended conda CLI
+        if: matrix.install_mode == 'conda'
+        shell: bash
+        run: |
+          WHEEL=$(echo dist/*.whl)
+          conda create -n floodsr-gdal -c conda-forge python=3.12 gdal pip -y
+          conda run -n floodsr-gdal python -m pip install --upgrade pip
+          conda run -n floodsr-gdal python -m pip install "$WHEEL"
+          conda run -n floodsr-gdal floodsr doctor --json > doctor-extended.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("doctor-extended.json").read_text(encoding="utf-8"))
+          assert payload["gdal"]["python_bindings_installed"] is True
+          assert payload["gdal"]["vrt_enabled"] is True
+          PY

@@ -4,7 +4,7 @@ User Guide
 Introduction
 ------------
 
-``floodSR`` enhances depth raster resolution while preserving larger flood
+``floodsr`` enhances depth raster resolution while preserving larger flood
 structure and adding terrain-guided local detail.
 
 Terminology

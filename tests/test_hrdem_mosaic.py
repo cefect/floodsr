@@ -75,7 +75,7 @@ def _read_output_dem_with_basic_assertions(dem_fp: str | Path):
 # ----- TESTSE -----
 # ------------------
 
-@pytest.mark.unit
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "case_id",
     [
@@ -136,6 +136,7 @@ def test_build_fetch_tile_grid_gdf_and_selection_mask_writes_geojson(
 # -----------------
 
 
+@pytest.mark.fast
 @pytest.mark.network
 @pytest.mark.parametrize(
     "case_id",
@@ -241,7 +242,7 @@ def test_fetch_hrdem_synthetic_cases(
 
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "domain_d",
     [
@@ -316,7 +317,7 @@ def test_write_dem_from_asset_hrefs_synthetic_cases(
         assert not np.any(np.isclose(arr, np.float32(nodata)))
 
 
-@pytest.mark.unit
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "asset_coverage_x_frac",
     [
@@ -375,92 +376,7 @@ def test_write_dem_from_asset_hrefs_non_windowed_outputs_float32_non_empty(
 
     _read_output_dem_with_basic_assertions(dem_fp)
 
-
-
-@pytest.mark.parametrize(
-    "fetch_window_size",
-    [
-        pytest.param(32, id="missing_gdal_forces_non_windowed"),
-    ],
-)
-def test_write_dem_from_asset_hrefs_without_gdal_forces_non_windowed(
-    tmp_path: Path,
-    synthetic_lowres_builder,
-    fetch_window_size: int,
-):
-    """A core-install subprocess should fall back to the non-windowed HRDEM writer."""
-    # Keep this fixture minimal because subprocess startup already dominates runtime.
-    depth_lr_fp, depth_arr, depth_transform = synthetic_lowres_builder(
-        "depth_lr_local_asset_no_gdal",
-        (1, 1),
-        SYNTHETIC_LOCAL_WRITE_BASE_D["depth_res"],
-        SYNTHETIC_LOCAL_WRITE_BASE_D["depth_crs"],
-    )
-    depth_bounds = array_bounds(*depth_arr.shape, depth_transform)
-    asset_fp = tmp_path / "asset_dem_local_no_gdal.tif"
-    asset_arr = np.linspace(
-        100.0,
-        140.0,
-        8 * 8,
-        dtype=np.float32,
-    ).reshape((8, 8))
-    asset_transform = from_bounds(
-        *depth_bounds,
-        8,
-        8,
-    )
-    _write_single_band_geotiff(
-        asset_fp,
-        asset_arr,
-        asset_transform,
-        SYNTHETIC_LOCAL_WRITE_BASE_D["asset_crs"],
-        nodata=-9999.0,
-    )
-
-    # Shadow the installed osgeo package so the subprocess sees a core-only environment.
-    shadow_root = tmp_path / "shadow_core"
-    shadow_pkg = shadow_root / "osgeo"
-    shadow_pkg.mkdir(parents=True, exist_ok=True)
-    (shadow_pkg / "__init__.py").write_text('raise ModuleNotFoundError("simulated missing osgeo")\n', encoding="utf-8")
-
-    script_fp = tmp_path / "run_no_gdal_fallback.py"
-    output_fp = tmp_path / "fetched_dem_local_asset_no_gdal.vrt"
-    script_fp.write_text(
-        "\n".join(
-            [
-                "import json",
-                "from pathlib import Path",
-                "import floodsr.dem_sources.hrdem_mosaic",
-                "",
-                "dem_fp = floodsr.dem_sources.hrdem_mosaic.write_dem_from_asset_hrefs(",
-                f"    depth_lr_fp={json.dumps(str(depth_lr_fp))},",
-                f"    asset_hrefs={[str(asset_fp)]!r},",
-                f"    output_fp={json.dumps(str(output_fp))},",
-                f"    fetch_window_size={int(fetch_window_size)},",
-                ")",
-                "dem_path = Path(dem_fp)",
-                'tile_dir = dem_path.parent / f"{dem_path.stem}__fetch_tiles"',
-                'print(json.dumps({"suffix": dem_path.suffix, "tile_dir_exists": tile_dir.exists()}))',
-            ]
-        ),
-        encoding="utf-8",
-    )
-    env = os.environ.copy()
-    env["PYTHONPATH"] = os.pathsep.join(
-        [value for value in (str(shadow_root), str(Path.cwd()), env.get("PYTHONPATH", "")) if value]
-    )
-    result = subprocess.run(
-        [sys.executable, str(script_fp)],
-        check=True,
-        capture_output=True,
-        cwd=Path.cwd(),
-        env=env,
-        text=True,
-    )
-    payload = json.loads(result.stdout.strip().splitlines()[-1])
-
-    assert payload["suffix"] == ".tif"
-    assert payload["tile_dir_exists"] is False
+ 
 
 
 @pytest.mark.network

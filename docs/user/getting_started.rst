@@ -4,8 +4,8 @@ Getting Started
 This page contains minimial info to get you up and flooding with ``floodSR``.
 For more detailed information, see the :doc:`user_guide`.
 
-What Is floodSR?
-----------------
+What Is ``floodsr``?
+--------------------
 
 ``floodSR`` is a flood-depth :resolution enhancement: tool. 
 Or a super-resolution (SR) tool in machine-speak.

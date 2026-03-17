@@ -8,7 +8,7 @@ Several ADRs define packaging, testing, and publishing intent, but the GitHub Ac
 
 - CI owns packaging validation for published artifacts.
 - CI builds release artifacts once and reuses them across downstream workflow steps.
-- GitHub Actions test selection is limited to `unit` tests and excludes `local`.
+- GitHub Actions test selection is limited to `fast` tests and excludes `local`.
 
 
 
@@ -18,7 +18,7 @@ Several ADRs define packaging, testing, and publishing intent, but the GitHub Ac
     - `ci.yaml` for branch CI and PR validation.
     - `release.yaml` for tag-triggered release publishing. 
         - Trusted Publishing
-        - checks out with full history, verifies the tagged commit is reachable from `main`, builds artifacts once, runs validation/tests, publishes, and then creates or updates the GitHub Release for that tag.
+        - checks out with full history, verifies the tagged commit is reachable from `master`, builds artifacts once, runs validation/tests, publishes, and then creates or updates the GitHub Release for that tag.
         - see release semantics in `ADR-0013`.
         - Release versions are derived from Git tags via `setuptools-scm`.
         - - Publish jobs receive `id-token: write` only at the publish step/job boundary; build and test jobs remain read-only.
@@ -27,6 +27,7 @@ Several ADRs define packaging, testing, and publishing intent, but the GitHub Ac
 
 - Prefer `push.tags` for release triggers rather than `workflow_run` chaining for publishing.
 - Reuse artifacts within the same workflow run via `upload-artifact` and `download-artifact`.
+- Manual edge-install validation may run on the repository self-hosted Linux runner fleet and use a fresh job container per matrix case for reproducible install smoke coverage.
 - Use GitHub environments for `testpypi` and `pypi` publish jobs.
  
 
@@ -35,3 +36,4 @@ Several ADRs define packaging, testing, and publishing intent, but the GitHub Ac
 - `ADR-0002` owns packaging intent.
 - `ADR-0006` owns test semantics.
 - `ADR-0013` owns release semantics.
+- `.github/workflows/README.md` documents the concrete workflow files and their operator-facing usage.

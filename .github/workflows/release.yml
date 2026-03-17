@@ -24,7 +24,7 @@ jobs:
     steps:
       # Fetch full history so tag reachability checks are accurate.
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -34,8 +34,8 @@ jobs:
           git fetch origin master
           git merge-base --is-ancestor "$GITHUB_SHA" origin/master
 
-  unit-tests:
-    name: unit tests (ubuntu-latest)
+  fast-tests:
+    name: fast tests (ubuntu-latest)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: verify-tag-origin
@@ -43,15 +43,15 @@ jobs:
     steps:
       # Fetch repository contents for test execution.
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       # Install a consistent Python runtime.
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       # Install system GDAL so the extended test environment can import osgeo.gdal.
       - name: Install system GDAL
@@ -59,17 +59,47 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gdal-bin libgdal-dev
 
-      # Install runtime and test dependencies required by the release unit suite.
+      # Install runtime and test dependencies required by the release fast suite.
       - name: Install test dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install "gdal==$(gdal-config --version)"
-          python -m pip install -e ".[dev,extended]"
+          python -m pip install -e ".[dev]"
 
-      # Run the CI-safe unit suite only.
-      - name: Run unit tests
+      # Run the CI-safe fast suite only.
+      - name: Run fast tests
         run: |
-          pytest -m "unit and not local"
+          pytest -m "fast and not local and not sphinx"
+
+  minimum-core-tests:
+    name: minimum core tests (ubuntu-latest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: verify-tag-origin
+
+    steps:
+      # Fetch repository contents for constrained minimum-version validation.
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      # Install a consistent Python runtime for the minimum core stack.
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      # Install the explicitly supported minimum core stack and run a small CLI-focused test slice.
+      - name: Install minimum core dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -c constraints/core-min-py312.txt -e ".[dev]"
+
+      # Prove the pinned minimum core stack supports the basic CLI surface.
+      - name: Run minimum core tests
+        run: |
+          pytest tests/test_cli_models.py -k "models_list or doctor"
 
   build-artifacts:
     name: build wheel and sdist (ubuntu-latest)
@@ -80,15 +110,15 @@ jobs:
     steps:
       # Fetch full history so setuptools-scm can derive the tagged release version.
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       # Install a consistent Python runtime for packaging.
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       # Build both artifacts, validate metadata, and assert the derived version matches the tag.
       - name: Build artifacts
@@ -114,7 +144,7 @@ jobs:
 
       # Reuse the same artifacts across release validation and publish jobs.
       - name: Upload dist artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: python-dist
           path: dist/*
@@ -128,13 +158,13 @@ jobs:
     steps:
       # Install a consistent Python runtime for isolated smoke envs.
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       # Fetch the previously built artifacts instead of rebuilding from source.
       - name: Download dist artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: python-dist
           path: dist
@@ -155,75 +185,89 @@ jobs:
       - name: Smoke test core CLI
         run: |
           floodsr --help
-          floodsr doctor
+          floodsr doctor --json > doctor.json
           floodsr models list
+          python - <<'PY'
+          import json
+          from pathlib import Path
 
-      # Confirm the built wheel remains importable without GDAL bindings installed.
-      - name: Verify optional GDAL import path
+          payload = json.loads(Path("doctor.json").read_text(encoding="utf-8"))
+          assert payload["gdal"]["python_bindings_installed"] is False
+          assert payload["gdal"]["vrt_enabled"] is False
+          PY
+
+      # Confirm the built wheel reports the expected core-only GDAL capability state.
+      - name: Verify optional GDAL doctor probes
         run: |
           WHEEL=$(echo dist/*.whl)
           python -m venv .venv-core
           . .venv-core/bin/activate
           python -m pip install --upgrade pip
           python -m pip install "$WHEEL"
+          floodsr doctor --json > doctor-core.json
           python - <<'PY'
-          import floodsr.dem_sources.hrdem_mosaic
-          assert floodsr.dem_sources.hrdem_mosaic.gdal is None
-          print("core import validated without osgeo.gdal")
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("doctor-core.json").read_text(encoding="utf-8"))
+          assert payload["gdal"]["python_bindings_installed"] is False
+          assert payload["gdal"]["vrt_enabled"] is False
           PY
 
-  # extended-install-smoke:
-  #   name: extended wheel smoke (ubuntu-latest)
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 30
-  #   needs: build-artifacts
-  #
-  #   steps:
-  #     # Install a consistent Python runtime for the extended smoke env.
-  #     - name: Setup Python
-  #       uses: actions/setup-python@v5
-  #       with:
-  #         python-version: "3.11"
-  #
-  #     # Install system GDAL before Python bindings so versions can be matched.
-  #     - name: Install system GDAL
-  #       run: |
-  #         sudo apt-get update
-  #         sudo apt-get install -y gdal-bin libgdal-dev
-  #
-  #     # Fetch the wheel built in the upstream packaging job.
-  #     - name: Download dist artifacts
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: python-dist
-  #         path: dist
-  #
-  #     # Install the matching GDAL Python bindings, then the extended extra from the wheel.
-  #     - name: Install extended wheel
-  #       run: |
-  #         python -m pip install --upgrade pip
-  #         python -m pip install "gdal==$(gdal-config --version)"
-  #         WHEEL_URI=$(python - <<'PY'
-  #         from pathlib import Path
-  #         print(next(Path("dist").glob("*.whl")).resolve().as_uri())
-  #         PY
-  #         )
-  #         python -m pip install "floodsr[extended] @ ${WHEEL_URI}"
-  #
-  #     # Verify the extended install can import GDAL-backed HRDEM functionality.
-  #     - name: Smoke test extended install
-  #       run: |
-  #         floodsr doctor
-  #         python - <<'PY'
-  #         import floodsr.dem_sources.hrdem_mosaic
-  #         assert floodsr.dem_sources.hrdem_mosaic.gdal is not None
-  #         print(floodsr.dem_sources.hrdem_mosaic.gdal.VersionInfo("--version"))
-  #         PY
+  extended-install-smoke:
+    name: extended wheel smoke (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    needs: build-artifacts
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+
+    steps:
+      # Fetch the previously built artifacts instead of rebuilding from source.
+      - name: Download dist artifacts
+        uses: actions/download-artifact@v5
+        with:
+          name: python-dist
+          path: dist
+
+      # Provide a conda environment for the documented extended install path.
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: floodsr-gdal
+          auto-activate-base: false
+          channels: conda-forge
+          python-version: "3.12"
+
+      # Install GDAL first in the target conda environment, then install floodsr with pip.
+      - name: Install extended dependencies and wheel
+        run: |
+          conda install -n floodsr-gdal -c conda-forge gdal -y
+          WHEEL=$(echo dist/*.whl)
+          conda run -n floodsr-gdal python -m pip install --upgrade pip
+          conda run -n floodsr-gdal python -m pip install "$WHEEL"
+
+      # Verify the extended install reports GDAL-backed VRT support.
+      - name: Smoke test extended CLI
+        run: |
+          conda run -n floodsr-gdal floodsr doctor --json > doctor-extended.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("doctor-extended.json").read_text(encoding="utf-8"))
+          assert payload["gdal"]["python_bindings_installed"] is True
+          assert payload["gdal"]["vrt_enabled"] is True
+          PY
 
   publish-testpypi:
     name: publish pre-release to TestPyPI
     runs-on: ubuntu-latest
-    needs: [unit-tests, build-artifacts, core-install-smoke]
+    needs: [fast-tests, minimum-core-tests, build-artifacts, core-install-smoke, extended-install-smoke]
     if: contains(github.ref_name, 'rc') || contains(github.ref_name, 'a') || contains(github.ref_name, 'b')
     environment: testpypi
     permissions:
@@ -234,12 +278,12 @@ jobs:
     steps:
       # Download the already validated release artifacts.
       - name: Download dist artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: python-dist
           path: dist
 
-      # Publish the pre-release artifacts to TestPyPI via Trusted Publishing.
+      # Publish the built wheel and sdist artifacts to TestPyPI via Trusted Publishing.
       - name: Publish to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
@@ -248,7 +292,7 @@ jobs:
   publish-pypi:
     name: publish stable release to PyPI
     runs-on: ubuntu-latest
-    needs: [unit-tests, build-artifacts, core-install-smoke]
+    needs: [fast-tests, minimum-core-tests, build-artifacts, core-install-smoke, extended-install-smoke]
     if: ${{ !contains(github.ref_name, 'rc') && !contains(github.ref_name, 'a') && !contains(github.ref_name, 'b') }}
     environment: pypi
     permissions:
@@ -259,12 +303,12 @@ jobs:
     steps:
       # Download the already validated release artifacts.
       - name: Download dist artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: python-dist
           path: dist
 
-      # Publish the stable artifacts to PyPI via Trusted Publishing.
+      # Publish the built wheel and sdist artifacts to PyPI via Trusted Publishing.
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
 

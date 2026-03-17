@@ -1,56 +1,35 @@
 # GitHub Workflows
 
-This directory contains the two active GitHub Actions workflows for this repository.
+This directory contains the active GitHub Actions workflows for this repository.
 
-## `ci.yml`
+## See Also
 
-Purpose:
-- Run branch CI for pull requests and pushes to `master`.
-- Validate unit tests plus packaging/install smoke checks without any publish privilege.
-
-What it does:
-1. Runs `pytest -m "unit and not local"`.
-2. Builds `dist/*` with `python -m build`.
-3. Runs `twine check` on the built artifacts.
-4. Smoke tests the built core wheel in isolated envs without GDAL bindings.
-5. Smoke tests the built extended wheel after installing system GDAL and matching Python bindings.
-
-Triggers:
-- `pull_request`
-- `push` to `master`
-- `workflow_dispatch`
-
-## `release.yml`
-
-Purpose:
-- Publish tagged releases using Trusted Publishing.
-- Keep Git tags, GitHub Releases, and package versions synchronized through `setuptools-scm`.
-
-What it does:
-1. Triggers on pushed tags matching `v*`.
-2. Checks out full Git history and verifies the tagged commit is reachable from `master`.
-3. Builds `dist/*` once and validates that the derived package version matches the tag.
-4. Runs the release validation suite and install smoke checks.
-5. Publishes pre-releases to TestPyPI or stable releases to PyPI via Trusted Publishing.
-6. Creates or updates the GitHub Release from the same tag.
+- See [`docs/dev/adr/0017-cicd-workflow-policy.md`](../../docs/dev/adr/0017-cicd-workflow-policy.md) for the CI/CD policy that defines the intent behind these workflows.
 
 ## Running
 
-From GitHub UI:
-1. Open **Actions**.
-2. Select **CI** or **Release**.
-3. Inspect the run for the relevant branch or tag.
+Push the branch first, then run a workflow from the GitHub UI or CLI.
 
-Using GitHub CLI:
 ```bash
-gh workflow run ci.yml
+gh workflow run --ref "$(git branch --show-current)"
+ 
 ```
 
-## Interpreting failures
+## `ci.yml`
 
-Typical failure buckets:
-- Packaging/install errors: project metadata, dependency resolution, or wheel build failures.
-- Versioning errors: the `setuptools-scm` derived version does not match the pushed tag.
-- Tag policy errors: the tagged commit is not reachable from `master`.
-- Trusted Publishing errors: missing or mismatched PyPI/TestPyPI publisher configuration.
-- Test tier selection drift: a non-unit test leaked into CI selection.
+- Purpose: branch CI for pull requests and pushes to `master`.
+- Scope: runs the `fast` pytest tier, runs one constrained minimum-core test slice, builds `dist/*`, runs `twine check`, and smoke-tests the core wheel on Ubuntu and Windows.
+- Trigger: `pull_request`, `push` to `master`, `workflow_dispatch`.
+
+## `install-edge.yml`
+
+- Purpose: manual install-matrix validation without slowing normal CI.
+- Scope: builds `dist/*` on the self-hosted Linux runner fleet, then runs each install smoke case in a fresh `condaforge/miniforge3:25.3.1-0` Docker container on `CEFTOP25M`; the matrix covers Linux-only basic `pipx` host-GDAL contexts plus one extended conda-forge GDAL case.
+- Trigger: None (i.e., `workflow_dispatch`).
+
+## `release.yml`
+
+- Purpose: tagged release validation and publish workflow.
+- Scope: verifies tag ancestry, runs the fast suite, runs one constrained minimum-core test slice, builds and validates `dist/*`, smoke-tests the core install on Ubuntu, smoke-tests the extended conda install on Ubuntu and Windows, then publishes to TestPyPI or PyPI and updates the GitHub Release.
+- Trigger: `push` tags matching `v*`.
+ 

@@ -24,13 +24,20 @@ Because of that, the package should expose one progressive capability model rath
   - CLI entrypoint: `floodsr`
 - Adopt a **progressive capability model** with two installation modes:
   - **Core install**
-    - Uses pure-Python or wheel-friendly dependencies only.
     - Must not require `osgeo.gdal`.
-    - Provides the default CLI and library surface for users who only need the non-GDAL path.
+    - Must not require system GDAL.
+    - Is supported via `pip` and `pipx` on wheel-supported platforms.
+    - Provides the default CLI and library surface for users who only need the non-VRT path.
     - VRT-dependent commands are unavailable.
+    - Lower bounds in `pyproject.toml` should match one explicitly tested minimum core stack rather than a broad historical compatibility promise.
   - **Extended install**
-    - Requires system GDAL and matching Python bindings.
+    - Is a Linux/conda-supported environment recipe rather than a PyPI extra.
+    - Requires GDAL to be installed in the target conda environment before `pip install floodsr`.
+    - Requires matching Python bindings in that same environment.
     - Enables VRT-dependent commands and any future direct-GDAL features.
+- Do not publish a `pyproject.toml` GDAL extra because the Python GDAL binding version must track the environment-provided GDAL version.
+- Keep the tested minimum core stack in a constraints file and validate it in CI.
+- Treat the extended path as a pinned conda stack, not an open-ended dependency range.
 - Keep publishing target as PyPI/TestPyPI wheels and source distributions.
 - Validate published artifacts against the capability level they claim to support.
 
@@ -38,8 +45,8 @@ Because of that, the package should expose one progressive capability model rath
 yes, this is complicated... but we spent a lot of time building the in-memory HRDEM fetcher.
 So we either:
 - break our **install must be simple** rule
-- revert and have no in-memory HRDEM fetcher (could do some more testing with `merge(mem_limit....)`.. but ran out of time, and this doesnt pre-filter)
-- or we do the work to support both install paths and validate them properly.
+- revert and have no in-memory HRDEM fetcher (could do some more testing with `merge(mem_limit....)`.. but ran out of time, and this won't support pre-filter)
+- or we do the work to support both install paths and validate them properly, with core validated across host GDAL contexts and extended validated as a conda-first Linux path
 
 
 ## development container strategy

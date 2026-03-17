@@ -111,7 +111,7 @@ def test_main_tohr_runs_in_hrdem_flagged_case(
         pytest.param("rss_mersch_A", id="data_case_output_name_rss_mersch_a", marks=pytest.mark.local),
     ],
 )
-@pytest.mark.unit
+@pytest.mark.fast
 def test_default_output_path_uses_cwd_and_input_stem(tmp_path: Path, tile_case_d: dict):
     """Ensure ToHR default output path is generated in cwd with _sr suffix."""
     case_spec = tile_case_d["case_spec"]
@@ -128,7 +128,7 @@ def test_default_output_path_uses_cwd_and_input_stem(tmp_path: Path, tile_case_d
 
 
 @pytest.mark.parametrize("case_id", [pytest.param("2407_FHIMP_tile", id="data_case_resolve_model_2407_fhimp_tile")])
-@pytest.mark.unit
+@pytest.mark.fast
 def test_resolve_tohr_model_spec_uses_cached_manifest_default(
     tmp_path: Path,
     tile_case_d: dict,
@@ -185,7 +185,7 @@ def test_resolve_tohr_model_spec_uses_cached_manifest_default(
 
 
 @pytest.mark.parametrize("case_id", [pytest.param("2407_FHIMP_tile", id="data_case_fetch_parse_2407_fhimp_tile")])
-@pytest.mark.unit
+@pytest.mark.fast
 def test_parse_tohr_allows_fetch_hrdem_without_dem(tile_case_d: dict):
     """Ensure tohr parser accepts --fetch-hrdem without requiring --dem."""
     case_spec = tile_case_d["case_spec"]
@@ -203,7 +203,7 @@ def test_parse_tohr_allows_fetch_hrdem_without_dem(tile_case_d: dict):
 
 
 @pytest.mark.parametrize("case_id", [pytest.param("2407_FHIMP_tile", id="data_case_fetch_force_tiling_2407_fhimp_tile")])
-@pytest.mark.unit
+@pytest.mark.fast
 def test_parse_tohr_allows_fetch_force_tiling_flag(tile_case_d: dict):
     """Ensure tohr parser accepts --fetch-force-tiling when HRDEM fetch is enabled."""
     case_spec = tile_case_d["case_spec"]
@@ -221,7 +221,7 @@ def test_parse_tohr_allows_fetch_force_tiling_flag(tile_case_d: dict):
 
 
 @pytest.mark.parametrize("case_id", [pytest.param("2407_FHIMP_tile", id="data_case_machine_json_2407_fhimp_tile")])
-@pytest.mark.unit
+@pytest.mark.fast
 def test_parse_tohr_allows_machine_json_only(tile_case_d: dict, tmp_path: Path):
     """Ensure tohr parser accepts machine-interface JSON as an alternate required-arg source."""
     case_spec = tile_case_d["case_spec"]
@@ -238,7 +238,7 @@ def test_parse_tohr_allows_machine_json_only(tile_case_d: dict, tmp_path: Path):
 
 
 @pytest.mark.parametrize("case_id", [pytest.param("2407_FHIMP_tile", id="data_case_machine_json_override_2407_fhimp_tile")])
-@pytest.mark.unit
+@pytest.mark.fast
 def test_parse_tohr_cli_args_override_machine_json(tile_case_d: dict, tmp_path: Path):
     """Ensure explicit CLI args retain precedence over machine-interface JSON."""
     case_spec = tile_case_d["case_spec"]
@@ -267,7 +267,7 @@ def test_parse_tohr_cli_args_override_machine_json(tile_case_d: dict, tmp_path: 
 
 
 @pytest.mark.parametrize("case_id", [pytest.param("2407_FHIMP_tile", id="data_case_dem_and_fetch_hrdem_2407_fhimp_tile")])
-@pytest.mark.unit
+@pytest.mark.fast
 def test_parse_tohr_rejects_dem_and_fetch_hrdem_together(tile_case_d: dict):
     """Ensure tohr parser rejects simultaneous --dem and --fetch-hrdem."""
     case_spec = tile_case_d["case_spec"]
@@ -285,7 +285,7 @@ def test_parse_tohr_rejects_dem_and_fetch_hrdem_together(tile_case_d: dict):
 
 
 @pytest.mark.parametrize("case_id", [pytest.param("2407_FHIMP_tile", id="data_case_fetch_out_requires_fetch_hrdem_2407_fhimp_tile")])
-@pytest.mark.unit
+@pytest.mark.fast
 def test_main_tohr_fetch_out_requires_fetch_hrdem(tile_case_d: dict, tmp_path: Path):
     """Ensure tohr runtime rejects --fetch-out unless --fetch-hrdem is enabled."""
     case_spec = tile_case_d["case_spec"]

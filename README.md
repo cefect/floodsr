@@ -2,109 +2,83 @@
 [![CI](https://github.com/cefect/floodsr/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/cefect/floodsr/actions/workflows/ci.yml)
 [![Release](https://github.com/cefect/floodsr/actions/workflows/release.yml/badge.svg?branch=master)](https://github.com/cefect/floodsr/actions/workflows/release.yml)
 [![Documentation Status](https://readthedocs.org/projects/floodsr/badge/?version=latest)](https://floodsr.readthedocs.io/en/latest/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Super-Resolution for flood hazard rasters.
 Ingests lores water grid and hires DEM and infers a hires water grid using the specified model.
 
-Documentation: https://floodsr.readthedocs.io/en/latest/
+- **Documentation**: https://floodsr.readthedocs.io/en/latest/
+- **Contribute**: https://github.com/cefect/floodsr/blob/master/CONTRIBUTING.md
 
 Implemented models (see `floodsr/models.json`):
 - **ResUNet_16x_DEM**: 16x DEM-conditioned ResUNet
-- **CostGrow** (future)
-
-Implemented backend:
-- **ONNX Runtime**
-
+ 
 
 ## Installation
 
+see [documentation](https://floodsr.readthedocs.io/en/latest/installation.html) for details.
+
+### basic install
+
 ```bash
-# recommended core install: isolated CLI install for users
-python -m pip install --user pipx
-pipx ensurepath
 pipx install floodsr
 ```
-
-TestPyPI install:
-
+ 
+### extended install
+for handling rasters too large for memory, floodsr requires GDAL backends.
 ```bash
-pipx install --index-url https://test.pypi.org/simple/ --pip-args="--extra-index-url https://pypi.org/simple" floodsr
+# advanced install for VRT workflows
+conda create -n floodsr-gdal -c conda-forge python=3.12 gdal -y
+conda activate floodsr-gdal
+python -m pip install floodsr
 ```
-
-Extended install for GDAL/VRT-dependent workflows:
-
-```bash
-sudo apt-get update
-sudo apt-get install -y gdal-bin libgdal-dev
-python -m pip install "gdal==$(gdal-config --version)"
-python -m pip install "floodsr[extended]"
-```
-
-The default `floodsr` package is the core install. It does not require
-`osgeo.gdal`, and the HRDEM fetcher falls back to the non-windowed path when
-GDAL bindings are missing.
-
-Developer work should use the devcontainer image in
-`.devcontainer/main/devcontainer.json`.
-
  
 
 ## Use
 
-Current CLI surface includes model registry, `tohr` raster execution, and runtime diagnostics.
 
+ 
 List available model versions:
 
 ```bash
-# source checkout shortcut for the CLI
-alias floodsr='python -m floodsr.cli'
-
 floodsr models list
 ```
 
 Fetch a model by version into the default cache:
 
 ```bash
-floodsr models fetch ResUNet_16x_DEM --force
+floodsr models fetch ResUNet_16x_DEM 
 ```
 
-tohr using HRDEM as DEM
-```bash
-floodsr tohr -f --in tests/data/2407_FHIMP_tile/lowres032.tif 
-```
-
-Run one ToHR pass from raster inputs:
+Enhance a low-resolution flood hazard raster *to high resolution* (``tohr``), fetching the DEM from the [HRDEM Mosaic](https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b) data source.
+NOTE: this requires downloading the test data (see below) or replacing the *.tif paths with your own data paths.
 
 ```bash
-# simple tile
-floodsr tohr \
-  --in tests/data/2407_FHIMP_tile/lowres032.tif \
-  --dem tests/data/2407_FHIMP_tile/hires002_dem.tif  
-
-# larger raster w/ windowing and tiling and rescaling
-floodsr tohr \
-  --in tests/data/rss_mersch_A/lowres030.tif \
-  --dem tests/data/rss_mersch_A/hires002_dem.tif \
-  --out pred_sr.tif
- 
+floodsr tohr --in lowres032.tif --fetch-hrdem 
 ```
 
-Run ToHR with explicit local model path:
+Enhance with a local DEM file:
 
 ```bash
-floodsr tohr \
-  --in tests/data/2407_FHIMP_tile/lowres032.tif \
-  --dem tests/data/2407_FHIMP_tile/hires002_dem.tif \
-  --out ./tmp/pred_sr.tif \
-  --model-path _inputs/ResUNet_16x_DEM/model_infer.onnx
+floodsr tohr --in lowres032.tif --dem hires002_dem.tif  
+
 ```
-
-
 
 Doctor diagnostics:
 
 ```bash
 floodsr doctor
+```
+
+For more details, see the [User Guide](https://floodsr.readthedocs.io/en/latest/user_guide.html).
+
+ 
+### downloading test data
+To download manually, browse to [this release](https://github.com/cefect/floodsr/releases/tag/v0.0.3) and download the assets into your current working directory.
+
+Alternatively, `bash` users with `curl`:
+```bash
+curl -L -O https://github.com/cefect/floodsr/releases/download/v0.0.3/hires002_dem.tif -O https://github.com/cefect/floodsr/releases/download/v0.0.3/lowres032.tif
 ```
 
  

@@ -5,10 +5,7 @@ on:
   pull_request:
     branches:
       - master
-  # Keep default branch healthy after merge.
-  push:
-    branches:
-      - master
+
   # Allow manual reruns from the Actions UI.
   workflow_dispatch:
 
@@ -22,23 +19,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  unit-tests:
-    name: unit tests (ubuntu-latest)
+  fast-tests:
+    name: fast tests (ubuntu-latest)
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
       # Fetch repository contents for test execution.
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       # Install a consistent Python runtime.
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       # Install system GDAL so the extended test environment can import osgeo.gdal.
       - name: Install system GDAL
@@ -46,17 +43,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gdal-bin libgdal-dev
 
-      # Install runtime and test dependencies required by the CI-safe unit suite.
+      # Install runtime and test dependencies required by the CI-safe fast suite.
       - name: Install test dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install "gdal==$(gdal-config --version)"
-          python -m pip install -e ".[dev,extended]"
+          python -m pip install -e ".[dev]"
 
-      # Run the CI-safe unit suite only.
-      - name: Run unit tests
+      # Run the CI-safe fast suite only.
+      - name: Run fast tests
         run: |
-          pytest -m "unit and not local"
+          pytest -m "fast and not local and not sphinx"
 
   build-artifacts:
     name: build wheel and sdist (ubuntu-latest)
@@ -66,15 +63,15 @@ jobs:
     steps:
       # Fetch repository contents for the build.
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       # Install a consistent Python runtime for packaging.
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       # Build both artifacts and validate the metadata shape.
       - name: Build artifacts
@@ -85,108 +82,91 @@ jobs:
 
       # Reuse the same artifacts across downstream smoke jobs.
       - name: Upload dist artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: python-dist
           path: dist/*
 
   core-install-smoke:
-    name: core wheel smoke (ubuntu-latest)
-    runs-on: ubuntu-latest
+    name: core wheel smoke (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 5
     needs: build-artifacts
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
 
     steps:
       # Install a consistent Python runtime for isolated smoke envs.
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       # Fetch the previously built artifacts instead of rebuilding from source.
       - name: Download dist artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: python-dist
           path: dist
 
       # Install pipx and expose the default local bin path for this job.
       - name: Install pipx
+        shell: bash
         run: |
           python -m pip install --upgrade pip pipx
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            echo "$APPDATA/Python/Python312/Scripts" >> "$GITHUB_PATH"
+          else
+            echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          fi
 
       # Smoke test the core install from the built wheel in an isolated pipx env.
       - name: pipx install built core wheel
+        shell: bash
         run: |
           WHEEL=$(echo dist/*.whl)
           python -m pipx install --force "$WHEEL"
 
       # Verify console entrypoint and basic no-input CLI paths.
       - name: Smoke test core CLI
+        shell: bash
         run: |
           floodsr --help
-          floodsr doctor
+          floodsr doctor --json > doctor.json
           floodsr models list
+          python - <<'PY'
+          import json
+          from pathlib import Path
 
-      # Confirm the built wheel remains importable without GDAL bindings installed.
-      - name: Verify optional GDAL import path
+          payload = json.loads(Path("doctor.json").read_text(encoding="utf-8"))
+          assert payload["gdal"]["python_bindings_installed"] is False
+          assert payload["gdal"]["vrt_enabled"] is False
+          PY
+
+      # Confirm the built wheel reports the expected core-only GDAL capability state.
+      - name: Verify optional GDAL doctor probes
+        shell: bash
         run: |
           WHEEL=$(echo dist/*.whl)
           python -m venv .venv-core
-          . .venv-core/bin/activate
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            . .venv-core/Scripts/activate
+          else
+            . .venv-core/bin/activate
+          fi
           python -m pip install --upgrade pip
           python -m pip install "$WHEEL"
+          floodsr doctor --json > doctor-core.json
           python - <<'PY'
-          import floodsr.dem_sources.hrdem_mosaic
-          assert floodsr.dem_sources.hrdem_mosaic.gdal is None
-          print("core import validated without osgeo.gdal")
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("doctor-core.json").read_text(encoding="utf-8"))
+          assert payload["gdal"]["python_bindings_installed"] is False
+          assert payload["gdal"]["vrt_enabled"] is False
           PY
 
-  # extended-install-smoke:
-  #   name: extended wheel smoke (ubuntu-latest)
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 10
-  #   needs: build-artifacts
-  #
-  #   steps:
-  #     # Install a consistent Python runtime for the extended smoke env.
-  #     - name: Setup Python
-  #       uses: actions/setup-python@v5
-  #       with:
-  #         python-version: "3.11"
-  #
-  #     # Install system GDAL before Python bindings so versions can be matched.
-  #     - name: Install system GDAL
-  #       run: |
-  #         sudo apt-get update
-  #         sudo apt-get install -y gdal-bin libgdal-dev
-  #
-  #     # Fetch the wheel built in the upstream packaging job.
-  #     - name: Download dist artifacts
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: python-dist
-  #         path: dist
-  #
-  #     # Install the matching GDAL Python bindings, then the extended extra from the wheel.
-  #     - name: Install extended wheel
-  #       run: |
-  #         python -m pip install --upgrade pip
-  #         python -m pip install "gdal==$(gdal-config --version)"
-  #         WHEEL_URI=$(python - <<'PY'
-  #         from pathlib import Path
-  #         print(next(Path("dist").glob("*.whl")).resolve().as_uri())
-  #         PY
-  #         )
-  #         python -m pip install "floodsr[extended] @ ${WHEEL_URI}"
-  #
-  #     # Verify the extended install can import GDAL-backed HRDEM functionality.
-  #     - name: Smoke test extended install
-  #       run: |
-  #         floodsr doctor
-  #         python - <<'PY'
-  #         import floodsr.dem_sources.hrdem_mosaic
-  #         assert floodsr.dem_sources.hrdem_mosaic.gdal is not None
-  #         print(floodsr.dem_sources.hrdem_mosaic.gdal.VersionInfo("--version"))
-  #         PY
+ 
