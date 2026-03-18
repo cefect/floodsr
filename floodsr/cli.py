@@ -214,6 +214,7 @@ def main_cli(args: argparse.Namespace) -> int:
             manifest_fp=args.manifest,
             backend_name=args.backend,
             force=args.force,
+            no_progress=args.no_progress,
         )
         print(model_fp)
         return 0
@@ -369,6 +370,11 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
         "--force",
         action="store_true",
         help="Redownload even when a valid cached weight file already exists.",
+    )
+    models_fetch_parser.add_argument(
+        "--no-progress",
+        action="store_true",
+        help="Disable model download progress output.",
     )
 
     # Register ToHR command.
