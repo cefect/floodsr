@@ -240,12 +240,12 @@ def test_fetch_hrdem_synthetic_cases(
 
 @pytest.mark.fast
 @pytest.mark.network
-def test_public_hrdem_asset_without_boto3_uses_rasterio_dummy_session(
+def test_public_hrdem_asset_without_boto3_is_suppressed_during_hrdem_fetch(
     tmp_path: Path,
     synthetic_lowres_builder,
     caplog,
 ):
-    """Public HRDEM S3-backed assets should fall back to DummySession when boto3 is unavailable."""
+    """HRDEM fetches should suppress rasterio DummySession info logs for public S3-backed assets."""
     depth_lr_fp, _, _ = synthetic_lowres_builder(
         "depth_lr_session_probe",
         (2, 2),
@@ -269,6 +269,20 @@ def test_public_hrdem_asset_without_boto3_uses_rasterio_dummy_session(
     if importlib.util.find_spec("boto3") is None:
         assert session_cls is rasterio.session.DummySession
         assert "boto3 not available, falling back to a DummySession." in caplog.text
+        caplog.clear()
+        output_fp = tmp_path / "fetched_dem_session_probe.tif"
+        with caplog.at_level("INFO", logger="rasterio.session"):
+            result = floodsr.dem_sources.hrdem_mosaic.main_fetch_hrdem_for_lowres_tile(
+                depth_lr_fp=depth_lr_fp,
+                output_fp=output_fp,
+                use_cache=False,
+                force_tiling=True,
+                fetch_window_size=32,
+                memory_limit_gib=16.0,
+                tqdm_disable=True,
+            )
+        assert Path(result.dem_fp).exists() is True
+        assert "boto3 not available, falling back to a DummySession." not in caplog.text
     else:
         assert session_cls is rasterio.session.AWSSession
 
