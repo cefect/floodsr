@@ -14,6 +14,7 @@ import rasterio
 import floodsr.dem_sources.hrdem_mosaic
 from conftest import _write_single_band_geotiff, logger, tile_case_d
 from rasterio.transform import array_bounds, from_bounds, from_origin
+from rasterio.windows import Window
 from rasterio.warp import transform_bounds
 
 # Match synthetic low-res raster origin to tests/data/2407_FHIMP_tile/lowres032.tif.
@@ -66,6 +67,40 @@ def _read_output_dem_with_basic_assertions(dem_fp: str | Path):
     return arr, nodata
 
 
+def _write_fetch_test_subset_depth_fp(tmp_path: Path, tile_case_d: dict) -> Path:
+    """Write an optional low-res subset used to keep network fetch tests small."""
+    case_spec = tile_case_d["case_spec"]
+    tile_dir = tile_case_d["tile_dir"]
+    depth_lr_fp = tile_dir / case_spec["inputs"]["lowres_fp"]
+    subset_d = case_spec.get("fetch_test", {}).get("lowres_window")
+    if subset_d is None:
+        return depth_lr_fp
+
+    subset_fp = tmp_path / f"{depth_lr_fp.stem}_fetch_subset.tif"
+    subset_window = Window(
+        col_off=int(subset_d["col_off"]),
+        row_off=int(subset_d["row_off"]),
+        width=int(subset_d["width"]),
+        height=int(subset_d["height"]),
+    )
+    with rasterio.open(depth_lr_fp) as src_ds:
+        subset_arr = src_ds.read(1, window=subset_window).astype(np.float32)
+        subset_profile = src_ds.profile.copy()
+        subset_profile.update(
+            {
+                "height": int(subset_window.height),
+                "width": int(subset_window.width),
+                "transform": src_ds.window_transform(subset_window),
+            }
+        )
+    if not bool(subset_profile.get("tiled", False)):
+        subset_profile.pop("blockxsize", None)
+        subset_profile.pop("blockysize", None)
+    with rasterio.open(subset_fp, "w", **subset_profile) as subset_ds:
+        subset_ds.write(subset_arr, 1)
+    return subset_fp
+
+
 
 
 
@@ -76,32 +111,18 @@ def _read_output_dem_with_basic_assertions(dem_fp: str | Path):
 # ----- TESTSE -----
 # ------------------
 
-@pytest.mark.fast
-@pytest.mark.local
-@pytest.mark.parametrize(
-    "case_id",
-    [
-        pytest.param("fathom_clip", id="fathom_clip", marks=pytest.mark.local),
-    ],
-)
 def test_build_fetch_tile_grid_gdf_and_selection_mask_writes_geojson(
     tmp_path: Path,
-    tile_case_d: dict,
     logger,
-    case_id: str,
 ):
     """Tile-grid helper should build a GeoDataFrame, support selection masking, and write GeoJSON."""
     gpd = pytest.importorskip("geopandas")
-    case_spec = tile_case_d["case_spec"]
-    tile_dir = tile_case_d["tile_dir"]
-    depth_lr_fp = tile_dir / case_spec["inputs"]["lowres_fp"]
-    depth_query = floodsr.dem_sources.hrdem_mosaic._resolve_depth_query_geometry(depth_lr_fp)
     tile_grid_gdf = floodsr.dem_sources.hrdem_mosaic._build_fetch_tile_grid_gdf(
-        depth_width=int(depth_query["depth_width"]),
-        depth_height=int(depth_query["depth_height"]),
+        source_width=64,
+        source_height=64,
         fetch_window_size=32,
-        depth_transform=depth_query["depth_transform"],
-        depth_crs=depth_query["depth_crs"],
+        source_transform=from_origin(500000.0, 4000000.0, 1.0, 1.0),
+        source_crs="EPSG:3979",
     )
     first_geom = tile_grid_gdf.iloc[0].geometry
     min_dim = min(first_geom.bounds[2] - first_geom.bounds[0], first_geom.bounds[3] - first_geom.bounds[1])
@@ -119,7 +140,7 @@ def test_build_fetch_tile_grid_gdf_and_selection_mask_writes_geojson(
     assert bool(fetch_mask.any()) is True
     assert bool((~fetch_mask).any()) is True
 
-    tile_grid_geojson_fp = tmp_path / f"{case_id}_fetch_tile_grid.geojson"
+    tile_grid_geojson_fp = tmp_path / "synthetic_fetch_tile_grid.geojson"
     tile_grid_geojson_fp.write_text(tile_grid_gdf.to_json(), encoding="utf-8")
     assert tile_grid_geojson_fp.exists()
     tile_grid_geojson_d = json.loads(tile_grid_geojson_fp.read_text(encoding="utf-8"))
@@ -149,13 +170,12 @@ def test_build_fetch_tile_grid_gdf_and_selection_mask_writes_geojson(
             id="fathom_clip",
             marks=pytest.mark.local,
         ),
+        pytest.param("wri_aqueduct_yeg", id="wri_aqueduct_yeg"),
     ],
 )
 def test_download_hrdem_project_extent_for_data_case(tmp_path: Path, logger, tile_case_d: dict):
     """Project extent service should return at least one intersecting feature for the fixture tile."""
-    case_spec = tile_case_d["case_spec"]
-    tile_dir = tile_case_d["tile_dir"]
-    depth_lr_fp = tile_dir / case_spec["inputs"]["lowres_fp"]
+    depth_lr_fp = _write_fetch_test_subset_depth_fp(tmp_path, tile_case_d)
     depth_query = floodsr.dem_sources.hrdem_mosaic._resolve_depth_query_geometry(depth_lr_fp)
     clip_bounds_3979 = transform_bounds(
         depth_query["depth_crs"],
@@ -165,6 +185,7 @@ def test_download_hrdem_project_extent_for_data_case(tmp_path: Path, logger, til
     )
     feature_l = floodsr.dem_sources.hrdem_mosaic._download_hrdem_project_extent_features(
         clip_bounds_3979,
+        raster_shape=(int(depth_query["depth_height"]), int(depth_query["depth_width"])),
         logger=logger,
     )
     assert isinstance(feature_l, list)
@@ -195,7 +216,7 @@ def test_download_hrdem_project_extent_for_data_case(tmp_path: Path, logger, til
             {
                 **SYNTHETIC_REAL_FETCH_BASE_D,
                 "depth_shape": (2, 2),
-                "fetch_window_size": 32,
+                "fetch_window_size": 80,
             },
             id="real_hrdem_tiled_small_a",
         ),
@@ -203,7 +224,7 @@ def test_download_hrdem_project_extent_for_data_case(tmp_path: Path, logger, til
             {
                 **SYNTHETIC_REAL_FETCH_BASE_D,
                 "depth_shape": (2, 3),
-                "fetch_window_size": 32,
+                "fetch_window_size": 80,
             },
             id="real_hrdem_tiled_small_b",
         ),
@@ -289,7 +310,7 @@ def test_public_hrdem_asset_without_boto3_is_suppressed_during_hrdem_fetch(
                 force_tiling=True,
                 fetch_window_size=32,
                 memory_limit_gib=16.0,
-                tqdm_disable=True,
+                show_progress=False,
             )
         assert Path(result.dem_fp).exists() is True
         assert "boto3 not available, falling back to a DummySession." not in caplog.text
@@ -447,6 +468,7 @@ def test_write_dem_from_asset_hrefs_non_windowed_outputs_float32_non_empty(
     "case_id",
     [
         pytest.param("fathom_clip",id="fathom_clip",),
+        pytest.param("wri_aqueduct_yeg", id="wri_aqueduct_yeg"),
     ],
 )
 @pytest.mark.parametrize(
@@ -461,10 +483,10 @@ def test_write_dem_from_asset_hrefs_non_windowed_outputs_float32_non_empty(
         pytest.param(
             {
                 "force_tiling": True,
-                "fetch_window_size": 32,
+                "fetch_window_size": 2048,
                 "use_project_extent_filter": False,
             },
-            id="tiling_w32",
+            id="tiling_source_window",
         ),
     ],
 )
@@ -477,10 +499,14 @@ def test_fetch_hrdem_data_case(
 ):
     """Non-synthetic case should produce non-empty output via main_fetch_hrdem_for_lowres_tile."""
     case_spec = tile_case_d["case_spec"]
-    tile_dir = tile_case_d["tile_dir"]
-    depth_lr_fp = tile_dir / case_spec["inputs"]["lowres_fp"]
+    fetch_test_d = case_spec.get("fetch_test", {})
+    depth_lr_fp = _write_fetch_test_subset_depth_fp(tmp_path, tile_case_d)
     assert depth_lr_fp.exists(), f"missing non-synthetic fixture: {depth_lr_fp}"
     output_fp = tmp_path / f"{depth_lr_fp.stem}_fetch_use_cache_{int(use_cache)}.tif"
+    fetch_kwargs = {
+        **fetch_kwargs,
+        "fetch_window_size": int(fetch_test_d.get("fetch_window_size", fetch_kwargs["fetch_window_size"])),
+    }
 
     # Fetch DEM directly in-process for faster and clearer failure surfaces.
     result = floodsr.dem_sources.hrdem_mosaic.main_fetch_hrdem_for_lowres_tile(
@@ -495,11 +521,6 @@ def test_fetch_hrdem_data_case(
     assert Path(result.dem_fp).exists() is True
     _read_output_dem_with_basic_assertions(result.dem_fp)
     tile_dir = Path(result.dem_fp).parent / f"{Path(result.dem_fp).stem}__fetch_tiles"
-    with rasterio.open(depth_lr_fp) as depth_ds:
-        max_tile_count = int(
-            np.ceil(depth_ds.height / int(fetch_kwargs["fetch_window_size"]))
-            * np.ceil(depth_ds.width / int(fetch_kwargs["fetch_window_size"]))
-        )
     tile_fp_l = list(tile_dir.glob("*.tif"))
     assert len(tile_fp_l) > 0
-    assert len(tile_fp_l) <= max_tile_count
+    assert len(tile_fp_l) <= int(fetch_test_d.get("expected_max_tiles", 4))

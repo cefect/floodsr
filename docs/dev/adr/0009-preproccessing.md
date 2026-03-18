@@ -10,6 +10,7 @@ Implementation note:
 - platform-level preprocessing is orchestrated by `floodsr tohr` and is not a standalone CLI entrypoint.
 - shared preprocessing logic should live in `floodsr/preprocessing.py`.
 - model workers consume platform-preprocessed artifacts, assert platform-model boundary conformance, then run model-specific preprocessing/transforms per `0005-model-registry.md`.
+- platform/model boundary implementations must avoid full in-memory reads/writes of large HRDEM-sized rasters when a raster-backed windowed path is available.
 
 
 ## platform-model boundary
@@ -78,6 +79,10 @@ Requirements:
 - This stage is executed as part of `tohr` before model-worker execution.
 - Keep this logic shared/model-agnostic in `floodsr/preprocessing.py` where practical.
 - CRS mismatch policy handling (`--crs-policy`) is owned by this platform stage, not by model workers.
+- Keep two preprocessing/materialization paths:
+  - a simple path that may materialize full prepared rasters in memory
+  - a raster-backed windowed path that reads and writes windows on demand to avoid materializing the full HRDEM-sized raster
+- In this phase, the raster-backed windowed path only needs to support hard-window inference. Feathered mosaicking can continue to require the simple path.
 
 
 
@@ -104,3 +109,8 @@ for legacy train configs where `MODEL_DEM_RES` cannot be inferred, fallback to:
 post-inference, assert:
 - output bbox == incoming lores depth bbox
 - output shape == preprocessed DEM shape
+
+#### memory handling
+- large scenes must not require a full in-memory read of the clipped raw DEM or a full in-memory allocation of the final raw-grid output raster
+- the raster-backed windowed path should preserve the same CRS/bounds/output contract as the simple path
+- `crs_policy` behavior is unchanged across both paths; only the materialization strategy differs

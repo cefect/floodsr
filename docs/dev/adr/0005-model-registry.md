@@ -56,6 +56,10 @@ FloodSR needs a stable model layer that:
     - Model specific post-processing
   - call shared tiling/windowing/mosaicking helpers from `tiling.py` (do not duplicate tiling implementations inside workers)
   - tiling method is fixed by implementation (not a user-facing toggle); only tiling parameters are configurable
+  - workers may support both:
+    - a simple in-memory array path
+    - a raster-backed windowed path for large scenes
+  - in this phase, the raster-backed windowed path only needs to support hard-window inference
 
 ## ToHR Lifecycle Contract
 
@@ -107,6 +111,9 @@ FloodSR needs a stable model layer that:
 - Build non-overlap HR window origins and map each HR origin to LR origin by integer `SCALE`.
 - Build feathered overlap window grid with fixed overlap/stride and forced trailing-edge coverage.
 - Reuse cached tile predictions by `(y0, x0)` key to avoid duplicate model calls across passes.
+- The simple path may materialize prepared arrays in memory before tiling.
+- The raster-backed windowed path should instead read prepared rasters on demand by window and write outputs incrementally.
+- The raster-backed windowed path is limited to hard windows in this phase.
 
 3. Core inference at model-engine boundary
 - For each window, slice aligned LR depth and HR DEM tiles.
@@ -127,3 +134,4 @@ FloodSR needs a stable model layer that:
 - Apply low-depth mask in meter domain.
 - Re-normalize to `[0, 1]` where needed for metric helper compatibility.
 - Compute/export full-scene diagnostics (including bilinear baseline comparison) and write output when enabled.
+- For large scenes, post-resample and output writing should support a raster-backed windowed implementation so the raw HR output grid is not fully materialized in memory.

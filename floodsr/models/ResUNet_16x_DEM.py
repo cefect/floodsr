@@ -71,19 +71,28 @@ Inference:
  
 """
 
-import logging, math, time
+import logging, math, shutil, tempfile, time
 from pathlib import Path
 from typing import Any
 
 import numpy as np
+import rasterio
+from tqdm import tqdm
 
 from floodsr.engine import EngineORT
 from floodsr.models.base import Model
-from floodsr.preprocessing import _read_single_band_raster, _write_single_band_raster, replace_nodata_with_zero, resolve_preprocess_config
-from floodsr.tiling import build_feather_ramp, build_tile_starts, iter_window_origins
+from floodsr.preprocessing import _build_single_band_profile, _read_single_band_raster, _write_single_band_raster, _zero_nodata_in_place, replace_nodata_with_zero, resolve_preprocess_config
+from floodsr.tiling import build_feather_ramp, build_tile_starts, iter_block_windows, iter_window_origins
 
 from rasterio.transform import from_bounds as bounds_to_transform
+from rasterio.windows import Window
 from rasterio.warp import Resampling, reproject
+
+
+try:
+    from osgeo import gdal
+except ImportError:
+    gdal = None
 
 
 def _pixel_size_m(profile: dict) -> tuple[float, float]:
@@ -114,6 +123,7 @@ class ModelWorker(Model):
 
     model_version = "ResUNet_16x_DEM"
     low_depth_mask_m = 1e-3
+    windowed_io_min_bytes = 32 * 1024 * 1024
 
     def __init__(
         self,
@@ -139,6 +149,134 @@ class ModelWorker(Model):
         self.engine = None
         return False
 
+    def _predict_tile_depth_m(
+        self,
+        depth_tile: np.ndarray,
+        dem_tile: np.ndarray,
+        max_depth: float,
+        dem_pct_clip: float,
+        tile_dem_stats_l: list[dict[str, float]],
+    ) -> np.ndarray:
+        """Run one model tile and collect DEM normalization stats."""
+        assert self.engine is not None, "worker must be entered before running inference"
+        log = self.log
+        run_result = self.engine.run_tile(
+            depth_tile,
+            dem_tile,
+            max_depth=max_depth,
+            dem_pct_clip=dem_pct_clip,
+            dem_ref_stats=None,
+            normalize_inputs=True,
+            depth_lr_nodata=None,
+            dem_hr_nodata=None,
+            logger=log,
+        )
+        pred_depth_m = run_result["prediction_m"]
+        dem_stats_used = run_result.get("dem_stats_used")
+        if isinstance(dem_stats_used, dict):
+            tile_dem_stats_l.append(
+                {
+                    "dem_p_clip": float(dem_stats_used.get("p_clip", 0.0)),
+                    "dem_min": float(dem_stats_used.get("dem_min", 0.0)),
+                    "dem_max": float(dem_stats_used.get("dem_max", 0.0)),
+                }
+            )
+        return pred_depth_m
+
+    def _summarize_tile_dem_stats(
+        self,
+        tile_dem_stats_l: list[dict[str, float]],
+    ) -> dict[str, float] | None:
+        """Summarize tile-local DEM normalization stats."""
+        if not tile_dem_stats_l:
+            return None
+        dem_stats_np = np.asarray(
+            [
+                [
+                    float(meta["dem_p_clip"]),
+                    float(meta["dem_min"]),
+                    float(meta["dem_max"]),
+                ]
+                for meta in tile_dem_stats_l
+            ],
+            dtype=np.float32,
+        )
+        dem_range_np = dem_stats_np[:, 2] - dem_stats_np[:, 1]
+        return {
+            "tile_count": float(dem_stats_np.shape[0]),
+            "dem_p_clip_min": float(dem_stats_np[:, 0].min()),
+            "dem_p_clip_mean": float(dem_stats_np[:, 0].mean()),
+            "dem_p_clip_max": float(dem_stats_np[:, 0].max()),
+            "dem_range_min": float(dem_range_np.min()),
+            "dem_range_mean": float(dem_range_np.mean()),
+            "dem_range_max": float(dem_range_np.max()),
+        }
+
+    def _resolve_execution_path(self, window_method: str, dem_raw_shape: tuple[int, int]) -> str:
+        """Choose the in-memory or raster-backed execution path."""
+        raw_bytes = int(dem_raw_shape[0]) * int(dem_raw_shape[1]) * 4
+        if window_method == "hard" and raw_bytes >= int(self.windowed_io_min_bytes):
+            return "windowed"
+        return "simple"
+
+    def _postprocess_output_in_place(self, output_fp: str | Path, max_depth: float) -> None:
+        """Apply clipping and low-depth masking to an on-disk raster."""
+        out_path = Path(output_fp).expanduser().resolve()
+        with rasterio.open(out_path, "r+") as ds:
+            for _, window in ds.block_windows(1):
+                arr = ds.read(1, window=window).astype(np.float32, copy=False)
+                arr = np.clip(arr, 0.0, float(max_depth)).astype(np.float32, copy=False)
+                arr = np.where(arr < float(self.low_depth_mask_m), 0.0, arr).astype(np.float32, copy=False)
+                ds.write(arr, 1, window=window)
+
+    def _gdal_is_available(self) -> bool:
+        """Return True when GDAL Python bindings are available."""
+        return gdal is not None
+
+    def _build_windowed_output_vrt(self, output_fp: str | Path, tile_fp_l: list[Path], nodata: float | None) -> Path:
+        """Build one simple VRT over one or more windowed output tiles."""
+        out_path = Path(output_fp).expanduser().resolve()
+        vrt_fp = out_path.with_suffix(".vrt")
+        if vrt_fp.exists():
+            vrt_fp.unlink()
+        vrt_options = gdal.BuildVRTOptions(
+            srcNodata=float(nodata) if nodata is not None else None,
+            VRTNodata=float(nodata) if nodata is not None else None,
+        )
+        vrt_ds = gdal.BuildVRT(str(vrt_fp), [str(fp) for fp in tile_fp_l], options=vrt_options)
+        assert vrt_ds is not None, f"gdal.BuildVRT returned None for {vrt_fp}"
+        vrt_ds = None
+        return vrt_fp
+
+    def _write_prediction_array(
+        self,
+        output_fp: str | Path,
+        prediction_out_m: np.ndarray,
+        output_profile: dict,
+        max_depth: float,
+        show_progress: bool,
+    ) -> Path:
+        """Clip, mask, and write an in-memory prediction array blockwise."""
+        out_path = Path(output_fp).expanduser().resolve()
+        with rasterio.open(out_path, "w", **output_profile) as dst_ds:
+            for _, window in iter_block_windows(
+                dst_ds,
+                show_progress=show_progress,
+                desc="final write pass",
+            ):
+                row_off = int(window.row_off)
+                col_off = int(window.col_off)
+                height = int(window.height)
+                width = int(window.width)
+                arr = prediction_out_m[row_off : row_off + height, col_off : col_off + width].astype(
+                    np.float32,
+                    copy=False,
+                )
+                arr = np.clip(arr, 0.0, float(max_depth)).astype(np.float32, copy=False)
+                arr = np.where(arr < float(self.low_depth_mask_m), 0.0, arr).astype(np.float32, copy=False)
+                dst_ds.write(arr, 1, window=window)
+        return out_path
+
     def _run_tiled_model_on_prepared(
         self,
         depth_lr_raw: np.ndarray,
@@ -151,6 +289,7 @@ class ModelWorker(Model):
         contract_hr_tile: int,
         window_method: str,
         overlap_lr: int,
+        show_progress: bool = True,
     ) -> tuple[np.ndarray, int, dict[str, float] | None]:
         """
         Run tiled model execution over prepared rasters and return model-space SR in meter domain.
@@ -177,6 +316,8 @@ class ModelWorker(Model):
             Mosaicing strategy (`hard` or `feather`).
         overlap_lr:
             Feather overlap in low-resolution pixels.
+        show_progress:
+            Whether tiled inference progress bars should be rendered.
 
         Returns
         -------
@@ -252,7 +393,7 @@ class ModelWorker(Model):
         )
 
         # Cache per-tile model outputs because overlap windows revisit origins.
-        def _predict_tile_depth_m(y0: int, x0: int) -> np.ndarray:
+        def _predict_cached_tile(y0: int, x0: int) -> np.ndarray:
             key = (int(y0), int(x0))
             if key in tile_cache:
                 return tile_cache[key]
@@ -271,30 +412,16 @@ class ModelWorker(Model):
                 f"DEM tile shape {dem_tile.shape} != {(contract_hr_tile, contract_hr_tile)}"
             )
 
-            run_result = self.engine.run_tile(
-                depth_tile,
-                dem_tile,
+            pred_depth_m = self._predict_tile_depth_m(
+                depth_tile=depth_tile,
+                dem_tile=dem_tile,
                 max_depth=max_depth,
                 dem_pct_clip=dem_pct_clip,
-                dem_ref_stats=None,
-                normalize_inputs=True,
-                depth_lr_nodata=None,
-                dem_hr_nodata=None,
-                logger=log,
+                tile_dem_stats_l=tile_dem_stats_l,
             )
-            pred_depth_m = run_result["prediction_m"]
             assert pred_depth_m.shape == (contract_hr_tile, contract_hr_tile), (
                 f"prediction shape {pred_depth_m.shape} != {(contract_hr_tile, contract_hr_tile)}"
             )
-            dem_stats_used = run_result.get("dem_stats_used")
-            if isinstance(dem_stats_used, dict):
-                tile_dem_stats_l.append(
-                    {
-                        "dem_p_clip": float(dem_stats_used.get("p_clip", 0.0)),
-                        "dem_min": float(dem_stats_used.get("dem_min", 0.0)),
-                        "dem_max": float(dem_stats_used.get("dem_max", 0.0)),
-                    }
-                )
             tile_cache[key] = pred_depth_m
             return pred_depth_m
 
@@ -312,10 +439,10 @@ class ModelWorker(Model):
             for _, _, y0, x0 in iter_window_origins(
                 nonoverlap_y,
                 nonoverlap_x,
-                use_progress=True,
+                show_progress=show_progress,
                 desc="non-overlap pass",
             ):
-                pred_depth_m = _predict_tile_depth_m(y0, x0)
+                pred_depth_m = _predict_cached_tile(y0, x0)
                 sr_pad[y0 : y0 + contract_hr_tile, x0 : x0 + contract_hr_tile] = pred_depth_m
         elif window_method == "feather":
             # Skip hard-pass priming and run only overlap-aware feather blending.
@@ -340,10 +467,10 @@ class ModelWorker(Model):
             for yi, xi, y0, x0 in iter_window_origins(
                 y_starts,
                 x_starts,
-                use_progress=True,
+                show_progress=show_progress,
                 desc="feather pass",
             ):
-                pred_depth_m = _predict_tile_depth_m(y0, x0)
+                pred_depth_m = _predict_cached_tile(y0, x0)
                 wy = feather_1d.copy()
                 wx = feather_1d.copy()
                 if overlap_hr > 0:
@@ -369,33 +496,120 @@ class ModelWorker(Model):
         else:  # pragma: no cover - guarded by assertions
             raise AssertionError(f"unsupported window_method={window_method}")
 
-        tile_dem_stats_summary = None
-        if tile_dem_stats_l:
-            dem_stats_np = np.asarray(
-                [
-                    [
-                        float(meta["dem_p_clip"]),
-                        float(meta["dem_min"]),
-                        float(meta["dem_max"]),
-                    ]
-                    for meta in tile_dem_stats_l
-                ],
-                dtype=np.float32,
-            )
-            dem_range_np = dem_stats_np[:, 2] - dem_stats_np[:, 1]
-            tile_dem_stats_summary = {
-                "tile_count": float(dem_stats_np.shape[0]),
-                "dem_p_clip_min": float(dem_stats_np[:, 0].min()),
-                "dem_p_clip_mean": float(dem_stats_np[:, 0].mean()),
-                "dem_p_clip_max": float(dem_stats_np[:, 0].max()),
-                "dem_range_min": float(dem_range_np.min()),
-                "dem_range_mean": float(dem_range_np.mean()),
-                "dem_range_max": float(dem_range_np.max()),
-            }
-
         prediction_depth_m = np.clip(sr_pad[:crop_h, :crop_w], 0.0, max_depth).astype(np.float32, copy=False)
         assert prediction_depth_m.ndim == 2, f"prediction must be 2D; got {prediction_depth_m.shape}"
-        return prediction_depth_m, len(tile_cache), tile_dem_stats_summary
+        return prediction_depth_m, len(tile_cache), self._summarize_tile_dem_stats(tile_dem_stats_l)
+
+    def _run_tiled_model_on_prepared_windowed_hard(
+        self,
+        depth_lr_fp: str | Path,
+        dem_hr_fp: str | Path,
+        prediction_model_fp: str | Path,
+        preprocess_cfg: dict[str, object],
+        model_lr_tile: int,
+        model_scale: int,
+        contract_hr_tile: int,
+        show_progress: bool = True,
+    ) -> tuple[int, dict[str, float] | None]:
+        """Run hard-window inference with raster-backed reads and writes."""
+        log = self.log
+        depth_path = Path(depth_lr_fp).expanduser().resolve()
+        dem_path = Path(dem_hr_fp).expanduser().resolve()
+        pred_path = Path(prediction_model_fp).expanduser().resolve()
+        max_depth = float(preprocess_cfg["max_depth"])
+        dem_pct_clip = float(preprocess_cfg["dem_pct_clip"])
+        tile_dem_stats_l: list[dict[str, float]] = []
+
+        with rasterio.open(depth_path) as depth_ds, rasterio.open(dem_path) as dem_ds:
+            crop_h, crop_w = int(dem_ds.height), int(dem_ds.width)
+            expected_lr_shape = (crop_h // model_scale, crop_w // model_scale)
+            assert (int(depth_ds.height), int(depth_ds.width)) == expected_lr_shape, (
+                f"depth shape {(int(depth_ds.height), int(depth_ds.width))} does not match crop/scale target {expected_lr_shape}"
+            )
+            log.info(
+                "prepared inputs summary:\n"
+                f"  aligned depth_lr shape={expected_lr_shape} res={_pixel_size_m(depth_ds.profile)} m/pix\n"
+                f"  aligned dem_hr shape={(crop_h, crop_w)} res={_pixel_size_m(dem_ds.profile)} m/pix\n"
+                f"  max_depth={max_depth}\n"
+                f"  dem_pct_clip={dem_pct_clip}"
+            )
+
+            pad_h = (int(math.ceil(crop_h / contract_hr_tile)) * contract_hr_tile) - crop_h
+            pad_w = (int(math.ceil(crop_w / contract_hr_tile)) * contract_hr_tile) - crop_w
+            hr_pad_h = crop_h + pad_h
+            hr_pad_w = crop_w + pad_w
+            nonoverlap_y = list(range(0, hr_pad_h, contract_hr_tile))
+            nonoverlap_x = list(range(0, hr_pad_w, contract_hr_tile))
+            pred_profile = _build_single_band_profile(
+                pred_path,
+                dem_ds.profile,
+                crop_h,
+                crop_w,
+                dem_ds.transform,
+            )
+            log.info(
+                "window config\n"
+                f"  method=hard\n"
+                f"  overlap_lr=0\n"
+                f"  overlap_hr=0\n"
+                f"  tile_size_lr={model_lr_tile}\n"
+                f"  tile_size_hr={contract_hr_tile}"
+            )
+            log.info(
+                f"running hard tiling over {len(nonoverlap_y)}x{len(nonoverlap_x)} grid\n"
+                f"  overlap_lr=0\n"
+                f"  overlap_hr=0"
+            )
+            with rasterio.open(pred_path, "w", **pred_profile) as pred_ds:
+                for _, _, y0, x0 in iter_window_origins(
+                    nonoverlap_y,
+                    nonoverlap_x,
+                    show_progress=show_progress,
+                    desc="non-overlap pass",
+                ):
+                    lr_y0 = y0 // model_scale
+                    lr_x0 = x0 // model_scale
+                    depth_tile = replace_nodata_with_zero(
+                        depth_ds.read(
+                            1,
+                            window=Window(lr_x0, lr_y0, model_lr_tile, model_lr_tile),
+                            boundless=True,
+                            fill_value=0.0,
+                        ).astype(np.float32, copy=False),
+                        depth_ds.nodata,
+                    )
+                    dem_tile = replace_nodata_with_zero(
+                        dem_ds.read(
+                            1,
+                            window=Window(x0, y0, contract_hr_tile, contract_hr_tile),
+                            boundless=True,
+                            fill_value=0.0,
+                        ).astype(np.float32, copy=False),
+                        dem_ds.nodata,
+                    )
+                    assert depth_tile.shape == (model_lr_tile, model_lr_tile), (
+                        f"depth tile shape {depth_tile.shape} != {(model_lr_tile, model_lr_tile)}"
+                    )
+                    assert dem_tile.shape == (contract_hr_tile, contract_hr_tile), (
+                        f"DEM tile shape {dem_tile.shape} != {(contract_hr_tile, contract_hr_tile)}"
+                    )
+                    pred_depth_m = self._predict_tile_depth_m(
+                        depth_tile=depth_tile,
+                        dem_tile=dem_tile,
+                        max_depth=max_depth,
+                        dem_pct_clip=dem_pct_clip,
+                        tile_dem_stats_l=tile_dem_stats_l,
+                    )
+                    actual_h = max(min(contract_hr_tile, crop_h - y0), 0)
+                    actual_w = max(min(contract_hr_tile, crop_w - x0), 0)
+                    if actual_h == 0 or actual_w == 0:
+                        continue
+                    pred_ds.write(
+                        pred_depth_m[:actual_h, :actual_w].astype(np.float32, copy=False),
+                        1,
+                        window=Window(x0, y0, actual_w, actual_h),
+                    )
+        return len(tile_dem_stats_l), self._summarize_tile_dem_stats(tile_dem_stats_l)
 
     def run(
         self,
@@ -408,10 +622,9 @@ class ModelWorker(Model):
         window_method: str = "feather",
         tile_overlap: int | None = None,
         tile_size: int | None = None,
+        show_progress: bool = True,
     ) -> dict[str, Any]:
         """Run model-specific ToHR from platform-preprocessed input rasters."""
-
-
         start = time.perf_counter()
         log = self.log
         assert self.engine is not None, "worker must be used under context management"
@@ -424,6 +637,7 @@ class ModelWorker(Model):
         assert dem_hr_path.exists(), f"preprocessed DEM raster does not exist: {dem_hr_path}"
         window_method = (window_method or "feather").strip().lower()
         assert window_method in {"hard", "feather"}, f"unsupported window_method={window_method}"
+        assert isinstance(show_progress, bool), f"show_progress must be bool, got {type(show_progress)!r}"
 
         log.info(
             f"starting tohr inference with model_version={self.model_version}\n"
@@ -433,9 +647,12 @@ class ModelWorker(Model):
             f"output\n    {out_path}"
         )
 
-        # Load platform-preprocessed artifacts and assert boundary assumptions.
-        depth_lr_raw, _, depth_lr_profile = _read_single_band_raster(depth_lr_path)
-        dem_platform_raw, dem_platform_nodata, dem_platform_profile = _read_single_band_raster(dem_hr_path)
+        with rasterio.open(depth_lr_path) as depth_meta_ds, rasterio.open(dem_hr_path) as dem_meta_ds:
+            depth_lr_profile = depth_meta_ds.profile.copy()
+            dem_platform_profile = dem_meta_ds.profile.copy()
+            depth_lr_shape = (int(depth_meta_ds.height), int(depth_meta_ds.width))
+            dem_raw_shape = (int(dem_meta_ds.height), int(dem_meta_ds.width))
+            dem_platform_nodata = dem_meta_ds.nodata
         depth_crs = depth_lr_profile.get("crs")
         dem_crs = dem_platform_profile.get("crs")
         assert depth_crs is not None and dem_crs is not None, "platform-preprocessed rasters must define CRS"
@@ -447,8 +664,8 @@ class ModelWorker(Model):
         )
         log.info(
             "platform-preprocessed inputs\n"
-            f"  depth_lr shape={depth_lr_raw.shape} res={_pixel_size_m(depth_lr_profile)} m/pix\n"
-            f"  dem_hr shape={dem_platform_raw.shape} res={_pixel_size_m(dem_platform_profile)} m/pix"
+            f"  depth_lr shape={depth_lr_shape} res={_pixel_size_m(depth_lr_profile)} m/pix\n"
+            f"  dem_hr shape={dem_raw_shape} res={_pixel_size_m(dem_platform_profile)} m/pix"
         )
 
         # Resolve model-specific preprocessing settings and runtime contract.
@@ -500,45 +717,28 @@ class ModelWorker(Model):
         if overlap_lr < 0:
             raise AssertionError(f"tile_overlap must be >= 0; got {overlap_lr}")
 
-        # Model-specific preprocessing: resample platform DEM to model HR grid.
-        target_hr_h = int(depth_lr_raw.shape[0] * model_scale)
-        target_hr_w = int(depth_lr_raw.shape[1] * model_scale)
+        target_hr_h = int(depth_lr_shape[0] * model_scale)
+        target_hr_w = int(depth_lr_shape[1] * model_scale)
         assert target_hr_h > 0 and target_hr_w > 0, f"target HR shape invalid {(target_hr_h, target_hr_w)}"
         dem_model_transform = bounds_to_transform(*depth_bounds, width=target_hr_w, height=target_hr_h)
-        dem_model = np.empty((target_hr_h, target_hr_w), dtype=np.float32)
-        reproject(
-            source=dem_platform_raw,
-            destination=dem_model,
-            src_transform=dem_platform_profile["transform"],
-            src_crs=dem_platform_profile["crs"],
-            src_nodata=dem_platform_nodata,
-            dst_transform=dem_model_transform,
-            dst_crs=depth_lr_profile["crs"],
-            dst_nodata=dem_platform_nodata,
-            resampling=Resampling.bilinear,
-            num_threads=1,
-        )
-        dem_model = replace_nodata_with_zero(dem_model, dem_platform_nodata)
-        assert np.isfinite(dem_model).all(), "model-space DEM contains non-finite values"
-
         dem_model_profile = dem_platform_profile.copy()
         dem_model_profile.update(
             {
-                "height": int(dem_model.shape[0]),
-                "width": int(dem_model.shape[1]),
+                "height": int(target_hr_h),
+                "width": int(target_hr_w),
                 "transform": dem_model_transform,
             }
         )
         dem_raw_profile = dem_platform_profile.copy()
         dem_raw_profile.update(
             {
-                "height": int(dem_platform_raw.shape[0]),
-                "width": int(dem_platform_raw.shape[1]),
+                "height": int(dem_raw_shape[0]),
+                "width": int(dem_raw_shape[1]),
                 "transform": dem_platform_profile["transform"],
             }
         )
         was_resampled = bool(
-            dem_model.shape != dem_platform_raw.shape
+            (target_hr_h, target_hr_w) != dem_raw_shape
             or not all(
                 np.isclose(
                     (dem_model_transform.a, dem_model_transform.e),
@@ -552,14 +752,15 @@ class ModelWorker(Model):
             "depth_lr_profile": depth_lr_profile,
             "dem_profile": dem_model_profile,
             "dem_raw_profile": dem_raw_profile,
-            "depth_lr_shape": tuple(depth_lr_raw.shape),
-            "dem_hr_shape": tuple(dem_model.shape),
-            "dem_raw_shape": tuple(dem_platform_raw.shape),
+            "depth_lr_shape": tuple(depth_lr_shape),
+            "dem_hr_shape": (int(target_hr_h), int(target_hr_w)),
+            "dem_raw_shape": tuple(dem_raw_shape),
             "resampled": was_resampled,
             "crs_policy": crs_policy,
         }
         expected_bounds = _profile_bounds(prepped["depth_lr_profile"])
-        log.info(
+        log.info("model preprocessing complete")
+        log.debug(
             "model preprocessing complete\n"
             f"  scale={model_scale} (HR/LR ratio)\n"
             f"  crs_policy={prepped['crs_policy']}\n"
@@ -567,66 +768,171 @@ class ModelWorker(Model):
             f"  aligned dem shape={prepped['dem_hr_shape']} raw_dem_shape={prepped['dem_raw_shape']}\n"
             f"  max_depth={float(preprocess_cfg['max_depth'])} dem_pct_clip={float(preprocess_cfg['dem_pct_clip'])}"
         )
-
-        prediction_model_m, tile_cache_size, tile_dem_stats = self._run_tiled_model_on_prepared(
-            depth_lr_raw=depth_lr_raw,
-            dem_hr_raw=dem_model,
-            depth_lr_profile=depth_lr_profile,
-            dem_hr_profile=dem_model_profile,
-            preprocess_cfg=preprocess_cfg,
-            model_lr_tile=model_lr_tile,
-            model_scale=model_scale,
-            contract_hr_tile=contract_hr_tile,
-            window_method=window_method,
-            overlap_lr=overlap_lr,
+        execution_path = self._resolve_execution_path(window_method, prepped["dem_raw_shape"])
+        log.info(
+            "tohr execution path\n"
+            f"  window_method={window_method}\n"
+            f"  execution_path={execution_path}\n"
+            f"  model_space_shape={prepped['dem_hr_shape']}\n"
+            f"  raw_output_shape={prepped['dem_raw_shape']}"
         )
-        assert prediction_model_m.shape == tuple(prepped["dem_hr_shape"]), (
-            f"prediction shape {prediction_model_m.shape} must match preprocessed DEM shape {prepped['dem_hr_shape']}"
-        )
-
-        output_profile = prepped["dem_raw_profile"].copy()
-        output_profile.update(dtype="float32", count=1)
-        output_profile.pop("blockxsize", None)
-        output_profile.pop("blockysize", None)
-
-        # Post-process model output and map back to platform DEM grid when needed.
-        prediction_out_m = prediction_model_m.astype(np.float32, copy=False)
-        post_resampled = tuple(prepped["dem_raw_shape"]) != tuple(prediction_model_m.shape)
-        if post_resampled:
-            log.info(
-                f"post-resampling model output from {prediction_model_m.shape} "
-                f"to {tuple(prepped['dem_raw_shape'])} on raw DEM grid with bilinear interpolation."
-            )
-            prediction_resampled_m = np.empty(tuple(prepped["dem_raw_shape"]), dtype=np.float32)
+        tile_cache_size = 0
+        tile_dem_stats = None
+        post_resampled = tuple(prepped["dem_raw_shape"]) != tuple(prepped["dem_hr_shape"])
+        if execution_path == "simple":
+            depth_lr_raw, _, _ = _read_single_band_raster(depth_lr_path)
+            dem_platform_raw, _, _ = _read_single_band_raster(dem_hr_path)
+            dem_model = np.empty((target_hr_h, target_hr_w), dtype=np.float32)
             reproject(
-                source=prediction_model_m.astype(np.float32, copy=False),
-                destination=prediction_resampled_m,
-                src_transform=prepped["dem_profile"]["transform"],
-                src_crs=prepped["dem_profile"]["crs"],
-                dst_transform=prepped["dem_raw_profile"]["transform"],
-                dst_crs=prepped["dem_raw_profile"]["crs"],
+                source=dem_platform_raw,
+                destination=dem_model,
+                src_transform=dem_platform_profile["transform"],
+                src_crs=dem_platform_profile["crs"],
+                src_nodata=dem_platform_nodata,
+                dst_transform=dem_model_transform,
+                dst_crs=depth_lr_profile["crs"],
+                dst_nodata=dem_platform_nodata,
                 resampling=Resampling.bilinear,
                 num_threads=1,
             )
-            prediction_out_m = prediction_resampled_m
-
-        prediction_out_m = np.clip(prediction_out_m, 0.0, float(preprocess_cfg["max_depth"])).astype(
-            np.float32,
-            copy=False,
-        )
-        prediction_out_m = np.where(
-            prediction_out_m < float(self.low_depth_mask_m),
-            0.0,
-            prediction_out_m,
-        ).astype(np.float32, copy=False)
+            dem_model = replace_nodata_with_zero(dem_model, dem_platform_nodata)
+            assert np.isfinite(dem_model).all(), "model-space DEM contains non-finite values"
+            prediction_model_m, tile_cache_size, tile_dem_stats = self._run_tiled_model_on_prepared(
+                depth_lr_raw=depth_lr_raw,
+                dem_hr_raw=dem_model,
+                depth_lr_profile=depth_lr_profile,
+                dem_hr_profile=dem_model_profile,
+                preprocess_cfg=preprocess_cfg,
+                model_lr_tile=model_lr_tile,
+                model_scale=model_scale,
+                contract_hr_tile=contract_hr_tile,
+                window_method=window_method,
+                overlap_lr=overlap_lr,
+                show_progress=show_progress,
+            )
+            assert prediction_model_m.shape == tuple(prepped["dem_hr_shape"]), (
+                f"prediction shape {prediction_model_m.shape} must match preprocessed DEM shape {prepped['dem_hr_shape']}"
+            )
+            output_profile = prepped["dem_raw_profile"].copy()
+            output_profile.update(dtype="float32", count=1)
+            output_profile.pop("blockxsize", None)
+            output_profile.pop("blockysize", None)
+            prediction_out_m = prediction_model_m.astype(np.float32, copy=False)
+            if post_resampled:
+                log.info(
+                    f"post-resampling model output from {prediction_model_m.shape} "
+                    f"to {tuple(prepped['dem_raw_shape'])} on raw DEM grid with bilinear interpolation."
+                )
+                prediction_resampled_m = np.empty(tuple(prepped["dem_raw_shape"]), dtype=np.float32)
+                if show_progress:
+                    with tqdm(total=1, desc="post-resample pass", unit="step") as pbar:
+                        reproject(
+                            source=prediction_model_m.astype(np.float32, copy=False),
+                            destination=prediction_resampled_m,
+                            src_transform=prepped["dem_profile"]["transform"],
+                            src_crs=prepped["dem_profile"]["crs"],
+                            dst_transform=prepped["dem_raw_profile"]["transform"],
+                            dst_crs=prepped["dem_raw_profile"]["crs"],
+                            resampling=Resampling.bilinear,
+                            num_threads=1,
+                        )
+                        pbar.update(1)
+                else:
+                    reproject(
+                        source=prediction_model_m.astype(np.float32, copy=False),
+                        destination=prediction_resampled_m,
+                        src_transform=prepped["dem_profile"]["transform"],
+                        src_crs=prepped["dem_profile"]["crs"],
+                        dst_transform=prepped["dem_raw_profile"]["transform"],
+                        dst_crs=prepped["dem_raw_profile"]["crs"],
+                        resampling=Resampling.bilinear,
+                        num_threads=1,
+                    )
+                prediction_out_m = prediction_resampled_m
+            out_written_fp = self._write_prediction_array(
+                output_fp=out_path,
+                prediction_out_m=prediction_out_m,
+                output_profile=output_profile,
+                max_depth=float(preprocess_cfg["max_depth"]),
+                show_progress=show_progress,
+            )
+        else:
+            assert window_method == "hard", "windowed path only supports hard windows"
+            with tempfile.TemporaryDirectory(prefix="floodsr-windowed-model-") as tmp_dir:
+                output_tile_dir = out_path.parent / f"{out_path.stem}__tohr_tiles"
+                if output_tile_dir.exists():
+                    shutil.rmtree(output_tile_dir)
+                output_tile_dir.mkdir(parents=True, exist_ok=True)
+                output_tile_fp = output_tile_dir / "tile_r0000000_c0000000.tif"
+                dem_model_fp = Path(tmp_dir) / f"{dem_hr_path.stem}_model_dem.tif"
+                prediction_model_fp = Path(tmp_dir) / f"{out_path.stem}_model_pred.tif"
+                dem_model_profile = _build_single_band_profile(
+                    dem_model_fp,
+                    dem_platform_profile,
+                    target_hr_h,
+                    target_hr_w,
+                    dem_model_transform,
+                )
+                with rasterio.open(dem_hr_path) as src_ds, rasterio.open(dem_model_fp, "w", **dem_model_profile) as dst_ds:
+                    reproject(
+                        source=rasterio.band(src_ds, 1),
+                        destination=rasterio.band(dst_ds, 1),
+                        src_transform=src_ds.transform,
+                        src_crs=src_ds.crs,
+                        src_nodata=dem_platform_nodata,
+                        dst_transform=dem_model_transform,
+                        dst_crs=depth_lr_profile["crs"],
+                        dst_nodata=dem_platform_nodata,
+                        resampling=Resampling.bilinear,
+                        num_threads=1,
+                    )
+                _zero_nodata_in_place(dem_model_fp, dem_platform_nodata)
+                tile_cache_size, tile_dem_stats = self._run_tiled_model_on_prepared_windowed_hard(
+                    depth_lr_fp=depth_lr_path,
+                    dem_hr_fp=dem_model_fp,
+                    prediction_model_fp=prediction_model_fp,
+                    preprocess_cfg=preprocess_cfg,
+                    model_lr_tile=model_lr_tile,
+                    model_scale=model_scale,
+                    contract_hr_tile=contract_hr_tile,
+                    show_progress=show_progress,
+                )
+                output_profile = _build_single_band_profile(
+                    output_tile_fp,
+                    prepped["dem_raw_profile"],
+                    prepped["dem_raw_shape"][0],
+                    prepped["dem_raw_shape"][1],
+                    prepped["dem_raw_profile"]["transform"],
+                )
+                if post_resampled:
+                    log.info(
+                        f"post-resampling model output from {tuple(prepped['dem_hr_shape'])} "
+                        f"to {tuple(prepped['dem_raw_shape'])} on raw DEM grid with bilinear interpolation."
+                    )
+                with rasterio.open(prediction_model_fp) as src_ds, rasterio.open(output_tile_fp, "w", **output_profile) as dst_ds:
+                    reproject(
+                        source=rasterio.band(src_ds, 1),
+                        destination=rasterio.band(dst_ds, 1),
+                        src_transform=src_ds.transform,
+                        src_crs=src_ds.crs,
+                        dst_transform=output_profile["transform"],
+                        dst_crs=output_profile["crs"],
+                        resampling=Resampling.bilinear,
+                        num_threads=1,
+                    )
+                self._postprocess_output_in_place(output_tile_fp, float(preprocess_cfg["max_depth"]))
+                out_written_fp = (
+                    self._build_windowed_output_vrt(out_path, [output_tile_fp], output_profile.get("nodata"))
+                    if self._gdal_is_available()
+                    else output_tile_fp
+                )
 
         prepared_dem_bounds = _profile_bounds(prepped["dem_raw_profile"])
         assert all(np.isclose(a, b, atol=1e-6, rtol=0.0) for a, b in zip(prepared_dem_bounds, expected_bounds)), (
             f"output profile bounds {prepared_dem_bounds} do not match expected low-res bounds {expected_bounds}"
         )
-
-        out_written_fp = _write_single_band_raster(out_path, prediction_out_m, output_profile)
-        _, _, written_profile = _read_single_band_raster(out_written_fp)
+        with rasterio.open(out_written_fp) as written_ds:
+            written_profile = written_ds.profile.copy()
         written_shape = (int(written_profile["height"]), int(written_profile["width"]))
         assert written_shape == tuple(prepped["dem_raw_shape"]), (
             f"written output shape {written_shape} must match raw DEM shape {prepped['dem_raw_shape']}"
@@ -647,6 +953,7 @@ class ModelWorker(Model):
             "model_version": self.model_version,
             "model_fp": str(self.model_fp),
             "output_size_bytes": out_file_size,
+            "execution_path": execution_path,
             "preprocess": {
                 "max_depth": float(preprocess_cfg["max_depth"]),
                 "dem_pct_clip": float(preprocess_cfg["dem_pct_clip"]),
@@ -660,10 +967,10 @@ class ModelWorker(Model):
                 "tile_cache_size": tile_cache_size,
                 "tile_dem_stats": tile_dem_stats,
                 "input_shape": {
-                    "crop_height": int(prediction_out_m.shape[0]),
-                    "crop_width": int(prediction_out_m.shape[1]),
-                    "model_space_crop_height": int(prediction_model_m.shape[0]),
-                    "model_space_crop_width": int(prediction_model_m.shape[1]),
+                    "crop_height": int(prepped["dem_raw_shape"][0]),
+                    "crop_width": int(prepped["dem_raw_shape"][1]),
+                    "model_space_crop_height": int(prepped["dem_hr_shape"][0]),
+                    "model_space_crop_width": int(prepped["dem_hr_shape"][1]),
                     "aligned_depth_shape": [int(x) for x in prepped["depth_lr_shape"]],
                     "aligned_dem_shape": [int(x) for x in prepped["dem_hr_shape"]],
                     "output_shape": [int(x) for x in prepped["dem_raw_shape"]],
@@ -674,6 +981,7 @@ class ModelWorker(Model):
                     "prepped_depth_was_resampled": bool(prepped["resampled"]),
                     "prepped_dem_was_resampled": bool(prepped["resampled"]),
                     "post_sr_was_resampled": bool(post_resampled),
+                    "execution_path": execution_path,
                 },
             },
         }

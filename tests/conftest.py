@@ -240,6 +240,46 @@ def synthetic_tohr_tiles(tmp_path_factory):
     }
 
 
+@pytest.fixture(scope="session")
+def synthetic_tohr_windowed_tiles(tmp_path_factory):
+    """Create a large-output synthetic case that should trigger windowed hard IO."""
+    pytest.importorskip("rasterio")
+    from rasterio.transform import from_origin
+
+    root = tmp_path_factory.mktemp("tohr_windowed_tiles")
+    lr_shape = (32, 32)
+    hr_shape = (4096, 4096)
+    crs = "EPSG:32633"
+    hr_resolution = 2.0
+    lr_resolution = (hr_shape[0] * hr_resolution) / lr_shape[0]
+    x0, y0 = 500000.0, 4100000.0
+
+    depth_lr = np.full(lr_shape, 1.0, dtype=np.float32)
+    dem = np.tile(np.linspace(500.0, 1000.0, hr_shape[1], dtype=np.float32), (hr_shape[0], 1))
+
+    depth_lr_fp = root / "depth_lr_windowed.tif"
+    dem_fp = root / "dem_windowed.tif"
+    _write_single_band_geotiff(
+        depth_lr_fp,
+        depth_lr,
+        from_origin(x0, y0 + lr_shape[0] * lr_resolution, lr_resolution, lr_resolution),
+        crs,
+    )
+    _write_single_band_geotiff(
+        dem_fp,
+        dem,
+        from_origin(x0, y0 + hr_shape[0] * hr_resolution, hr_resolution, hr_resolution),
+        crs,
+    )
+
+    return {
+        "depth_lr_fp": depth_lr_fp,
+        "dem_fp": dem_fp,
+        "hr_shape": hr_shape,
+        "output_fp": root / "pred_sr_windowed.tif",
+    }
+
+
 @pytest.fixture(scope="function")
 def tohr_model_fp(tmp_path, default_model_version):
     """Resolve local model path used by engine and CLI ToHR tests."""
