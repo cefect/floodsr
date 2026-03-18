@@ -15,9 +15,16 @@ DEFAULT_MANIFEST_FP = Path(__file__).with_name("models.json")
 log = logging.getLogger(__name__)
 
 
-def _stream_response_to_destination(response, destination: Path, logger=None, chunk_size: int = 1024 * 1024) -> Path:
-    """Stream an HTTP response to disk with a simple progress bar when possible."""
+def _stream_response_to_destination(
+    response,
+    destination: Path,
+    logger=None,
+    chunk_size: int = 1024 * 1024,
+    no_progress: bool = False,
+) -> Path:
+    """Stream an HTTP response to disk with optional progress reporting."""
     log = logger or logging.getLogger(__name__)
+    assert isinstance(no_progress, bool), f"no_progress must be bool, got {type(no_progress)!r}"
 
     # Parse response size so progress can report percent complete.
     total_bytes = response.headers.get("Content-Length")
@@ -27,7 +34,7 @@ def _stream_response_to_destination(response, destination: Path, logger=None, ch
         total_size = None
 
     # Only draw a progress bar for TTY stderr with known total size.
-    show_progress = bool(total_size) and sys.stderr.isatty()
+    show_progress = (not no_progress) and bool(total_size) and sys.stderr.isatty()
     downloaded = 0
     with destination.open("wb") as stream:
         chunk = response.read(chunk_size)
@@ -104,7 +111,7 @@ class WeightsRetrievalBackend:
 
     name = "base"
 
-    def retrieve(self, source: str, destination: Path) -> Path:
+    def retrieve(self, source: str, destination: Path, no_progress: bool = False) -> Path:
         """Fetch model bytes from source into destination."""
         raise NotImplementedError
 
@@ -114,7 +121,7 @@ class HttpRetrievalBackend(WeightsRetrievalBackend):
 
     name = "http"
 
-    def retrieve(self, source: str, destination: Path) -> Path:
+    def retrieve(self, source: str, destination: Path, no_progress: bool = False) -> Path:
         """Download bytes from an HTTP(S) URL to destination."""
         assert source, "source cannot be empty"
         assert isinstance(destination, Path), "destination must be a pathlib.Path"
@@ -139,7 +146,7 @@ class HttpRetrievalBackend(WeightsRetrievalBackend):
         # First attempt: no credentials (works for public assets and avoids needless token use).
         try:
             with urlopen(Request(source)) as response:  # nosec B310
-                _stream_response_to_destination(response, destination, logger=log)
+                _stream_response_to_destination(response, destination, logger=log, no_progress=no_progress)
             return destination
         except HTTPError as err:
             unauthenticated_http_error = err
@@ -163,7 +170,7 @@ class HttpRetrievalBackend(WeightsRetrievalBackend):
         request = Request(source, headers=request_headers)
         try:
             with urlopen(request) as response:  # nosec B310
-                _stream_response_to_destination(response, destination, logger=log)
+                _stream_response_to_destination(response, destination, logger=log, no_progress=no_progress)
             return destination
         except HTTPError as err:
             # Private GitHub release assets can still 404 on the web URL, so resolve via API.
@@ -199,7 +206,7 @@ class HttpRetrievalBackend(WeightsRetrievalBackend):
                     },
                 )
                 with urlopen(asset_request) as asset_response:  # nosec B310
-                    _stream_response_to_destination(asset_response, destination, logger=log)
+                    _stream_response_to_destination(asset_response, destination, logger=log, no_progress=no_progress)
                 return destination
 
             message = f"failed to download model from '{source}' (HTTP {err.code})"
@@ -218,7 +225,7 @@ class FileRetrievalBackend(WeightsRetrievalBackend):
 
     name = "file"
 
-    def retrieve(self, source: str, destination: Path) -> Path:
+    def retrieve(self, source: str, destination: Path, no_progress: bool = False) -> Path:
         """Copy model bytes from a local path into destination."""
         parsed = urlparse(source)
         if parsed.scheme.lower() in {"", "file"}:
@@ -312,8 +319,10 @@ def fetch_model(
     manifest_fp: str | Path | None = None,
     backend_name: str | None = None,
     force: bool = False,
+    no_progress: bool = False,
 ) -> Path:
     """Fetch one model to cache and verify its checksum."""
+    assert isinstance(no_progress, bool), f"no_progress must be bool, got {type(no_progress)!r}"
     model = resolve_model(model_version, manifest_fp=manifest_fp)
     model_fp = get_model_cache_path(model.version, model.file_name, cache_dir=cache_dir)
     part_fp = model_fp.with_suffix(f"{model_fp.suffix}.part")
@@ -327,7 +336,7 @@ def fetch_model(
         part_fp.unlink()
     backend = get_retrieval_backend(model.url, backend_name=backend_name)
     try:
-        backend.retrieve(model.url, part_fp)
+        backend.retrieve(model.url, part_fp, no_progress=no_progress)
         assert_sha256(part_fp, model.sha256)
         part_fp.replace(model_fp)
     finally:
