@@ -1,0 +1,36 @@
+{
+  "inputs": {
+    "lowres_fp": "inunriver_historical_000000000WATCH_1980_rp01000.tif",
+    "dem_fp": false,
+    "truth_fp": false
+  },
+  "expected": {
+    "ResUNet_16x_DEM_default": {
+      "params": {
+        "model_version": "ResUNet_16x_DEM"
+      },
+      "metrics": {
+        "precision": 3,
+        "mase_m": 0.0,
+        "rmse_m": 0.0,
+        "ssim": 1.0
+      }
+    }
+  },
+  "flags": {
+    "in_hrdem": true,
+    "non_native_scale": true,
+    "allow_zero_border": true,
+    "supports_regression_metrics": false
+  },
+  "fetch_test": {
+    "lowres_window": {
+      "row_off": 40,
+      "col_off": 80,
+      "height": 1,
+      "width": 2
+    },
+    "fetch_window_size": 1300,
+    "expected_max_tiles": 2
+  }
+}

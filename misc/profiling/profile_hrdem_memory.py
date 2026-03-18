@@ -201,7 +201,7 @@ def _run_fetch_case(
             force_tiling=bool(case_cfg["force_tiling"]),
             fetch_window_size=int(case_cfg["fetch_window_size"]),
             memory_limit_gib=float(case_cfg["memory_limit_gib"]),
-            tqdm_disable=False,
+            show_progress=True,
             logger=log,
         )
         return {
