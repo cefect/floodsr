@@ -295,16 +295,55 @@ def _write_single_band_raster(fp: str | Path, arr: np.ndarray, profile: dict, dr
     return path
 
 
-def _align_depth_and_dem_inputs(
+def estimate_raster_float32_nbytes(fp: str | Path) -> int:
+    """Estimate one-band float32 raster bytes from dataset shape only."""
+    path = Path(fp).expanduser().resolve()
+    assert path.exists(), f"raster does not exist: {path}"
+    with rasterio.open(path) as ds:
+        return int(ds.height) * int(ds.width) * 4
+
+
+def _build_single_band_profile(fp: str | Path, profile: dict, height: int, width: int, transform) -> dict:
+    """Build one single-band float32 output profile."""
+    from rasterio.drivers import driver_from_extension
+
+    path = Path(fp).expanduser().resolve()
+    out_profile = profile.copy()
+    out_profile.update(
+        {
+            "driver": driver_from_extension(path),
+            "height": int(height),
+            "width": int(width),
+            "count": 1,
+            "dtype": "float32",
+            "transform": transform,
+        }
+    )
+    if not bool(out_profile.get("tiled", False)):
+        out_profile.pop("blockxsize", None)
+        out_profile.pop("blockysize", None)
+    return out_profile
+
+
+def _zero_nodata_in_place(fp: str | Path, nodata: float | None) -> None:
+    """Replace nodata values with zero in an on-disk raster."""
+    if nodata is None:
+        return
+    path = Path(fp).expanduser().resolve()
+    with rasterio.open(path, "r+") as ds:
+        for _, window in ds.block_windows(1):
+            arr = ds.read(1, window=window).astype(np.float32, copy=False)
+            ds.write(replace_nodata_with_zero(arr, nodata), 1, window=window)
+
+
+def _resolve_alignment_context(
     depth_lr_fp: str | Path,
     dem_hr_fp: str | Path,
     scale: int,
     crs_policy: str = "strict",
     logger=None,
 ) -> dict[str, Any]:
-    """Align raster inputs for model scale by preserving LR depth and resampling DEM."""
-
-
+    """Resolve shared CRS, bounds, and grid metadata for aligned preprocessing."""
     log = logger or logging.getLogger(__name__)
     assert scale > 0, f"scale must be > 0; got {scale}"
     crs_policy = normalize_crs_policy(crs_policy)
@@ -313,7 +352,6 @@ def _align_depth_and_dem_inputs(
     assert depth_path.exists(), f"low-res depth raster does not exist: {depth_path}"
     assert dem_path.exists(), f"hires DEM raster does not exist: {dem_path}"
 
-    # Open both rasters once to validate metadata and derive shared alignment targets.
     with rasterio.open(depth_path) as depth_ds, rasterio.open(dem_path) as dem_ds:
         assert depth_ds.count == 1, f"depth raster must have 1 band; got {depth_ds.count}"
         assert dem_ds.count == 1, f"DEM raster must have 1 band; got {dem_ds.count}"
@@ -324,9 +362,8 @@ def _align_depth_and_dem_inputs(
             assert dem_crs is not None, "both rasters must include CRS when depth CRS is missing"
             depth_crs = dem_crs
             log.warning(f"assigning missing depth CRS from DEM CRS\n    depth={depth_path}\n    dem={dem_path}")
-
-        # Resolve policy-selected target CRS used by downstream bounds/transforms.
         assert dem_crs is not None, "both rasters must define CRS"
+
         if crs_policy == "strict":
             assert depth_crs == dem_crs, f"CRS mismatch under --crs-policy strict\n    depth={depth_crs}\n    dem={dem_crs}"
             target_crs = depth_crs
@@ -337,7 +374,9 @@ def _align_depth_and_dem_inputs(
         assert target_crs.is_projected, f"CRS must be projected; got {target_crs}"
 
         if depth_crs != dem_crs and crs_policy != "strict":
-            log.warning(f"CRS mismatch; applying --crs-policy={crs_policy}\n    depth={depth_crs}\n    dem={dem_crs}\n    target={target_crs}")
+            log.warning(
+                f"CRS mismatch; applying --crs-policy={crs_policy}\n    depth={depth_crs}\n    dem={dem_crs}\n    target={target_crs}"
+            )
 
         depth_res = (abs(float(depth_ds.res[0])), abs(float(depth_ds.res[1])))
         dem_res = (abs(float(dem_ds.res[0])), abs(float(dem_ds.res[1])))
@@ -346,7 +385,6 @@ def _align_depth_and_dem_inputs(
         if not np.isclose(dem_res[0], dem_res[1]):
             log.warning(f"DEM pixels are not square: res={dem_res}. continuing with resampling.")
 
-        # Map depth bounds into target CRS so all further geometry is comparable.
         depth_bounds_native = depth_ds.bounds
         if depth_crs == target_crs:
             depth_bounds_target = tuple(float(v) for v in depth_bounds_native)
@@ -355,140 +393,185 @@ def _align_depth_and_dem_inputs(
                 float(v) for v in transform_bounds(depth_crs, target_crs, *depth_bounds_native, densify_pts=21)
             )
         dem_bounds = dem_ds.bounds
-        if crs_policy == "strict" and not all(np.isclose(depth_bounds_target, dem_bounds, atol=1e-6, rtol=0.0)):
+        if crs_policy == "strict" and not all(np.isclose(a, b, atol=1e-6, rtol=0.0) for a, b in zip(depth_bounds_target, dem_bounds)):
             log.warning(f"input bounds differ; clipping DEM to depth raster bounds.\n    depth={depth_bounds_target}\n    dem={dem_bounds}")
 
-        # Keep depth on native shape; only reproject when target CRS differs.
-        depth_nodata = depth_ds.nodata
-        depth_lr_native = replace_nodata_with_zero(
-            depth_ds.read(1).astype(np.float32, copy=False),
-            depth_nodata,
+        depth_shape = (int(depth_ds.height), int(depth_ds.width))
+        depth_transform = (
+            depth_ds.transform
+            if depth_crs == target_crs
+            else bounds_to_transform(*depth_bounds_target, width=depth_shape[1], height=depth_shape[0])
         )
         depth_profile = depth_ds.profile.copy()
         depth_profile["crs"] = target_crs
-        if depth_crs == target_crs:
-            depth_lr = depth_lr_native
-            depth_transform = depth_ds.transform
+
+        dem_bounds_src = (
+            depth_bounds_target
+            if dem_crs == target_crs
+            else tuple(float(v) for v in transform_bounds(target_crs, dem_crs, *depth_bounds_target, densify_pts=21))
+        )
+        dem_window = from_bounds(*dem_bounds_src, dem_ds.transform).round_offsets().round_lengths()
+        dem_window_transform = dem_ds.window_transform(dem_window)
+        dem_crop_bounds = tuple(
+            float(v)
+            for v in array_bounds(int(dem_window.height), int(dem_window.width), dem_window_transform)
+        )
+
+        target_hr_shape = (int(depth_shape[0] * scale), int(depth_shape[1] * scale))
+        dem_model_transform = bounds_to_transform(
+            *depth_bounds_target,
+            width=int(target_hr_shape[1]),
+            height=int(target_hr_shape[0]),
+        )
+        if dem_crs == target_crs:
+            dem_raw_shape = (int(dem_window.height), int(dem_window.width))
+            dem_raw_transform = dem_window_transform
         else:
-            depth_transform = bounds_to_transform(
-                *depth_bounds_target,
-                width=int(depth_lr_native.shape[1]),
-                height=int(depth_lr_native.shape[0]),
+            _, dem_raw_w, dem_raw_h = calculate_default_transform(
+                dem_crs,
+                target_crs,
+                int(dem_window.width),
+                int(dem_window.height),
+                *dem_crop_bounds,
             )
-            depth_lr = np.empty_like(depth_lr_native, dtype=np.float32)
+            dem_raw_shape = (max(int(dem_raw_h), 1), max(int(dem_raw_w), 1))
+            dem_raw_transform = bounds_to_transform(
+                *depth_bounds_target,
+                width=int(dem_raw_shape[1]),
+                height=int(dem_raw_shape[0]),
+            )
+
+        return {
+            "depth_path": depth_path,
+            "dem_path": dem_path,
+            "depth_crs": depth_crs,
+            "dem_crs": dem_crs,
+            "target_crs": target_crs,
+            "depth_nodata": depth_ds.nodata,
+            "dem_nodata": dem_ds.nodata,
+            "depth_shape": depth_shape,
+            "depth_transform": depth_transform,
+            "depth_profile": depth_profile,
+            "depth_bounds_target": depth_bounds_target,
+            "dem_profile": dem_ds.profile.copy() | {"crs": target_crs},
+            "dem_window": dem_window,
+            "dem_window_transform": dem_window_transform,
+            "dem_crop_bounds": dem_crop_bounds,
+            "dem_model_transform": dem_model_transform,
+            "target_hr_shape": target_hr_shape,
+            "dem_raw_shape": dem_raw_shape,
+            "dem_raw_transform": dem_raw_transform,
+            "resampled": bool(
+                dem_raw_shape != target_hr_shape
+                or not all(
+                    np.isclose(
+                        (dem_model_transform.a, dem_model_transform.e),
+                        (dem_raw_transform.a, dem_raw_transform.e),
+                    )
+                )
+            ),
+            "crs_policy": crs_policy,
+        }
+
+
+def _align_depth_and_dem_inputs(
+    depth_lr_fp: str | Path,
+    dem_hr_fp: str | Path,
+    scale: int,
+    crs_policy: str = "strict",
+    logger=None,
+) -> dict[str, Any]:
+    """Align raster inputs for model scale by preserving LR depth and resampling DEM."""
+    ctx = _resolve_alignment_context(
+        depth_lr_fp,
+        dem_hr_fp,
+        scale=scale,
+        crs_policy=crs_policy,
+        logger=logger,
+    )
+    with rasterio.open(ctx["depth_path"]) as depth_ds, rasterio.open(ctx["dem_path"]) as dem_ds:
+        depth_lr_native = replace_nodata_with_zero(
+            depth_ds.read(1).astype(np.float32, copy=False),
+            ctx["depth_nodata"],
+        )
+        if ctx["depth_crs"] == ctx["target_crs"]:
+            depth_lr = depth_lr_native
+        else:
+            depth_lr = np.empty(ctx["depth_shape"], dtype=np.float32)
             reproject(
                 source=depth_lr_native,
                 destination=depth_lr,
                 src_transform=depth_ds.transform,
-                src_crs=depth_crs,
-                src_nodata=depth_nodata,
-                dst_transform=depth_transform,
-                dst_crs=target_crs,
-                dst_nodata=depth_nodata,
+                src_crs=ctx["depth_crs"],
+                src_nodata=ctx["depth_nodata"],
+                dst_transform=ctx["depth_transform"],
+                dst_crs=ctx["target_crs"],
+                dst_nodata=ctx["depth_nodata"],
                 resampling=Resampling.bilinear,
                 num_threads=1,
             )
-            depth_lr = replace_nodata_with_zero(depth_lr, depth_nodata)
+            depth_lr = replace_nodata_with_zero(depth_lr, ctx["depth_nodata"])
 
-        # Convert target bounds back to DEM CRS and clip DEM to the shared footprint.
-        if dem_crs == target_crs:
-            dem_bounds_src = depth_bounds_target
-        else:
-            dem_bounds_src = tuple(
-                float(v) for v in transform_bounds(target_crs, dem_crs, *depth_bounds_target, densify_pts=21)
-            )
-        dem_window = from_bounds(*dem_bounds_src, dem_ds.transform).round_offsets().round_lengths()
-        dem_nodata = dem_ds.nodata
         dem_crop = replace_nodata_with_zero(
-            dem_ds.read(1, window=dem_window).astype(np.float32, copy=False),
-            dem_nodata,
+            dem_ds.read(1, window=ctx["dem_window"]).astype(np.float32, copy=False),
+            ctx["dem_nodata"],
         )
-        assert dem_crop.size > 0, f"clipped DEM is empty for bounds {depth_bounds_target}"
-        dem_crop_transform = dem_ds.window_transform(dem_window)
-        dem_profile = dem_ds.profile.copy()
-        dem_profile["crs"] = target_crs
-        dem_crop_bounds = tuple(float(v) for v in array_bounds(dem_crop.shape[0], dem_crop.shape[1], dem_crop_transform))
+        assert dem_crop.size > 0, f"clipped DEM is empty for bounds {ctx['depth_bounds_target']}"
+        dem_model = np.empty(ctx["target_hr_shape"], dtype=np.float32)
+        reproject(
+            source=dem_crop,
+            destination=dem_model,
+            src_transform=ctx["dem_window_transform"],
+            src_crs=ctx["dem_crs"],
+            src_nodata=ctx["dem_nodata"],
+            dst_transform=ctx["dem_model_transform"],
+            dst_crs=ctx["target_crs"],
+            dst_nodata=ctx["dem_nodata"],
+            resampling=Resampling.bilinear,
+            num_threads=1,
+        )
+        dem_model = replace_nodata_with_zero(dem_model, ctx["dem_nodata"])
+        if ctx["dem_crs"] == ctx["target_crs"]:
+            dem_raw = dem_crop
+        else:
+            dem_raw = np.empty(ctx["dem_raw_shape"], dtype=np.float32)
+            reproject(
+                source=dem_crop,
+                destination=dem_raw,
+                src_transform=ctx["dem_window_transform"],
+                src_crs=ctx["dem_crs"],
+                src_nodata=ctx["dem_nodata"],
+                dst_transform=ctx["dem_raw_transform"],
+                dst_crs=ctx["target_crs"],
+                dst_nodata=ctx["dem_nodata"],
+                resampling=Resampling.bilinear,
+                num_threads=1,
+            )
+            dem_raw = replace_nodata_with_zero(dem_raw, ctx["dem_nodata"])
 
-    if not np.isfinite(dem_crop).all():
-        raise AssertionError("DEM contains non-finite values after clipping")
+    if not np.isfinite(dem_model).all():
+        raise AssertionError("resampled DEM contains non-finite values")
+    if not np.isfinite(dem_raw).all():
+        raise AssertionError("raw-grid DEM contains non-finite values")
     if not np.isfinite(depth_lr).all():
         raise AssertionError("low-res depth contains non-finite values")
     if depth_lr.min() < 0.0:
         raise AssertionError(f"low-res depth has negative values: min={float(depth_lr.min())}")
-
-    # Build model-grid DEM at requested scale while preserving target CRS bounds.
-    target_hr_h = int(depth_lr.shape[0] * scale)
-    target_hr_w = int(depth_lr.shape[1] * scale)
-    assert target_hr_h > 0 and target_hr_w > 0, f"target HR shape invalid {(target_hr_h, target_hr_w)}"
-    dem_model_transform = bounds_to_transform(*depth_bounds_target, width=target_hr_w, height=target_hr_h)
-    dem_model = np.empty((target_hr_h, target_hr_w), dtype=np.float32)
-    reproject(
-        source=dem_crop,
-        destination=dem_model,
-        src_transform=dem_crop_transform,
-        src_crs=dem_crs,
-        src_nodata=dem_nodata,
-        dst_transform=dem_model_transform,
-        dst_crs=target_crs,
-        dst_nodata=dem_nodata,
-        resampling=Resampling.bilinear,
-        num_threads=1,
-    )
-    dem_model = replace_nodata_with_zero(dem_model, dem_nodata)
-    if not np.isfinite(dem_model).all():
-        raise AssertionError("resampled DEM contains non-finite values")
-    # Keep a raw-output DEM grid in target CRS for final output materialization.
-    if dem_crs == target_crs:
-        dem_raw = dem_crop
-        dem_raw_shape = tuple(int(v) for v in dem_crop.shape)
-        dem_raw_transform = dem_crop_transform
-    else:
-        _, dem_raw_w, dem_raw_h = calculate_default_transform(
-            dem_crs,
-            target_crs,
-            int(dem_crop.shape[1]),
-            int(dem_crop.shape[0]),
-            *dem_crop_bounds,
-        )
-        dem_raw_w = max(int(dem_raw_w), 1)
-        dem_raw_h = max(int(dem_raw_h), 1)
-        dem_raw_shape = (dem_raw_h, dem_raw_w)
-        dem_raw_transform = bounds_to_transform(*depth_bounds_target, width=dem_raw_w, height=dem_raw_h)
-        dem_raw = np.empty(dem_raw_shape, dtype=np.float32)
-        reproject(
-            source=dem_crop,
-            destination=dem_raw,
-            src_transform=dem_crop_transform,
-            src_crs=dem_crs,
-            src_nodata=dem_nodata,
-            dst_transform=dem_raw_transform,
-            dst_crs=target_crs,
-            dst_nodata=dem_nodata,
-            resampling=Resampling.bilinear,
-            num_threads=1,
-        )
-        dem_raw = replace_nodata_with_zero(dem_raw, dem_nodata)
-        
-    was_resampled = bool(
-        dem_model.shape != dem_raw_shape
-        or not all(np.isclose((dem_model_transform.a, dem_model_transform.e), (dem_raw_transform.a, dem_raw_transform.e)))
-    )
-    # Return aligned arrays and metadata used by both platform and model-specific stages.
     return {
         "depth_lr": depth_lr,
-        "depth_lr_nodata": depth_nodata,
-        "depth_lr_transform": depth_transform,
-        "depth_lr_profile": depth_profile,
+        "depth_lr_nodata": ctx["depth_nodata"],
+        "depth_lr_transform": ctx["depth_transform"],
+        "depth_lr_profile": ctx["depth_profile"],
         "dem_hr": dem_model,
-        "dem_hr_nodata": dem_nodata,
-        "dem_hr_transform": dem_model_transform,
+        "dem_hr_nodata": ctx["dem_nodata"],
+        "dem_hr_transform": ctx["dem_model_transform"],
         "dem_raw": dem_raw,
-        "dem_raw_shape": dem_raw_shape,
-        "dem_raw_transform": dem_raw_transform,
-        "dem_profile": dem_profile,
-        "crop_shape": (target_hr_h, target_hr_w),
-        "resampled": was_resampled,
-        "crs_policy": crs_policy,
+        "dem_raw_shape": ctx["dem_raw_shape"],
+        "dem_raw_transform": ctx["dem_raw_transform"],
+        "dem_profile": ctx["dem_profile"],
+        "crop_shape": ctx["target_hr_shape"],
+        "resampled": ctx["resampled"],
+        "crs_policy": ctx["crs_policy"],
     }
 
 
@@ -501,66 +584,103 @@ def write_prepared_rasters(
     logger=None,
     depth_lr_prepared_fp: str | Path | None = None,
     dem_hr_prepared_fp: str | Path | None = None,
+    use_windowed: bool = False,
 ) -> dict[str, object]:
     """Write aligned/resized depth and DEM rasters to disk for inference."""
     log = logger or logging.getLogger(__name__)
     out_dir = Path(out_dir).expanduser()
     out_dir.mkdir(parents=True, exist_ok=True)
-    aligned = _align_depth_and_dem_inputs(
-        depth_lr_fp,
-        dem_hr_fp,
-        scale=scale,
-        crs_policy=crs_policy,
-        logger=log,
-    )
-
     depth_prepared_fp = Path(depth_lr_prepared_fp) if depth_lr_prepared_fp is not None else (
         out_dir / f"{Path(depth_lr_fp).stem}_prepped_depth.tif"
     )
     dem_prepared_fp = Path(dem_hr_prepared_fp) if dem_hr_prepared_fp is not None else (
         out_dir / f"{Path(dem_hr_fp).stem}_prepped_dem.tif"
     )
-    depth_profile = aligned["depth_lr_profile"].copy()
-    depth_profile.update(
-        {
-            "height": int(aligned["depth_lr"].shape[0]),
-            "width": int(aligned["depth_lr"].shape[1]),
-            "transform": aligned["depth_lr_transform"],
-        }
+    ctx = _resolve_alignment_context(
+        depth_lr_fp,
+        dem_hr_fp,
+        scale=scale,
+        crs_policy=crs_policy,
+        logger=log,
     )
-    dem_profile = aligned["dem_profile"].copy()
-    dem_profile.update(
-        {
-            "height": int(aligned["dem_hr"].shape[0]),
-            "width": int(aligned["dem_hr"].shape[1]),
-            "transform": aligned["dem_hr_transform"],
-        }
+    depth_profile = _build_single_band_profile(
+        depth_prepared_fp,
+        ctx["depth_profile"],
+        ctx["depth_shape"][0],
+        ctx["depth_shape"][1],
+        ctx["depth_transform"],
     )
-    dem_raw_profile = aligned["dem_profile"].copy()
-    dem_raw_profile.update(
-        {
-            "height": int(aligned["dem_raw_shape"][0]),
-            "width": int(aligned["dem_raw_shape"][1]),
-            "transform": aligned["dem_raw_transform"],
-        }
+    dem_profile = _build_single_band_profile(
+        dem_prepared_fp,
+        ctx["dem_profile"],
+        ctx["target_hr_shape"][0],
+        ctx["target_hr_shape"][1],
+        ctx["dem_model_transform"],
+    )
+    dem_raw_profile = _build_single_band_profile(
+        dem_prepared_fp,
+        ctx["dem_profile"],
+        ctx["dem_raw_shape"][0],
+        ctx["dem_raw_shape"][1],
+        ctx["dem_raw_transform"],
     )
 
-    depth_prepared_path = _write_single_band_raster(depth_prepared_fp, aligned["depth_lr"], depth_profile)
-    dem_prepared_path = _write_single_band_raster(dem_prepared_fp, aligned["dem_hr"], dem_profile)
+    if use_windowed:
+        with rasterio.open(ctx["depth_path"]) as depth_ds, rasterio.open(depth_prepared_fp, "w", **depth_profile) as dst_ds:
+            reproject(
+                source=rasterio.band(depth_ds, 1),
+                destination=rasterio.band(dst_ds, 1),
+                src_transform=depth_ds.transform,
+                src_crs=ctx["depth_crs"],
+                src_nodata=ctx["depth_nodata"],
+                dst_transform=ctx["depth_transform"],
+                dst_crs=ctx["target_crs"],
+                dst_nodata=ctx["depth_nodata"],
+                resampling=Resampling.bilinear,
+                num_threads=1,
+            )
+        _zero_nodata_in_place(depth_prepared_fp, ctx["depth_nodata"])
+        with rasterio.open(ctx["dem_path"]) as dem_ds, rasterio.open(dem_prepared_fp, "w", **dem_profile) as dst_ds:
+            reproject(
+                source=rasterio.band(dem_ds, 1),
+                destination=rasterio.band(dst_ds, 1),
+                src_transform=dem_ds.transform,
+                src_crs=ctx["dem_crs"],
+                src_nodata=ctx["dem_nodata"],
+                dst_transform=ctx["dem_model_transform"],
+                dst_crs=ctx["target_crs"],
+                dst_nodata=ctx["dem_nodata"],
+                resampling=Resampling.bilinear,
+                num_threads=1,
+            )
+        _zero_nodata_in_place(dem_prepared_fp, ctx["dem_nodata"])
+        depth_prepared_path = depth_prepared_fp.expanduser().resolve()
+        dem_prepared_path = dem_prepared_fp.expanduser().resolve()
+    else:
+        aligned = _align_depth_and_dem_inputs(
+            depth_lr_fp,
+            dem_hr_fp,
+            scale=scale,
+            crs_policy=crs_policy,
+            logger=log,
+        )
+        depth_prepared_path = _write_single_band_raster(depth_prepared_fp, aligned["depth_lr"], depth_profile)
+        dem_prepared_path = _write_single_band_raster(dem_prepared_fp, aligned["dem_hr"], dem_profile)
     return {
         "depth_lr_prepared_fp": depth_prepared_path,
         "dem_hr_prepared_fp": dem_prepared_path,
         "depth_lr_profile": depth_profile,
         "dem_profile": dem_profile,
-        "depth_lr_nodata": aligned["depth_lr_nodata"],
-        "dem_hr_nodata": aligned["dem_hr_nodata"],
-        "crop_shape": aligned["crop_shape"],
-        "resampled": aligned["resampled"],
-        "depth_lr_shape": tuple(aligned["depth_lr"].shape),
-        "dem_hr_shape": tuple(aligned["dem_hr"].shape),
-        "dem_raw_shape": tuple(aligned["dem_raw_shape"]),
+        "depth_lr_nodata": ctx["depth_nodata"],
+        "dem_hr_nodata": ctx["dem_nodata"],
+        "crop_shape": ctx["target_hr_shape"],
+        "resampled": ctx["resampled"],
+        "depth_lr_shape": tuple(ctx["depth_shape"]),
+        "dem_hr_shape": tuple(ctx["target_hr_shape"]),
+        "dem_raw_shape": tuple(ctx["dem_raw_shape"]),
         "dem_raw_profile": dem_raw_profile,
-        "crs_policy": aligned["crs_policy"],
+        "crs_policy": ctx["crs_policy"],
+        "materialization": "windowed" if use_windowed else "simple",
     }
 
 
@@ -572,55 +692,90 @@ def write_platform_prepared_rasters(
     logger=None,
     depth_lr_prepared_fp: str | Path | None = None,
     dem_hr_prepared_fp: str | Path | None = None,
+    use_windowed: bool = False,
 ) -> dict[str, object]:
     """Write platform-preprocessed depth/DEM rasters (CRS+bounds+nodata harmonized)."""
     log = logger or logging.getLogger(__name__)
     out_dir = Path(out_dir).expanduser()
     out_dir.mkdir(parents=True, exist_ok=True)
-
-    # Reuse alignment internals to standardize CRS/bounds/nodata before model-specific prep.
-    aligned = _align_depth_and_dem_inputs(
-        depth_lr_fp,
-        dem_hr_fp,
-        scale=1,
-        crs_policy=crs_policy,
-        logger=log,
-    )
-
     depth_prepared_fp = Path(depth_lr_prepared_fp) if depth_lr_prepared_fp is not None else (
         out_dir / f"{Path(depth_lr_fp).stem}_platform_depth.tif"
     )
     dem_prepared_fp = Path(dem_hr_prepared_fp) if dem_hr_prepared_fp is not None else (
         out_dir / f"{Path(dem_hr_fp).stem}_platform_dem.tif"
     )
-
-    depth_profile = aligned["depth_lr_profile"].copy()
-    depth_profile.update(
-        {
-            "height": int(aligned["depth_lr"].shape[0]),
-            "width": int(aligned["depth_lr"].shape[1]),
-            "transform": aligned["depth_lr_transform"],
-        }
+    ctx = _resolve_alignment_context(
+        depth_lr_fp,
+        dem_hr_fp,
+        scale=1,
+        crs_policy=crs_policy,
+        logger=log,
     )
-    dem_profile = aligned["dem_profile"].copy()
-    dem_profile.update(
-        {
-            "height": int(aligned["dem_raw_shape"][0]),
-            "width": int(aligned["dem_raw_shape"][1]),
-            "transform": aligned["dem_raw_transform"],
-        }
+    depth_profile = _build_single_band_profile(
+        depth_prepared_fp,
+        ctx["depth_profile"],
+        ctx["depth_shape"][0],
+        ctx["depth_shape"][1],
+        ctx["depth_transform"],
+    )
+    dem_profile = _build_single_band_profile(
+        dem_prepared_fp,
+        ctx["dem_profile"],
+        ctx["dem_raw_shape"][0],
+        ctx["dem_raw_shape"][1],
+        ctx["dem_raw_transform"],
     )
 
-    depth_prepared_path = _write_single_band_raster(depth_prepared_fp, aligned["depth_lr"], depth_profile)
-    dem_prepared_path = _write_single_band_raster(dem_prepared_fp, aligned["dem_raw"], dem_profile)
+    if use_windowed:
+        with rasterio.open(ctx["depth_path"]) as depth_ds, rasterio.open(depth_prepared_fp, "w", **depth_profile) as dst_ds:
+            reproject(
+                source=rasterio.band(depth_ds, 1),
+                destination=rasterio.band(dst_ds, 1),
+                src_transform=depth_ds.transform,
+                src_crs=ctx["depth_crs"],
+                src_nodata=ctx["depth_nodata"],
+                dst_transform=ctx["depth_transform"],
+                dst_crs=ctx["target_crs"],
+                dst_nodata=ctx["depth_nodata"],
+                resampling=Resampling.bilinear,
+                num_threads=1,
+            )
+        _zero_nodata_in_place(depth_prepared_fp, ctx["depth_nodata"])
+        with rasterio.open(ctx["dem_path"]) as dem_ds, rasterio.open(dem_prepared_fp, "w", **dem_profile) as dst_ds:
+            reproject(
+                source=rasterio.band(dem_ds, 1),
+                destination=rasterio.band(dst_ds, 1),
+                src_transform=dem_ds.transform,
+                src_crs=ctx["dem_crs"],
+                src_nodata=ctx["dem_nodata"],
+                dst_transform=ctx["dem_raw_transform"],
+                dst_crs=ctx["target_crs"],
+                dst_nodata=ctx["dem_nodata"],
+                resampling=Resampling.bilinear,
+                num_threads=1,
+            )
+        _zero_nodata_in_place(dem_prepared_fp, ctx["dem_nodata"])
+        depth_prepared_path = depth_prepared_fp.expanduser().resolve()
+        dem_prepared_path = dem_prepared_fp.expanduser().resolve()
+    else:
+        aligned = _align_depth_and_dem_inputs(
+            depth_lr_fp,
+            dem_hr_fp,
+            scale=1,
+            crs_policy=crs_policy,
+            logger=log,
+        )
+        depth_prepared_path = _write_single_band_raster(depth_prepared_fp, aligned["depth_lr"], depth_profile)
+        dem_prepared_path = _write_single_band_raster(dem_prepared_fp, aligned["dem_raw"], dem_profile)
     return {
         "depth_lr_prepared_fp": depth_prepared_path,
         "dem_hr_prepared_fp": dem_prepared_path,
         "depth_lr_profile": depth_profile,
         "dem_profile": dem_profile,
-        "depth_lr_nodata": aligned["depth_lr_nodata"],
-        "dem_hr_nodata": aligned["dem_hr_nodata"],
-        "depth_lr_shape": tuple(aligned["depth_lr"].shape),
-        "dem_hr_shape": tuple(aligned["dem_raw_shape"]),
-        "crs_policy": aligned["crs_policy"],
+        "depth_lr_nodata": ctx["depth_nodata"],
+        "dem_hr_nodata": ctx["dem_nodata"],
+        "depth_lr_shape": tuple(ctx["depth_shape"]),
+        "dem_hr_shape": tuple(ctx["dem_raw_shape"]),
+        "crs_policy": ctx["crs_policy"],
+        "materialization": "windowed" if use_windowed else "simple",
     }
