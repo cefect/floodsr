@@ -1,5 +1,7 @@
 """Shared tiling helpers for model-worker windowing and mosaicing."""
 
+import math
+
 import numpy as np
 from tqdm import tqdm
 
@@ -28,6 +30,21 @@ def iter_window_origins(
     windows = ((yi, xi, y0, x0) for yi, y0 in enumerate(y_starts) for xi, x0 in enumerate(x_starts))
     if show_progress:
         return tqdm(windows, desc=desc, total=total, unit="window")
+    return windows
+
+
+def iter_block_windows(
+    ds,
+    *,
+    show_progress: bool,
+    desc: str = "block pass",
+):
+    """Yield block windows with optional progress rendering."""
+    block_h, block_w = ds.block_shapes[0]
+    total = int(math.ceil(ds.height / block_h) * math.ceil(ds.width / block_w))
+    windows = ds.block_windows(1)
+    if show_progress:
+        return tqdm(windows, desc=desc, total=total, unit="block")
     return windows
 
 

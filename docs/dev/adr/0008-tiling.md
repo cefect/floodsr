@@ -12,14 +12,15 @@ Model workers need the same windowing and mosaicking behavior to avoid duplicate
   - window generation/extraction helpers
   - mosaicking/blending helpers
 - Model workers must import and use these shared tiling functions.
-- Tiling method is not user-configurable from CLI.
-  - users can configure tiling parameters (e.g., overlap, tile size where valid for the model contract)
-  - users cannot choose algorithm family (`hard` vs `feather`) at runtime
+- Tiling method may be exposed by the current CLI/API implementation, but shared tiling behavior still lives in `tiling.py`.
 - Default implementation uses sliding windows with overlap and weighted blending.
-- Read windows on demand; do not materialize full input raster in memory.
+- Keep two execution styles:
+  - a simple in-memory path
+  - a raster-backed windowed path that reads windows on demand
+- In this phase, the raster-backed windowed path only needs to support hard windows. Feathered blending remains on the simple path.
 
 ## Consequences
 
 - All model workers share identical tiling/mosaicking behavior by default.
 - Future model workers can reuse common tiling code while keeping model-specific `run()` implementations focused on model logic.
-- CLI surface is simpler because tiling strategy is fixed, while still exposing useful numeric parameters.
+- The hard-window raster-backed path gives a memory-bounded option for large scenes without requiring a full rewrite of feathered mosaicking first.

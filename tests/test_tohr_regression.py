@@ -1,14 +1,16 @@
 """Tests for ToHR regression and synthetic tiling behavior."""
 
+import logging
 from pathlib import Path
 
 import numpy as np
 import pytest
 
 import floodsr.dem_sources.catalog
+import floodsr.models.ResUNet_16x_DEM as resunet_module
 import floodsr.tohr
 import misc.eval
-from conftest import default_model_version, logger, synthetic_tohr_tiles, tile_case_d, tohr_model_fp
+from conftest import default_model_version, logger, synthetic_tohr_tiles, synthetic_tohr_windowed_tiles, tile_case_d, tohr_model_fp
 import rasterio
 
 pytestmark = pytest.mark.network
@@ -106,10 +108,10 @@ def test_tohr_regression_matches_case_spec_metrics(
 
 
 @pytest.mark.parametrize(
-    "window_method, tile_overlap",
+    "window_method, tile_overlap, expected_execution_path",
     [
-        pytest.param("hard", 0, id="on_the_fly_synth_hard"),
-        pytest.param("feather", 1, id="on_the_fly_synth_feather"),
+        pytest.param("hard", 0, "simple", id="on_the_fly_synth_hard"),
+        pytest.param("feather", 1, "simple", id="on_the_fly_synth_feather"),
     ],
 )
 def test_tohr_on_the_fly_synthetic_tiles(
@@ -118,6 +120,7 @@ def test_tohr_on_the_fly_synthetic_tiles(
     synthetic_tohr_tiles: dict,
     window_method: str,
     tile_overlap: int,
+    expected_execution_path: str,
     logger,
 ) -> None:
     """Run tiled ToHR on on-the-fly synthetic rasters for both window methods."""
@@ -140,3 +143,61 @@ def test_tohr_on_the_fly_synthetic_tiles(
     assert pred.shape == synthetic_tohr_tiles["hr_shape"]
     assert pred.dtype == np.float32
     assert pred.size > 0
+    assert result["execution_path"] == expected_execution_path
+
+
+def test_tohr_hard_windowed_tiles(
+    tohr_model_fp: Path,
+    default_model_version: str,
+    synthetic_tohr_windowed_tiles: dict,
+    logger,
+):
+    """Run hard-window ToHR on a synthetic case that should trigger windowed IO."""
+    result = floodsr.tohr.tohr(
+        model_version=default_model_version,
+        model_fp=tohr_model_fp,
+        depth_lr_fp=synthetic_tohr_windowed_tiles["depth_lr_fp"],
+        dem_hr_fp=synthetic_tohr_windowed_tiles["dem_fp"],
+        output_fp=synthetic_tohr_windowed_tiles["output_fp"],
+        window_method="hard",
+        tile_overlap=0,
+        logger=logger,
+    )
+
+    with rasterio.open(result["output_fp"]) as ds:
+        pred = ds.read(1)
+    assert pred.dtype == np.float32
+    assert pred.size > 0
+    assert result["execution_path"] == "windowed"
+    assert Path(result["output_fp"]).suffix == (".vrt" if resunet_module.gdal is not None else ".tif")
+
+
+@pytest.mark.fast
+def test_tohr_preprocessing_log_details_are_debug_only(
+    tohr_model_fp: Path,
+    default_model_version: str,
+    synthetic_tohr_tiles: dict,
+    caplog: pytest.LogCaptureFixture,
+):
+    """Ensure ToHR preprocessing details stay on DEBUG while INFO keeps the summary line."""
+    pytest.importorskip("onnxruntime")
+    log = logging.getLogger("pytest.tohr_logging")
+
+    with caplog.at_level(logging.DEBUG, logger=log.name):
+        floodsr.tohr.tohr(
+            model_version=default_model_version,
+            model_fp=tohr_model_fp,
+            depth_lr_fp=synthetic_tohr_tiles["depth_lr_fp"],
+            dem_hr_fp=synthetic_tohr_tiles["dem_fp"],
+            output_fp=synthetic_tohr_tiles["output_fp"],
+            show_progress=False,
+            logger=log,
+        )
+
+    info_messages = [record.getMessage() for record in caplog.records if record.name == log.name and record.levelno == logging.INFO]
+    debug_messages = [record.getMessage() for record in caplog.records if record.name == log.name and record.levelno == logging.DEBUG]
+
+    assert "model preprocessing complete" in info_messages
+    assert not any("aligned depth shape=" in message for message in info_messages)
+    assert any("aligned depth shape=" in message for message in debug_messages)
+    assert any("dem_pct_clip=" in message for message in debug_messages)

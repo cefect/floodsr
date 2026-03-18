@@ -5,7 +5,7 @@ import tempfile
 from pathlib import Path
 
 from floodsr.model_registry import resolve_model_worker_class
-from floodsr.preprocessing import write_platform_prepared_rasters
+from floodsr.preprocessing import estimate_raster_float32_nbytes, write_platform_prepared_rasters
 
 
 def tohr(
@@ -35,11 +35,23 @@ def tohr(
     with worker as ready_worker:
         # Platform-level preprocessing runs before model worker execution.
         with tempfile.TemporaryDirectory(prefix="floodsr-platform-prep-") as prepped_dir:
+            dem_nbytes = estimate_raster_float32_nbytes(dem_hr_fp)
+            window_method_norm = str(window_method or "feather").strip().lower()
+            windowed_min_bytes = int(getattr(ready_worker, "windowed_io_min_bytes", 0))
+            use_windowed = bool(window_method_norm == "hard" and dem_nbytes >= windowed_min_bytes)
+            log.info(
+                "tohr path selection\n"
+                f"  requested_window_method={window_method_norm}\n"
+                f"  dem_float32_bytes={dem_nbytes:,}\n"
+                f"  windowed_io_threshold_bytes={windowed_min_bytes:,}\n"
+                f"  selected_platform_materialization={'windowed' if use_windowed else 'simple'}"
+            )
             platform = write_platform_prepared_rasters(
                 depth_lr_fp,
                 dem_hr_fp,
                 prepped_dir,
                 crs_policy=crs_policy,
+                use_windowed=use_windowed,
                 logger=log,
             )
             result = ready_worker.run(
@@ -54,4 +66,5 @@ def tohr(
                 tile_size=tile_size,
                 show_progress=show_progress,
             )
+            result["platform_materialization"] = platform.get("materialization", "simple")
     return result

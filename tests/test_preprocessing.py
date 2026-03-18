@@ -13,10 +13,18 @@ from floodsr.preprocessing import write_platform_prepared_rasters, write_prepare
 pytestmark = pytest.mark.fast
 
 
+@pytest.mark.parametrize(
+    "use_windowed",
+    [
+        pytest.param(False, id="prepared_simple"),
+        pytest.param(True, id="prepared_windowed"),
+    ],
+)
 def test_write_prepared_rasters_outputs_exist_and_are_float32(
     synthetic_tohr_tiles: dict,
     tmp_path,
     logger,
+    use_windowed: bool,
 ) -> None:
     """Prepared outputs should exist on disk and keep float32 ToHR arrays."""
     rasterio = pytest.importorskip("rasterio")
@@ -26,6 +34,7 @@ def test_write_prepared_rasters_outputs_exist_and_are_float32(
         scale=16,
         out_dir=tmp_path,
         logger=logger,
+        use_windowed=use_windowed,
     )
 
     assert prepared["depth_lr_prepared_fp"].exists()

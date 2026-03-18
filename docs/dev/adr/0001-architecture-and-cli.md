@@ -76,9 +76,13 @@ Under the hood, should implement a workflow like:
   - if `--model-version` not specified, use first listed in `models.json` if found in cache, otherwise fallback to first in cache.  if nothing in cache, error with instructions to fetch a model.
 - 2. optional DEM fetch.
 - 3. run platform pre-processing inside the `tohr` workflow via shared helpers in `floodsr/preprocessing.py` to produce platform-model boundary artifacts. see `0009-preproccessing.md`.
+  - keep two internal execution paths:
+    - a simple in-memory path for modest extents
+    - a raster-backed windowed path for memory-constrained large extents
 - 4. instantiate model worker from the resolved version (subclass of `Model`) and execute model-specific super-resolution via `with ...: worker.run(...)` on the pre-processed platform-model boundary artifacts (not raw user rasters).
   - select engine runtime/provider policy per `0015-engine-runtime.md` (owned by model worker internals)
   - model workers must call shared tiling utilities from `tiling.py`.
+  - the raster-backed windowed pipeline is restricted to hard-window inference in this phase; feathered blending remains on the simple path
 - 5. final model post-processing and output materialization.
 - 6. diagnostics/reporting/cleanup.
 
