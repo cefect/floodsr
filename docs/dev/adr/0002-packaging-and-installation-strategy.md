@@ -28,6 +28,7 @@ Because of that, the package should expose one progressive capability model rath
     - Must not require system GDAL.
     - Is supported via `pip` and `pipx` on wheel-supported platforms.
     - Provides the default CLI and library surface for users who only need the non-VRT path.
+    - User docs should recommend `pipx` for local CLI-first installs and `pip` for Google Colab notebook sessions.
     - VRT-dependent commands are unavailable.
     - Lower bounds in `pyproject.toml` should match one explicitly tested minimum core stack rather than a broad historical compatibility promise.
   - **Extended install**
