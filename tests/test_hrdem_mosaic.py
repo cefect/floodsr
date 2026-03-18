@@ -1,5 +1,6 @@
 """Tests for HRDEM fetch helpers using synthetic and fixture-driven rasters."""
 
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -76,6 +77,7 @@ def _read_output_dem_with_basic_assertions(dem_fp: str | Path):
 # ------------------
 
 @pytest.mark.fast
+@pytest.mark.local
 @pytest.mark.parametrize(
     "case_id",
     [
@@ -138,6 +140,7 @@ def test_build_fetch_tile_grid_gdf_and_selection_mask_writes_geojson(
 
 @pytest.mark.fast
 @pytest.mark.network
+@pytest.mark.local
 @pytest.mark.parametrize(
     "case_id",
     [
@@ -233,6 +236,65 @@ def test_fetch_hrdem_synthetic_cases(
     )
 
     _read_output_dem_with_basic_assertions(result.dem_fp)
+
+
+@pytest.mark.fast
+@pytest.mark.network
+def test_public_hrdem_asset_without_boto3_is_suppressed_during_hrdem_fetch(
+    tmp_path: Path,
+    synthetic_lowres_builder,
+    caplog,
+):
+    """HRDEM fetches should suppress rasterio DummySession info logs for public S3-backed assets.
+
+    Observed with rasterio 1.5.0: public HRDEM asset hrefs contain
+    ``amazonaws.com``, which causes rasterio.session to probe AWS-session
+    handling. When boto3 is absent, rasterio logs an ``INFO`` fallback to
+    ``DummySession`` even though the read still succeeds. This test keeps the
+    baseline rasterio behavior visible, then verifies that our fetch wrapper
+    suppresses only that non-actionable info message.
+    """
+    depth_lr_fp, _, _ = synthetic_lowres_builder(
+        "depth_lr_session_probe",
+        (2, 2),
+        SYNTHETIC_REAL_FETCH_BASE_D["depth_res"],
+        SYNTHETIC_REAL_FETCH_BASE_D["depth_crs"],
+    )
+    depth_query = floodsr.dem_sources.hrdem_mosaic._resolve_depth_query_geometry(depth_lr_fp)
+    _, asset_hrefs, _ = floodsr.dem_sources.hrdem_mosaic._query_hrdem_assets(
+        depth_query["bbox_4326"],
+        stac_url=floodsr.dem_sources.hrdem_mosaic.STAC_URL,
+        collection=floodsr.dem_sources.hrdem_mosaic.COLLECTION,
+        asset_key=floodsr.dem_sources.hrdem_mosaic.DEFAULT_ASSET,
+        stac_query_limit=5,
+    )
+    asset_href = asset_hrefs[0]
+
+    # Public HRDEM assets are S3-backed HTTPS URLs, which is what triggers the
+    # rasterio.session AWS-session detection path.
+    assert "amazonaws.com" in asset_href
+    with caplog.at_level("INFO", logger="rasterio.session"):
+        session_cls = rasterio.session.Session.cls_from_path(asset_href)
+
+    if importlib.util.find_spec("boto3") is None:
+        assert session_cls is rasterio.session.DummySession
+        assert "boto3 not available, falling back to a DummySession." in caplog.text
+        caplog.clear()
+        output_fp = tmp_path / "fetched_dem_session_probe.tif"
+        with caplog.at_level("INFO", logger="rasterio.session"):
+            result = floodsr.dem_sources.hrdem_mosaic.main_fetch_hrdem_for_lowres_tile(
+                depth_lr_fp=depth_lr_fp,
+                output_fp=output_fp,
+                use_cache=False,
+                force_tiling=True,
+                fetch_window_size=32,
+                memory_limit_gib=16.0,
+                tqdm_disable=True,
+            )
+        assert Path(result.dem_fp).exists() is True
+        assert "boto3 not available, falling back to a DummySession." not in caplog.text
+    else:
+        assert session_cls is rasterio.session.AWSSession
 
 
 
@@ -380,6 +442,7 @@ def test_write_dem_from_asset_hrefs_non_windowed_outputs_float32_non_empty(
 
 
 @pytest.mark.network
+@pytest.mark.local
 @pytest.mark.parametrize(
     "case_id",
     [

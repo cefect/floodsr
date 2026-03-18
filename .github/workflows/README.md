@@ -27,6 +27,12 @@ gh workflow run --ref "$(git branch --show-current)"
 - Scope: builds `dist/*` on the self-hosted Linux runner fleet, then runs each install smoke case in a fresh `condaforge/miniforge3:25.3.1-0` Docker container on `CEFTOP25M`; the matrix covers Linux-only basic `pipx` host-GDAL contexts plus one extended conda-forge GDAL case.
 - Trigger: None (i.e., `workflow_dispatch`).
 
+## `all-tests.yml`
+
+- Purpose: manual full-suite validation on the self-hosted Linux runner fleet without changing branch CI scope.
+- Scope: recreates the locked `deploy` conda environment, runs `pytest -m "not sphinx"` once, preserves the full pytest log plus JUnit XML even when tests fail, and publishes warning/error extracts for review.
+- Trigger: None (i.e., `workflow_dispatch`).
+
 ## `release.yml`
 
 - Purpose: tagged release validation and publish workflow.
