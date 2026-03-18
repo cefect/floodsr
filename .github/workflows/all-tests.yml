@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   all-tests:
-    name: all tests except sphinx/local (self-hosted container)
+    name: all tests except sphinx (self-hosted container)
     # Target the current self-hosted Linux runner fleet.
     runs-on:
       - self-hosted
@@ -26,6 +26,13 @@ jobs:
     timeout-minutes: 90
 
     steps:
+      # Install git inside the fresh container before checkout.
+      - name: Install checkout dependency
+        shell: bash
+        run: |
+          apt-get update
+          apt-get install -y git
+
       # Fetch repository contents for test execution.
       - name: Checkout
         uses: actions/checkout@v5
@@ -52,16 +59,14 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
-          set +e
           set -o pipefail
           mkdir -p artifacts
           conda run -n deploy-ci python -m pytest \
-            -m "not sphinx and not local" \
+            -m "not sphinx" \
             --junitxml=artifacts/pytest-junit.xml \
             2>&1 | tee artifacts/pytest.log
           status=${PIPESTATUS[0]}
           printf "%s\n" "${status}" > artifacts/pytest.exitcode
-          set -e
 
       # Extract the warning and error lines into separate artifacts for quick review.
       - name: Summarize warnings and errors
@@ -72,7 +77,6 @@ jobs:
           import pathlib, re
 
           artifact_dir = pathlib.Path("artifacts")
-          artifact_dir.mkdir(parents=True, exist_ok=True)
           log_fp = artifact_dir / "pytest.log"
           lines = log_fp.read_text(encoding="utf-8", errors="replace").splitlines() if log_fp.exists() else []
 
@@ -109,11 +113,7 @@ jobs:
         run: |
           {
             echo "## All Tests Summary"
-            if [ -f artifacts/summary.txt ]; then
-              cat artifacts/summary.txt
-            else
-              echo "summary unavailable"
-            fi
+            cat artifacts/summary.txt
           } >> "${GITHUB_STEP_SUMMARY}"
 
       # Fail only after logs and summaries have been captured.
@@ -121,10 +121,6 @@ jobs:
         if: always()
         shell: bash
         run: |
-          if [ ! -f artifacts/pytest.exitcode ]; then
-            echo "pytest exit code artifact missing"
-            exit 1
-          fi
           status=$(cat artifacts/pytest.exitcode)
           if [ "${status}" -ne 0 ]; then
             exit "${status}"
