@@ -1,22 +1,4 @@
-"""HRDEM STAC backend implementation.
-
-This module supports two fetch modes: a non-windowed merge for fast, high-memory
-runs and a windowed tile-to-VRT path for lower-memory systems. When GDAL Python
-bindings are unavailable, tiled requests are forced onto the non-windowed path
-so the core install remains importable and usable.
-
-Tuning
-------
-The reproducible profile in ``/workspace/misc/profiling`` shows the expected
-tradeoff on the large ``fathom_1024`` fixture. On the 2026-03-06 run,
-``non_windowed`` peaked at about 10.2 GiB RSS in about 206 s, ``windowed_w512``
-peaked at about 5.9 GiB in about 212 s, and ``windowed_w256`` peaked at about
-1.75 GiB in about 260 s. Start with non-windowed on high-memory systems, then
-force tiling and reduce ``fetch_window_size`` as available memory drops. See
-``/workspace/misc/profiling/readme.md`` and
-``/workspace/misc/profiling/output/summary.csv`` for the profile inputs and
-results.
-"""
+"""HRDEM STAC backend implementation."""
 
 import hashlib
 import json
@@ -58,7 +40,7 @@ DEFAULT_ASSET = "dtm"
 PROJECT_EXTENT_URL = (
     "https://maps-cartes.services.geo.ca/server_serveur/rest/services/NRCan/coverage_HRDEM_en/MapServer/4"
 )
-DEFAULT_FETCH_WINDOW_SIZE = 256 #coarse pixels
+DEFAULT_FETCH_WINDOW_SIZE = 8192
 DEFAULT_FETCH_MEMORY_LIMIT_GIB = 16.0
 DEFAULT_STAC_QUERY_LIMIT = 200
 DEFAULT_BOUNDS_DENSIFY_PTS = 21
@@ -466,6 +448,7 @@ def _filter_hrdem_assets_to_clip_bounds(
 
 def _build_project_extent_gdf(
     clip_bounds_3979: tuple[float, float, float, float],
+    raster_shape: tuple[int, int] | None = None,
     project_extent_url: str = PROJECT_EXTENT_URL,
     timeout_s: float = DEFAULT_PROJECT_EXTENT_TIMEOUT_S,
     logger=None,
@@ -473,6 +456,7 @@ def _build_project_extent_gdf(
     """Download and parse HRDEM project extent features into one EPSG:3979 GeoDataFrame."""
     feature_l = _download_hrdem_project_extent_features(
         clip_bounds_3979,
+        raster_shape=raster_shape,
         project_extent_url=project_extent_url,
         timeout_s=timeout_s,
         logger=logger,
@@ -489,33 +473,38 @@ def _build_project_extent_gdf(
 
 
 def _build_fetch_tile_grid_gdf(
-    depth_width: int,
-    depth_height: int,
+    source_width: int,
+    source_height: int,
     fetch_window_size: int,
-    depth_transform,
-    depth_crs,
+    source_transform,
+    source_crs,
 ):
-    """Build one depth-native-CRS GeoDataFrame describing the full fetch tile grid."""
+    """Build one source-CRS GeoDataFrame describing the full fetch tile grid."""
     fetch_window_size = int(fetch_window_size)
-    depth_width = int(depth_width)
-    depth_height = int(depth_height)
+    source_width = int(source_width)
+    source_height = int(source_height)
     tile_meta_l: list[dict[str, object]] = []
     tile_id = 0
-    for row_off in range(0, depth_height, fetch_window_size):
-        for col_off in range(0, depth_width, fetch_window_size):
-            lowres_height = min(fetch_window_size, depth_height - row_off)
-            lowres_width = min(fetch_window_size, depth_width - col_off)
-            lowres_window = Window(col_off=col_off, row_off=row_off, width=lowres_width, height=lowres_height)
-            lowres_bounds = window_bounds(lowres_window, depth_transform)
+    for row_off in range(0, source_height, fetch_window_size):
+        for col_off in range(0, source_width, fetch_window_size):
+            source_tile_height = min(fetch_window_size, source_height - row_off)
+            source_tile_width = min(fetch_window_size, source_width - col_off)
+            source_window = Window(
+                col_off=col_off,
+                row_off=row_off,
+                width=source_tile_width,
+                height=source_tile_height,
+            )
+            source_bounds = window_bounds(source_window, source_transform)
             win_geometry = {
                 "type": "Polygon",
                 "coordinates": [
                     [
-                        [float(lowres_bounds[0]), float(lowres_bounds[1])],
-                        [float(lowres_bounds[0]), float(lowres_bounds[3])],
-                        [float(lowres_bounds[2]), float(lowres_bounds[3])],
-                        [float(lowres_bounds[2]), float(lowres_bounds[1])],
-                        [float(lowres_bounds[0]), float(lowres_bounds[1])],
+                        [float(source_bounds[0]), float(source_bounds[1])],
+                        [float(source_bounds[0]), float(source_bounds[3])],
+                        [float(source_bounds[2]), float(source_bounds[3])],
+                        [float(source_bounds[2]), float(source_bounds[1])],
+                        [float(source_bounds[0]), float(source_bounds[1])],
                     ]
                 ],
             }
@@ -524,14 +513,14 @@ def _build_fetch_tile_grid_gdf(
                     "tile_id": int(tile_id),
                     "row_off": int(row_off),
                     "col_off": int(col_off),
-                    "lowres_height": int(lowres_height),
-                    "lowres_width": int(lowres_width),
-                    "win_bounds": tuple(float(v) for v in lowres_bounds),
+                    "source_height": int(source_tile_height),
+                    "source_width": int(source_tile_width),
+                    "win_bounds": tuple(float(v) for v in source_bounds),
                     "geometry": shape(win_geometry),
                 }
             )
             tile_id += 1
-    return gpd.GeoDataFrame(tile_meta_l, geometry="geometry", crs=depth_crs)
+    return gpd.GeoDataFrame(tile_meta_l, geometry="geometry", crs=source_crs)
 
 
 def _resolve_fetch_tile_selection_mask(tile_grid_gdf, project_extent_gdf) -> np.ndarray:
@@ -552,6 +541,7 @@ def _resolve_fetch_tile_selection_mask(tile_grid_gdf, project_extent_gdf) -> np.
 
 def _download_hrdem_project_extent_features(
     clip_bounds_3979: tuple[float, float, float, float],
+    raster_shape: tuple[int, int] | None = None,
     project_extent_url: str = PROJECT_EXTENT_URL,
     timeout_s: float = DEFAULT_PROJECT_EXTENT_TIMEOUT_S,
     logger=None,
@@ -588,8 +578,12 @@ def _download_hrdem_project_extent_features(
     feature_l = payload.get("features", [])
     if not isinstance(feature_l, list):
         raise RuntimeError(f"project extent query returned invalid feature payload type: {type(feature_l)!r}")
+    shape_msg = ""
+    if raster_shape is not None:
+        shape_msg = f", raster_shape={tuple(int(v) for v in raster_shape)}"
     log.info(
         f"downloaded {len(feature_l):,} HRDEM project extent feature(s) for clip_bounds_3979={clip_bounds_3979}"
+        f"{shape_msg}, cache=none"
     )
     return feature_l
 
@@ -679,10 +673,9 @@ def _03_read_dem_windowed_tiles_to_vrt(
     first_crs,
     clip_bounds: tuple[float, float, float, float],
     source_res: tuple[float, float],
-    depth_transform,
-    depth_crs,
-    depth_width: int,
-    depth_height: int,
+    source_transform,
+    source_width: int,
+    source_height: int,
     dst_nodata: float,
     fetch_window_size: int,
     out_path: Path,
@@ -702,31 +695,31 @@ def _03_read_dem_windowed_tiles_to_vrt(
     fetch_window_size = int(fetch_window_size)
     assert fetch_window_size > 0, f"fetch_window_size must be > 0; got {fetch_window_size}"
     # Derive static grid dimensions and validate source metadata.
-    depth_width = int(depth_width)
-    depth_height = int(depth_height)
-    assert depth_width > 0 and depth_height > 0, f"invalid low-res raster shape: {(depth_height, depth_width)}"
+    source_width = int(source_width)
+    source_height = int(source_height)
+    assert source_width > 0 and source_height > 0, f"invalid source raster shape: {(source_height, source_width)}"
     source_res_x, source_res_y = source_res
     assert source_res_x > 0 and source_res_y > 0, f"invalid source resolution: {source_res}"
     assert project_extent_timeout_s > 0, f"project_extent_timeout_s must be > 0, got {project_extent_timeout_s}"
-    # Build the full fetch-tile grid once in fetch-native CRS.
+    # Build the full fetch-tile grid once in source CRS/source pixels.
     tile_grid_gdf = _build_fetch_tile_grid_gdf(
-        depth_width=depth_width,
-        depth_height=depth_height,
+        source_width=source_width,
+        source_height=source_height,
         fetch_window_size=fetch_window_size,
-        depth_transform=depth_transform,
-        depth_crs=depth_crs,
+        source_transform=source_transform,
+        source_crs=first_crs,
     )
     tile_count = int(len(tile_grid_gdf))
     assert tile_count > 0, "tile grid builder returned no windows"
-    tile_rows = int((depth_height + fetch_window_size - 1) // fetch_window_size)
-    tile_cols = int((depth_width + fetch_window_size - 1) // fetch_window_size)
+    tile_rows = int((source_height + fetch_window_size - 1) // fetch_window_size)
+    tile_cols = int((source_width + fetch_window_size - 1) // fetch_window_size)
     full_tile_count = int(
-        ((tile_grid_gdf["lowres_height"] == fetch_window_size) & (tile_grid_gdf["lowres_width"] == fetch_window_size)).sum()
+        ((tile_grid_gdf["source_height"] == fetch_window_size) & (tile_grid_gdf["source_width"] == fetch_window_size)).sum()
     )
     edge_tile_count = int(tile_count - full_tile_count)
     log.info(
-        f"window tiling plan: lowres_window_shape={fetch_window_size:,} x {fetch_window_size:,}, "
-        f"lowres_grid={tile_rows:,}x{tile_cols:,}, tiles_total={tile_count:,}, "
+        f"window tiling plan: source_window_shape={fetch_window_size:,} x {fetch_window_size:,}, "
+        f"source_grid={tile_rows:,}x{tile_cols:,}, tiles_total={tile_count:,}, "
         f"full_tiles={full_tile_count:,}, edge_tiles={edge_tile_count:,}"
     )
     tile_grid_gdf = tile_grid_gdf.copy()
@@ -739,14 +732,15 @@ def _03_read_dem_windowed_tiles_to_vrt(
         )
         project_extent_gdf = _build_project_extent_gdf(
             clip_bounds_3979,
+            raster_shape=(source_height, source_width),
             project_extent_url=project_extent_url,
             timeout_s=project_extent_timeout_s,
             logger=log,
         )
         project_extent_for_tiles_gdf = (
             project_extent_gdf
-            if str(depth_crs) == "EPSG:3979"
-            else project_extent_gdf.to_crs(depth_crs)
+            if str(first_crs) == "EPSG:3979"
+            else project_extent_gdf.to_crs(first_crs)
         )
         tile_grid_gdf["intersects_project"] = _resolve_fetch_tile_selection_mask(
             tile_grid_gdf,
@@ -795,34 +789,27 @@ def _03_read_dem_windowed_tiles_to_vrt(
                 # Emit periodic progress diagnostics for long tiled fetch runs.
                 if i == 1 or i % 100 == 0 or i == iter_tile_count:
                     log.debug(
-                        f"window progress {i:,}/{iter_tile_count:,}: lowres_row_off={int(tile_row.row_off)}, "
-                        f"lowres_col_off={int(tile_row.col_off)}, lowres_height={int(tile_row.lowres_height)}, "
-                        f"lowres_width={int(tile_row.lowres_width)}"
+                        f"window progress {i:,}/{iter_tile_count:,}: source_row_off={int(tile_row.row_off)}, "
+                        f"source_col_off={int(tile_row.col_off)}, source_height={int(tile_row.source_height)}, "
+                        f"source_width={int(tile_row.source_width)}"
                     )
                 # Validate expected fixed window shape away from right/bottom edges.
-                is_bottom_edge = int(tile_row.row_off) + int(tile_row.lowres_height) >= depth_height
-                is_right_edge = int(tile_row.col_off) + int(tile_row.lowres_width) >= depth_width
+                is_bottom_edge = int(tile_row.row_off) + int(tile_row.source_height) >= source_height
+                is_right_edge = int(tile_row.col_off) + int(tile_row.source_width) >= source_width
                 if not is_bottom_edge:
-                    assert int(tile_row.lowres_height) == fetch_window_size, (
+                    assert int(tile_row.source_height) == fetch_window_size, (
                         f"non-edge window height must equal fetch_window_size={fetch_window_size}, "
-                        f"got {int(tile_row.lowres_height)} at lowres_row_off={int(tile_row.row_off)}"
+                        f"got {int(tile_row.source_height)} at source_row_off={int(tile_row.row_off)}"
                     )
                 if not is_right_edge:
-                    assert int(tile_row.lowres_width) == fetch_window_size, (
+                    assert int(tile_row.source_width) == fetch_window_size, (
                         f"non-edge window width must equal fetch_window_size={fetch_window_size}, "
-                        f"got {int(tile_row.lowres_width)} at lowres_col_off={int(tile_row.col_off)}"
+                        f"got {int(tile_row.source_width)} at source_col_off={int(tile_row.col_off)}"
                     )
-                win_bounds = tuple(float(v) for v in tile_row.win_bounds)
-                # Convert this tile bounds from depth CRS to source CRS for raster IO.
-                fetch_bounds = transform_bounds(
-                    depth_crs,
-                    first_crs,
-                    *win_bounds,
-                    densify_pts=DEFAULT_BOUNDS_DENSIFY_PTS,
-                )
+                fetch_bounds = tuple(float(v) for v in tile_row.win_bounds)
                 # Derive integer output raster shape in source pixels.
-                win_width = max(1, int(np.ceil((fetch_bounds[2] - fetch_bounds[0]) / source_res_x)))
-                win_height = max(1, int(np.ceil((fetch_bounds[3] - fetch_bounds[1]) / source_res_y)))
+                win_width = int(tile_row.source_width)
+                win_height = int(tile_row.source_height)
                 # Build output transform for the fetched source-resolution tile.
                 tile_transform = from_bounds(*fetch_bounds, win_width, win_height)
 
@@ -835,7 +822,7 @@ def _03_read_dem_windowed_tiles_to_vrt(
                 if not window_src_meta_l:
                     diag_d["missing_window_count"] += 1
                     if diag_d["missing_window_count"] <= 5:
-                        log.warning(f"no HRDEM assets found for fetch window bounds={win_bounds}; writing nodata")
+                        log.warning(f"no HRDEM assets found for fetch window bounds={fetch_bounds}; writing nodata")
                 else:
                     diag_d["tiles_with_assets_count"] += 1
 
@@ -957,13 +944,8 @@ def write_dem_from_asset_hrefs(
         assert fetch_window_size > 0, f"fetch_window_size must be > 0; got {fetch_window_size}"
     assert asset_hrefs, "asset_hrefs must not be empty"
 
-    # Force the wheel-friendly merge path whenever GDAL bindings are absent.
     if fetch_window_size is not None and not _gdal_is_available():
-        log.warning(
-            f"GDAL Python bindings not available; forcing non-windowed HRDEM read and ignoring "
-            f"fetch_window_size={fetch_window_size}"
-        )
-        fetch_window_size = None
+        raise AssertionError("windowed HRDEM fetch requires GDAL Python bindings")
 
     if request_token is None:
         request_token = _build_request_token(
@@ -1035,10 +1017,9 @@ def write_dem_from_asset_hrefs(
             first_crs=first_crs,
             clip_bounds=clip_bounds,
             source_res=geom["source_res"],
-            depth_transform=depth_query["depth_transform"],
-            depth_crs=depth_query["depth_crs"],
-            depth_width=int(depth_query["depth_width"]),
-            depth_height=int(depth_query["depth_height"]),
+            source_transform=out_transform,
+            source_width=int(est_width),
+            source_height=int(est_height),
             dst_nodata=dst_nodata,
             fetch_window_size=int(fetch_window_size),
             out_path=out_path,
@@ -1155,18 +1136,11 @@ def main_fetch_hrdem_for_lowres_tile(
         )
         est_float32_gib = float(fetch_geom["float32_gib"])
         tiling_requested = bool(force_tiling or est_float32_gib > float(memory_limit_gib))
-        tiling_enabled = bool(tiling_requested and _gdal_is_available())
-        if force_tiling and not tiling_enabled:
-            log.warning(
-                "forcing non-windowed fetch because GDAL Python bindings are unavailable even though tiled fetch was requested"
-            )
-        elif force_tiling:
+        tiling_enabled = bool(tiling_requested)
+        if tiling_enabled and not _gdal_is_available():
+            raise AssertionError("windowed HRDEM fetch requires GDAL Python bindings")
+        if force_tiling:
             log.warning("forcing tiled fetch via configuration")
-        elif tiling_requested and not tiling_enabled:
-            log.warning(
-                f"estimated non-windowed peak memory {est_float32_gib:.2f} GiB exceeds limit {memory_limit_gib:.2f} GiB, "
-                "but GDAL Python bindings are unavailable so non-windowed fetch remains in use"
-            )
         elif tiling_enabled:
             log.warning(
                 f"auto-enabling tiled fetch: estimated non-windowed peak memory {est_float32_gib:.2f} GiB "

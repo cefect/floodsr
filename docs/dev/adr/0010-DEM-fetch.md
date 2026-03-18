@@ -54,7 +54,8 @@ DEFAULT_ASSET = "dtm"
     - fetch from hrdem mosaic in one go (no tiling) and merge in-memory. (current implementation)
 - `tiled`:
   - download HRDEM Project Extent features intersecting fetch footprint polygon (3979). throw error if no features returned.
-  - build a tiling scheme in fetch-native/source CRS (no eager conversion to 3979).
+  - build a tiling scheme in fetch-native/source CRS using source-space pixel windows (not lores pixel windows). if source resolution metadata is unavailable, assume 1m.
+  - fetch tiles should align to source pixels/resolution. they do not need to align to lores pixel edges.
   - inside the tiled fetch loop, convert each fetch-tile geometry/bounds to 3979 only for HRDEM Project Extent polygon intersection checks.
     - throw error if no intersecting tiles
     - warn when a tile does not intersect and write nodata for that tile (skip source reads for that tile).
@@ -91,6 +92,10 @@ BIGTIFF=IF_SAFER
 #### post and pre processing changes
 - treat the incoming HRDEM asset (should always be 3979) identical to explicitly user-provided DEMs.
   - throw an early verbose error if `--crs-policy=strict` and the incoming lores is not 3979.
+- keep `crs_policy` behavior in preprocessing/runtime, not in the fetch tiling logic.
+  - `strict`: require identical CRS after fetch as usual; do not auto-reproject in the fetch layer.
+  - `use-dem`: fetched HRDEM CRS remains the downstream target CRS.
+  - `use-lores`: fetched HRDEM remains in source CRS until preprocessing reprojects it to the lores CRS.
 - then the `docs/dev/adr/0009-preproccessing.md` pre-processing steps and checks are applied to the fetched HRDEM tile  
 
 
