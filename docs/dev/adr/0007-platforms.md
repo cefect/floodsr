@@ -8,7 +8,9 @@ In order of priority, we plan to support:
 - macOS [deferred]
 
 ## required user specs
-- pipx installed
+- python 3.12+ with pip installed
+- pipx installed for local CLI-first installs
+- google colab users should install with pip inside the notebook runtime
 - enough memory to fit the output tile (but possibly not all the input tiles as well). >16GB?
 
 ## providers

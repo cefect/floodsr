@@ -3,7 +3,7 @@
  
 ## Context
 
-The project is distributed as a Python package via PyPI and installed primarily via pip and pipx. We require a repeatable, low-risk release process that minimizes credential exposure and ensures packaging correctness before publishing stable releases. TestPyPI is available as a staging index. GitHub Actions is used for CI/CD.
+The project is distributed as a Python package via PyPI and installed primarily via `pipx` for local CLI use and `pip` for notebook-first environments such as Google Colab. We require a repeatable, low-risk release process that minimizes credential exposure and ensures packaging correctness before publishing stable releases. TestPyPI is available as a staging index. GitHub Actions is used for CI/CD.
 
 Key constraints:
 

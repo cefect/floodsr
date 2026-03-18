@@ -8,13 +8,15 @@ A bit-too-simple moonshot install:
    pipx install floodsr
 
 pipx command not found? Check :ref:`system_requirements`.
+Running in Google Colab? Jump to :ref:`basic_install_google_colab`.
 
 .. _system_requirements:
 
 System Requirements
 -------------------
-``floodsr`` was designed as a CLI-first Python package, so we recommend installing with `pipx <https://pipx.pypa.io/stable/>`__ to ensure environment isolation.
-This project requires `Python 3.12+ <https://realpython.com/installing-python/>`_ and pip (which usually comes shipped with Python). Once you have a compatible Python install, installing `pipx <https://pipx.pypa.io/stable/installation/>`__ is easy.
+``floodsr`` was designed as a CLI-first Python package, so we recommend installing with `pipx <https://pipx.pypa.io/stable/>`__ to ensure environment isolation (except for Google Colab, where ``pip`` is the better fit. See :ref:`basic_install_google_colab`).
+This project requires `Python 3.12+ <https://realpython.com/installing-python/>`_ and pip (which usually comes shipped with Python). 
+Once you have a compatible Python install, installing `pipx <https://pipx.pypa.io/stable/installation/>`__ is easy.
 If you have a modern Python setup, installing pipx is easy:
 
 
@@ -54,6 +56,24 @@ You can also try the ``doctor`` command to echo the current environment and ``fl
    floodsr doctor
 
 This should show the version and status of the backends used by ``floodsr``.
+
+
+.. _basic_install_google_colab:
+
+Basic Install (Google Colab)
+----------------------------
+
+Google Colab already gives you an isolated Python environment, so ``pipx`` is unnecessary there. Install the core package with ``pip`` in a notebook cell:
+
+.. code-block:: bash
+
+   python -m pip install floodsr
+
+Then confirm the CLI is available:
+
+.. code-block:: bash
+
+   !floodsr --help
 
 
 Extended Install
