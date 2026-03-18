@@ -1,5 +1,6 @@
 """Tests for HRDEM fetch helpers using synthetic and fixture-driven rasters."""
 
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -235,6 +236,41 @@ def test_fetch_hrdem_synthetic_cases(
     )
 
     _read_output_dem_with_basic_assertions(result.dem_fp)
+
+
+@pytest.mark.fast
+@pytest.mark.network
+def test_public_hrdem_asset_without_boto3_uses_rasterio_dummy_session(
+    tmp_path: Path,
+    synthetic_lowres_builder,
+    caplog,
+):
+    """Public HRDEM S3-backed assets should fall back to DummySession when boto3 is unavailable."""
+    depth_lr_fp, _, _ = synthetic_lowres_builder(
+        "depth_lr_session_probe",
+        (2, 2),
+        SYNTHETIC_REAL_FETCH_BASE_D["depth_res"],
+        SYNTHETIC_REAL_FETCH_BASE_D["depth_crs"],
+    )
+    depth_query = floodsr.dem_sources.hrdem_mosaic._resolve_depth_query_geometry(depth_lr_fp)
+    _, asset_hrefs, _ = floodsr.dem_sources.hrdem_mosaic._query_hrdem_assets(
+        depth_query["bbox_4326"],
+        stac_url=floodsr.dem_sources.hrdem_mosaic.STAC_URL,
+        collection=floodsr.dem_sources.hrdem_mosaic.COLLECTION,
+        asset_key=floodsr.dem_sources.hrdem_mosaic.DEFAULT_ASSET,
+        stac_query_limit=5,
+    )
+    asset_href = asset_hrefs[0]
+
+    assert "amazonaws.com" in asset_href
+    with caplog.at_level("INFO", logger="rasterio.session"):
+        session_cls = rasterio.session.Session.cls_from_path(asset_href)
+
+    if importlib.util.find_spec("boto3") is None:
+        assert session_cls is rasterio.session.DummySession
+        assert "boto3 not available, falling back to a DummySession." in caplog.text
+    else:
+        assert session_cls is rasterio.session.AWSSession
 
 
 
