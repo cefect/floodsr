@@ -31,13 +31,15 @@ jobs:
         shell: bash
         run: |
           apt-get update
-          apt-get install -y git
+          apt-get install -y git git-lfs
+          git lfs install
 
       # Fetch repository contents for test execution.
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          lfs: true
 
       # Recreate the repo's deploy environment for test parity with local dev.
       - name: Create deploy environment
@@ -59,6 +61,7 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
+          set +e
           set -o pipefail
           mkdir -p artifacts
           conda run -n deploy-ci python -m pytest \
@@ -67,6 +70,7 @@ jobs:
             2>&1 | tee artifacts/pytest.log
           status=${PIPESTATUS[0]}
           printf "%s\n" "${status}" > artifacts/pytest.exitcode
+          set -e
 
       # Extract the warning and error lines into separate artifacts for quick review.
       - name: Summarize warnings and errors
