@@ -1,0 +1,127 @@
+name: All Tests
+
+on:
+  # Run the full non-Sphinx pytest suite only when requested.
+  workflow_dispatch:
+
+permissions:
+  # Read-only is sufficient for checkout and artifact upload.
+  contents: read
+
+concurrency:
+  # Keep one manual full-suite run per ref active at a time.
+  group: all-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  all-tests:
+    name: all tests except sphinx (self-hosted container)
+    # Target the current self-hosted Linux runner fleet.
+    runs-on:
+      - self-hosted
+      - Linux
+      - X64
+    container:
+      image: condaforge/miniforge3:25.3.1-0
+    timeout-minutes: 90
+
+    steps:
+      # Install git inside the fresh container before checkout.
+      - name: Install checkout dependency
+        shell: bash
+        run: |
+          apt-get update
+          apt-get install -y git
+
+      # Fetch repository contents for test execution.
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      # Recreate the repo's deploy environment for test parity with local dev.
+      - name: Create deploy environment
+        shell: bash
+        run: |
+          mamba env create -n deploy-ci -f container/miniforge/conda-env-deploy.lock.yml
+          conda run -n deploy-ci python --version
+
+      # Install the editable package plus pytest extras into the locked env.
+      - name: Install package into deploy environment
+        shell: bash
+        run: |
+          conda run -n deploy-ci python -m pip install --upgrade pip
+          conda run -n deploy-ci python -m pip install -e ".[dev]"
+
+      # Run the full non-Sphinx suite once, keep going through failures, and persist logs.
+      - name: Run pytest
+        id: pytest
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p artifacts
+          conda run -n deploy-ci python -m pytest \
+            -m "not sphinx" \
+            --junitxml=artifacts/pytest-junit.xml \
+            2>&1 | tee artifacts/pytest.log
+          status=${PIPESTATUS[0]}
+          printf "%s\n" "${status}" > artifacts/pytest.exitcode
+
+      # Extract the warning and error lines into separate artifacts for quick review.
+      - name: Summarize warnings and errors
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import pathlib, re
+
+          artifact_dir = pathlib.Path("artifacts")
+          log_fp = artifact_dir / "pytest.log"
+          lines = log_fp.read_text(encoding="utf-8", errors="replace").splitlines() if log_fp.exists() else []
+
+          warning_re = re.compile(r"\bwarning\b", re.IGNORECASE)
+          error_re = re.compile(r"\berror\b", re.IGNORECASE)
+
+          warning_lines = [line for line in lines if warning_re.search(line)]
+          error_lines = [line for line in lines if error_re.search(line)]
+
+          (artifact_dir / "warnings.log").write_text("\n".join(warning_lines) + ("\n" if warning_lines else ""), encoding="utf-8")
+          (artifact_dir / "errors.log").write_text("\n".join(error_lines) + ("\n" if error_lines else ""), encoding="utf-8")
+
+          exit_code = (artifact_dir / "pytest.exitcode").read_text(encoding="utf-8").strip() if (artifact_dir / "pytest.exitcode").exists() else "missing"
+          summary_lines = [
+              f"pytest exit code: {exit_code}",
+              f"warning line count: {len(warning_lines)}",
+              f"error line count: {len(error_lines)}",
+          ]
+          (artifact_dir / "summary.txt").write_text("\n".join(summary_lines) + "\n", encoding="utf-8")
+          PY
+
+      # Upload all test outputs even when pytest fails.
+      - name: Upload pytest artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: all-tests-artifacts
+          path: artifacts/*
+
+      # Publish a compact run summary in the Actions UI.
+      - name: Publish step summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## All Tests Summary"
+            cat artifacts/summary.txt
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      # Fail only after logs and summaries have been captured.
+      - name: Fail on pytest errors
+        if: always()
+        shell: bash
+        run: |
+          status=$(cat artifacts/pytest.exitcode)
+          if [ "${status}" -ne 0 ]; then
+            exit "${status}"
+          fi
