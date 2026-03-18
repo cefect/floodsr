@@ -45,7 +45,7 @@ jobs:
       - name: Materialize git-lfs test data
         shell: bash
         run: |
-          git lfs checkout
+          git -C "${GITHUB_WORKSPACE}" lfs checkout
 
       # Recreate the repo's deploy environment for test parity with local dev.
       - name: Create deploy environment
@@ -87,6 +87,7 @@ jobs:
           import pathlib, re
 
           artifact_dir = pathlib.Path("artifacts")
+          artifact_dir.mkdir(parents=True, exist_ok=True)
           log_fp = artifact_dir / "pytest.log"
           lines = log_fp.read_text(encoding="utf-8", errors="replace").splitlines() if log_fp.exists() else []
 
@@ -123,7 +124,11 @@ jobs:
         run: |
           {
             echo "## All Tests Summary"
-            cat artifacts/summary.txt
+            if [ -f artifacts/summary.txt ]; then
+              cat artifacts/summary.txt
+            else
+              echo "summary unavailable"
+            fi
           } >> "${GITHUB_STEP_SUMMARY}"
 
       # Fail only after logs and summaries have been captured.
@@ -131,6 +136,10 @@ jobs:
         if: always()
         shell: bash
         run: |
+          if [ ! -f artifacts/pytest.exitcode ]; then
+            echo "pytest exit code artifact missing"
+            exit 1
+          fi
           status=$(cat artifacts/pytest.exitcode)
           if [ "${status}" -ne 0 ]; then
             exit "${status}"
