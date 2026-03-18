@@ -76,6 +76,7 @@ def _read_output_dem_with_basic_assertions(dem_fp: str | Path):
 # ------------------
 
 @pytest.mark.fast
+@pytest.mark.local
 @pytest.mark.parametrize(
     "case_id",
     [
@@ -138,6 +139,7 @@ def test_build_fetch_tile_grid_gdf_and_selection_mask_writes_geojson(
 
 @pytest.mark.fast
 @pytest.mark.network
+@pytest.mark.local
 @pytest.mark.parametrize(
     "case_id",
     [
@@ -380,6 +382,7 @@ def test_write_dem_from_asset_hrefs_non_windowed_outputs_float32_non_empty(
 
 
 @pytest.mark.network
+@pytest.mark.local
 @pytest.mark.parametrize(
     "case_id",
     [

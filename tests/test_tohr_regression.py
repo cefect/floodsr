@@ -23,6 +23,7 @@ pytestmark = pytest.mark.network
         pytest.param("rss_mersch_A", "ResUNet_16x_DEM_default", id="mersch_default", marks=pytest.mark.local),
     ],
 )
+@pytest.mark.local
 def test_tohr_regression_matches_case_spec_metrics(
     tohr_model_fp: Path,
     tile_case_d: dict,

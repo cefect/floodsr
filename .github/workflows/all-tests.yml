@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   all-tests:
-    name: all tests except sphinx (self-hosted container)
+    name: all tests except sphinx/local (self-hosted container)
     # Target the current self-hosted Linux runner fleet.
     runs-on:
       - self-hosted
@@ -26,26 +26,11 @@ jobs:
     timeout-minutes: 90
 
     steps:
-      # Install git inside the fresh container before checkout.
-      - name: Install checkout dependency
-        shell: bash
-        run: |
-          apt-get update
-          apt-get install -y git git-lfs
-          git lfs install
-
       # Fetch repository contents for test execution.
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
-
-      # Materialize fetched LFS objects into the worktree before pytest reads test rasters.
-      - name: Materialize git-lfs test data
-        shell: bash
-        run: |
-          git -C "${GITHUB_WORKSPACE}" lfs checkout
 
       # Recreate the repo's deploy environment for test parity with local dev.
       - name: Create deploy environment
@@ -71,7 +56,7 @@ jobs:
           set -o pipefail
           mkdir -p artifacts
           conda run -n deploy-ci python -m pytest \
-            -m "not sphinx" \
+            -m "not sphinx and not local" \
             --junitxml=artifacts/pytest-junit.xml \
             2>&1 | tee artifacts/pytest.log
           status=${PIPESTATUS[0]}
