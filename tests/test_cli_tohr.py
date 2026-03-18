@@ -9,6 +9,8 @@ import pytest
 from conftest import default_model_version, tile_case_d, tohr_model_fp
 from floodsr.cli import _parse_arguments, _resolve_default_output_path, _resolve_tohr_model_spec, main
 
+pytestmark = pytest.mark.local
+
 @pytest.mark.parametrize(
     "case_id",
     [

@@ -23,6 +23,7 @@ import json
 import logging
 import shutil
 import tempfile
+from contextlib import contextmanager
 from functools import partial
 from pathlib import Path
 from typing import Callable
@@ -73,6 +74,27 @@ DEFAULT_NON_WINDOWED_MERGE_MEM_LIMIT_MB = 256
 MIN_TILED_BLOCK_SIZE = 16
 TILE_CACHE_DIR_NAME = "floodsr_hrdem_tile_cache"
 TEMP_OUTPUT_PREFIX = "floodsr_hrdem_output"
+
+
+@contextmanager
+def _quiet_rasterio_session_info_logs():
+    """Temporarily suppress rasterio.session info chatter during HRDEM fetches.
+
+    With rasterio 1.5.0, public HRDEM assets resolved from STAC currently point
+    at S3-backed ``amazonaws.com`` URLs. Rasterio's session selection treats
+    those URLs as AWS-session candidates and logs an ``INFO`` message when
+    ``boto3`` is not installed, even though the public read still succeeds via
+    ``DummySession``. We suppress that narrow logger only around the fetch path
+    so users do not see non-actionable AWS chatter while preserving the default
+    rasterio behavior everywhere else.
+    """
+    session_logger = logging.getLogger("rasterio.session")
+    prev_level = session_logger.level
+    session_logger.setLevel(max(prev_level, logging.WARNING) if prev_level else logging.WARNING)
+    try:
+        yield
+    finally:
+        session_logger.setLevel(prev_level)
 
 
 def _gdal_is_available() -> bool:
@@ -1100,93 +1122,96 @@ def main_fetch_hrdem_for_lowres_tile(
 
     # Discover candidate assets from STAC using the query bbox in WGS84.
     # STAC bbox search is intentionally coarse and can over-return assets near edges.
-    item_ids, asset_hrefs, _ = _query_hrdem_assets(
-        bbox_4326=bbox_4326,
-        stac_url=stac_url,
-        collection=collection,
-        asset_key=asset_key,
-        stac_query_limit=stac_query_limit,
-    )
-    # Build source-CRS fetch geometry and enforce exact raster-bound filtering.
-    # Why this second filter is required:
-    # 1) BBOX-only discovery can return false positives that intersect the bbox but not the exact footprint.
-    # 2) CRS transforms/densification can amplify edge effects, especially for narrow query extents.
-    # 3) Dropping non-overlapping assets early avoids unnecessary reads/downloads and nodata-only tiles.
-    # 4) This keeps tile diagnostics more stable and deterministic for both local and network runs.
-    fetch_geom = _estimate_fetch_geometry(depth_crs, depth_bounds, asset_hrefs[0])
-    item_ids, asset_hrefs = _filter_hrdem_assets_to_clip_bounds(
-        item_ids,
-        asset_hrefs,
-        clip_bounds=fetch_geom["clip_bounds"],
-        expected_crs=fetch_geom["source_crs"],
-        logger=log,
-    )
-    if not asset_hrefs:
-        raise RuntimeError(
-            f"HRDEM STAC candidate assets did not intersect the exact query footprint for bounds={depth_bounds}"
+    # Keep rasterio's boto3/DummySession fallback chatter out of user logs only
+    # for this fetch workflow. Public HRDEM reads still work without boto3.
+    with _quiet_rasterio_session_info_logs():
+        item_ids, asset_hrefs, _ = _query_hrdem_assets(
+            bbox_4326=bbox_4326,
+            stac_url=stac_url,
+            collection=collection,
+            asset_key=asset_key,
+            stac_query_limit=stac_query_limit,
         )
-    log.info(
-        f"found {len(item_ids)} HRDEM item(s) intersecting low-res tile bounds after exact intersection filter"
-    )
-    est_float32_gib = float(fetch_geom["float32_gib"])
-    tiling_requested = bool(force_tiling or est_float32_gib > float(memory_limit_gib))
-    tiling_enabled = bool(tiling_requested and _gdal_is_available())
-    if force_tiling and not tiling_enabled:
-        log.warning(
-            "forcing non-windowed fetch because GDAL Python bindings are unavailable even though tiled fetch was requested"
+        # Build source-CRS fetch geometry and enforce exact raster-bound filtering.
+        # Why this second filter is required:
+        # 1) BBOX-only discovery can return false positives that intersect the bbox but not the exact footprint.
+        # 2) CRS transforms/densification can amplify edge effects, especially for narrow query extents.
+        # 3) Dropping non-overlapping assets early avoids unnecessary reads/downloads and nodata-only tiles.
+        # 4) This keeps tile diagnostics more stable and deterministic for both local and network runs.
+        fetch_geom = _estimate_fetch_geometry(depth_crs, depth_bounds, asset_hrefs[0])
+        item_ids, asset_hrefs = _filter_hrdem_assets_to_clip_bounds(
+            item_ids,
+            asset_hrefs,
+            clip_bounds=fetch_geom["clip_bounds"],
+            expected_crs=fetch_geom["source_crs"],
+            logger=log,
         )
-    elif force_tiling:
-        log.warning("forcing tiled fetch via configuration")
-    elif tiling_requested and not tiling_enabled:
-        log.warning(
-            f"estimated non-windowed peak memory {est_float32_gib:.2f} GiB exceeds limit {memory_limit_gib:.2f} GiB, "
-            "but GDAL Python bindings are unavailable so non-windowed fetch remains in use"
+        if not asset_hrefs:
+            raise RuntimeError(
+                f"HRDEM STAC candidate assets did not intersect the exact query footprint for bounds={depth_bounds}"
+            )
+        log.info(
+            f"found {len(item_ids)} HRDEM item(s) intersecting low-res tile bounds after exact intersection filter"
         )
-    elif tiling_enabled:
-        log.warning(
-            f"auto-enabling tiled fetch: estimated non-windowed peak memory {est_float32_gib:.2f} GiB "
-            f"exceeds limit {memory_limit_gib:.2f} GiB"
-        )
-    else:
-        log.debug(
-            f"estimated non-windowed peak memory {est_float32_gib:.2f} GiB within limit {memory_limit_gib:.2f} GiB; "
-            "using non-tiled fetch"
-        )
+        est_float32_gib = float(fetch_geom["float32_gib"])
+        tiling_requested = bool(force_tiling or est_float32_gib > float(memory_limit_gib))
+        tiling_enabled = bool(tiling_requested and _gdal_is_available())
+        if force_tiling and not tiling_enabled:
+            log.warning(
+                "forcing non-windowed fetch because GDAL Python bindings are unavailable even though tiled fetch was requested"
+            )
+        elif force_tiling:
+            log.warning("forcing tiled fetch via configuration")
+        elif tiling_requested and not tiling_enabled:
+            log.warning(
+                f"estimated non-windowed peak memory {est_float32_gib:.2f} GiB exceeds limit {memory_limit_gib:.2f} GiB, "
+                "but GDAL Python bindings are unavailable so non-windowed fetch remains in use"
+            )
+        elif tiling_enabled:
+            log.warning(
+                f"auto-enabling tiled fetch: estimated non-windowed peak memory {est_float32_gib:.2f} GiB "
+                f"exceeds limit {memory_limit_gib:.2f} GiB"
+            )
+        else:
+            log.debug(
+                f"estimated non-windowed peak memory {est_float32_gib:.2f} GiB within limit {memory_limit_gib:.2f} GiB; "
+                "using non-tiled fetch"
+            )
 
-    # Build one deterministic token used for both default temp output naming and tile-cache key namespacing.
-    # Including tiling/project-extent mode prevents collisions between different fetch strategies for the same bounds.
-    request_token = _build_request_token(
-        depth_bounds=depth_bounds,
-        stac_url=stac_url,
-        collection=collection,
-        asset_key=asset_key,
-        tiling_enabled=tiling_enabled,
-        fetch_window_size=fetch_window_size,
-        use_project_extent_filter=bool(tiling_enabled and use_project_extent_filter),
-    )
-    if output_fp is None:
-        suffix = ".vrt" if tiling_enabled else ".tif"
-        out_path = _resolve_default_output_path(request_token, suffix=suffix)
-    else:
-        out_path = Path(output_fp).expanduser().resolve()
-        if tiling_enabled and out_path.suffix.lower() != ".vrt":
-            out_path = out_path.with_suffix(".vrt")
-    # Cache lives at the GeoTIFF tile level only; VRT is an assembly artifact rebuilt per request.
-    out_path.parent.mkdir(parents=True, exist_ok=True)
+        # Build one deterministic token used for both default temp output naming and tile-cache key namespacing.
+        # Including tiling/project-extent mode prevents collisions between different fetch strategies for the same bounds.
+        request_token = _build_request_token(
+            depth_bounds=depth_bounds,
+            stac_url=stac_url,
+            collection=collection,
+            asset_key=asset_key,
+            tiling_enabled=tiling_enabled,
+            fetch_window_size=fetch_window_size,
+            use_project_extent_filter=bool(tiling_enabled and use_project_extent_filter),
+        )
+        if output_fp is None:
+            suffix = ".vrt" if tiling_enabled else ".tif"
+            out_path = _resolve_default_output_path(request_token, suffix=suffix)
+        else:
+            out_path = Path(output_fp).expanduser().resolve()
+            if tiling_enabled and out_path.suffix.lower() != ".vrt":
+                out_path = out_path.with_suffix(".vrt")
+        # Cache lives at the GeoTIFF tile level only; VRT is an assembly artifact rebuilt per request.
+        out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    written_fp = write_dem_from_asset_hrefs(
-        depth_lr_fp=depth_path,
-        asset_hrefs=asset_hrefs,
-        output_fp=out_path,
-        request_token=request_token,
-        use_cache=bool(use_cache),
-        logger=log,
-        fetch_window_size=fetch_window_size if tiling_enabled else None,
-        use_project_extent_filter=bool(tiling_enabled and use_project_extent_filter),
-        project_extent_url=project_extent_url,
-        project_extent_timeout_s=float(project_extent_timeout_s),
-        tqdm_disable=bool(tqdm_disable),
-    )
+        written_fp = write_dem_from_asset_hrefs(
+            depth_lr_fp=depth_path,
+            asset_hrefs=asset_hrefs,
+            output_fp=out_path,
+            request_token=request_token,
+            use_cache=bool(use_cache),
+            logger=log,
+            fetch_window_size=fetch_window_size if tiling_enabled else None,
+            use_project_extent_filter=bool(tiling_enabled and use_project_extent_filter),
+            project_extent_url=project_extent_url,
+            project_extent_timeout_s=float(project_extent_timeout_s),
+            tqdm_disable=bool(tqdm_disable),
+        )
     return DemFetchResult(
         source_id=SOURCE_ID,
         dem_fp=written_fp,
