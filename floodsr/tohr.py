@@ -20,6 +20,7 @@ def tohr(
     window_method: str = "feather",
     tile_overlap: int | None = None,
     tile_size: int | None = None,
+    show_progress: bool = True,
     logger=None,
 ) -> dict[str, object]:
     """Run one ToHR pass through the model worker lifecycle."""
@@ -51,5 +52,6 @@ def tohr(
                 window_method=window_method,
                 tile_overlap=tile_overlap,
                 tile_size=tile_size,
+                show_progress=show_progress,
             )
     return result

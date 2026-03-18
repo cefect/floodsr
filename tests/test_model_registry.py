@@ -25,20 +25,20 @@ def test_list_models_returns_non_empty_records(models_manifest_fp: Path):
 
 
 @pytest.mark.parametrize(
-    "no_progress",
+    "show_progress",
     [
-        pytest.param(False, id="progress_default"),
-        pytest.param(True, id="progress_disabled"),
+        pytest.param(True, id="progress_default"),
+        pytest.param(False, id="progress_disabled"),
     ],
 )
 @pytest.mark.fast
-def test_fetch_model_returns_cached_path(tmp_path: Path, models_manifest_fp: Path, no_progress: bool):
+def test_fetch_model_returns_cached_path(tmp_path: Path, models_manifest_fp: Path, show_progress: bool):
     """Ensure model fetch stores the artifact in cache."""
     model_fp = fetch_model(
         "v-cli",
         cache_dir=tmp_path / "cache",
         manifest_fp=models_manifest_fp,
-        no_progress=no_progress,
+        show_progress=show_progress,
     )
     assert isinstance(model_fp, Path)
     assert model_fp.exists()

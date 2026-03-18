@@ -75,6 +75,7 @@ def _resolve_tohr_model_spec(args: argparse.Namespace) -> tuple[str, Path]:
         manifest_fp=args.manifest,
         backend_name=args.backend,
         force=args.force,
+        show_progress=args.show_progress,
     )
 
 
@@ -135,8 +136,9 @@ def _build_tohr_machine_cli_tokens(payload: dict[str, object], argv: list[str]) 
         "tile_overlap": "--tile-overlap",
         "tile_size": "--tile-size",
         "crs_policy": "--crs-policy",
+        "show_progress": "--show-progress",
     }
-    bool_flags = {"fetch_hrdem", "fetch_force_tiling", "force"}
+    bool_flags = {"fetch_hrdem", "fetch_force_tiling", "force", "show_progress"}
     cli_tokens = []
     for raw_key, value in payload.items():
         key = _normalize_machine_key(raw_key)
@@ -149,7 +151,9 @@ def _build_tohr_machine_cli_tokens(payload: dict[str, object], argv: list[str]) 
         if key in bool_flags:
             if not isinstance(value, bool):
                 raise ValueError(f"machine-json key '{raw_key}' must be boolean, got {type(value)!r}")
-            if value:
+            if key == "show_progress":
+                cli_tokens.append(cli_flag if value else "--no-show-progress")
+            elif value:
                 cli_tokens.append(cli_flag)
             continue
         if value is None:
@@ -214,7 +218,7 @@ def main_cli(args: argparse.Namespace) -> int:
             manifest_fp=args.manifest,
             backend_name=args.backend,
             force=args.force,
-            no_progress=args.no_progress,
+            show_progress=args.show_progress,
         )
         print(model_fp)
         return 0
@@ -237,6 +241,7 @@ def main_cli(args: argparse.Namespace) -> int:
                 depth_lr_fp=args.in_fp,
                 output_fp=args.fetch_out,
                 fetch_force_tiling=args.fetch_force_tiling,
+                show_progress=args.show_progress,
                 logger=log,
             )
             dem_fp = fetch_result.dem_fp
@@ -253,6 +258,7 @@ def main_cli(args: argparse.Namespace) -> int:
             window_method=args.window_method,
             tile_overlap=args.tile_overlap,
             tile_size=args.tile_size,
+            show_progress=args.show_progress,
             logger=log,
         )
         print(result["output_fp"])
@@ -372,9 +378,10 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
         help="Redownload even when a valid cached weight file already exists.",
     )
     models_fetch_parser.add_argument(
-        "--no-progress",
-        action="store_true",
-        help="Disable model download progress output.",
+        "--show-progress",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Show model download progress output.",
     )
 
     # Register ToHR command.
@@ -484,6 +491,12 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
         choices=("strict", "use-dem", "use-lores"),
         default="strict",
         help="Policy for CRS mismatches between the low-res depth raster and DEM.",
+    )
+    tohr_parser.add_argument(
+        "--show-progress",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Show model download, DEM fetch, and tiled runtime progress output.",
     )
 
     # Register diagnostic command.

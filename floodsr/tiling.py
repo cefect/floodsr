@@ -20,13 +20,13 @@ def iter_window_origins(
     y_starts: list[int],
     x_starts: list[int],
     *,
-    use_progress: bool,
+    show_progress: bool,
     desc: str = "windowed inference",
 ):
     """Yield indexed window origins with optional progress rendering."""
     total = len(y_starts) * len(x_starts)
     windows = ((yi, xi, y0, x0) for yi, y0 in enumerate(y_starts) for xi, x0 in enumerate(x_starts))
-    if use_progress:
+    if show_progress:
         return tqdm(windows, desc=desc, total=total, unit="window")
     return windows
 

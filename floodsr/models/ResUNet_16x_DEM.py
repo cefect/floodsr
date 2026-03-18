@@ -151,6 +151,7 @@ class ModelWorker(Model):
         contract_hr_tile: int,
         window_method: str,
         overlap_lr: int,
+        show_progress: bool = True,
     ) -> tuple[np.ndarray, int, dict[str, float] | None]:
         """
         Run tiled model execution over prepared rasters and return model-space SR in meter domain.
@@ -177,6 +178,8 @@ class ModelWorker(Model):
             Mosaicing strategy (`hard` or `feather`).
         overlap_lr:
             Feather overlap in low-resolution pixels.
+        show_progress:
+            Whether tiled inference progress bars should be rendered.
 
         Returns
         -------
@@ -312,7 +315,7 @@ class ModelWorker(Model):
             for _, _, y0, x0 in iter_window_origins(
                 nonoverlap_y,
                 nonoverlap_x,
-                use_progress=True,
+                show_progress=show_progress,
                 desc="non-overlap pass",
             ):
                 pred_depth_m = _predict_tile_depth_m(y0, x0)
@@ -340,7 +343,7 @@ class ModelWorker(Model):
             for yi, xi, y0, x0 in iter_window_origins(
                 y_starts,
                 x_starts,
-                use_progress=True,
+                show_progress=show_progress,
                 desc="feather pass",
             ):
                 pred_depth_m = _predict_tile_depth_m(y0, x0)
@@ -408,6 +411,7 @@ class ModelWorker(Model):
         window_method: str = "feather",
         tile_overlap: int | None = None,
         tile_size: int | None = None,
+        show_progress: bool = True,
     ) -> dict[str, Any]:
         """Run model-specific ToHR from platform-preprocessed input rasters."""
 
@@ -424,6 +428,7 @@ class ModelWorker(Model):
         assert dem_hr_path.exists(), f"preprocessed DEM raster does not exist: {dem_hr_path}"
         window_method = (window_method or "feather").strip().lower()
         assert window_method in {"hard", "feather"}, f"unsupported window_method={window_method}"
+        assert isinstance(show_progress, bool), f"show_progress must be bool, got {type(show_progress)!r}"
 
         log.info(
             f"starting tohr inference with model_version={self.model_version}\n"
@@ -579,6 +584,7 @@ class ModelWorker(Model):
             contract_hr_tile=contract_hr_tile,
             window_method=window_method,
             overlap_lr=overlap_lr,
+            show_progress=show_progress,
         )
         assert prediction_model_m.shape == tuple(prepped["dem_hr_shape"]), (
             f"prediction shape {prediction_model_m.shape} must match preprocessed DEM shape {prepped['dem_hr_shape']}"

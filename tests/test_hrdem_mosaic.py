@@ -310,7 +310,7 @@ def test_public_hrdem_asset_without_boto3_is_suppressed_during_hrdem_fetch(
                 force_tiling=True,
                 fetch_window_size=32,
                 memory_limit_gib=16.0,
-                tqdm_disable=True,
+                show_progress=False,
             )
         assert Path(result.dem_fp).exists() is True
         assert "boto3 not available, falling back to a DummySession." not in caplog.text

@@ -684,7 +684,7 @@ def _03_read_dem_windowed_tiles_to_vrt(
     use_project_extent_filter: bool,
     project_extent_url: str,
     project_extent_timeout_s: float,
-    tqdm_disable: bool = False,
+    show_progress: bool = True,
     logger=None,
 ) -> dict[str, object]:
     """Read DEM windows into per-tile GeoTIFFs and assemble one VRT mosaic."""
@@ -783,7 +783,7 @@ def _03_read_dem_windowed_tiles_to_vrt(
             total=iter_tile_count,
             desc="HRDEM window fetch",
             unit="tile",
-            disable=bool(tqdm_disable),
+            disable=not bool(show_progress),
         ) as progress:
             for i, tile_row in enumerate(tile_grid_iter_gdf.itertuples(index=False), start=1):
                 # Emit periodic progress diagnostics for long tiled fetch runs.
@@ -933,7 +933,7 @@ def write_dem_from_asset_hrefs(
     use_project_extent_filter: bool = False,
     project_extent_url: str = PROJECT_EXTENT_URL,
     project_extent_timeout_s: float = DEFAULT_PROJECT_EXTENT_TIMEOUT_S,
-    tqdm_disable: bool = False,
+    show_progress: bool = True,
 ) -> Path:
     """Build one clipped DEM from preselected assets, with per-GeoTIFF tile caching."""
     log = logger or logging.getLogger(__name__)
@@ -1028,7 +1028,7 @@ def write_dem_from_asset_hrefs(
             use_project_extent_filter=bool(use_project_extent_filter),
             project_extent_url=project_extent_url,
             project_extent_timeout_s=float(project_extent_timeout_s),
-            tqdm_disable=bool(tqdm_disable),
+            show_progress=bool(show_progress),
             logger=log,
         )
 
@@ -1060,7 +1060,7 @@ def main_fetch_hrdem_for_lowres_tile(
     use_project_extent_filter: bool = True,
     project_extent_url: str = PROJECT_EXTENT_URL,
     project_extent_timeout_s: float = DEFAULT_PROJECT_EXTENT_TIMEOUT_S,
-    tqdm_disable: bool = False,
+    show_progress: bool = True,
 ) -> DemFetchResult:
     """Fetch one HRDEM tile aligned to a low-res depth raster query footprint."""
     log = logger or logging.getLogger(__name__)
@@ -1069,7 +1069,7 @@ def main_fetch_hrdem_for_lowres_tile(
     assert isinstance(use_project_extent_filter, bool), (
         f"use_project_extent_filter must be bool, got {type(use_project_extent_filter)!r}"
     )
-    assert isinstance(tqdm_disable, bool), f"tqdm_disable must be bool, got {type(tqdm_disable)!r}"
+    assert isinstance(show_progress, bool), f"show_progress must be bool, got {type(show_progress)!r}"
     fetch_window_size = int(fetch_window_size)
     assert fetch_window_size > 0, f"fetch_window_size must be > 0; got {fetch_window_size}"
     assert memory_limit_gib > 0, f"memory_limit_gib must be > 0; got {memory_limit_gib}"
@@ -1096,7 +1096,7 @@ def main_fetch_hrdem_for_lowres_tile(
         f"  stac_query_limit={stac_query_limit}\n"
         f"  use_project_extent_filter={use_project_extent_filter}\n"
         f"  use_cache={use_cache}\n"
-        f"  tqdm_disable={tqdm_disable}\n"
+        f"  show_progress={show_progress}\n"
         f"  project_extent_url={project_extent_url}\n"
         f"  depth_lr_fp=\n    {depth_path}"
     )
@@ -1184,7 +1184,7 @@ def main_fetch_hrdem_for_lowres_tile(
             use_project_extent_filter=bool(tiling_enabled and use_project_extent_filter),
             project_extent_url=project_extent_url,
             project_extent_timeout_s=float(project_extent_timeout_s),
-            tqdm_disable=bool(tqdm_disable),
+            show_progress=bool(show_progress),
         )
     return DemFetchResult(
         source_id=SOURCE_ID,

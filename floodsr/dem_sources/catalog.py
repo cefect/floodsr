@@ -18,6 +18,7 @@ def fetch_dem(
     depth_lr_fp: str | Path,
     output_fp: str | Path | None = None,
     fetch_force_tiling: bool = False,
+    show_progress: bool = True,
     logger=None,
 ) -> DemFetchResult:
     """Fetch a DEM for the given low-res depth tile using one registered source."""
@@ -32,5 +33,6 @@ def fetch_dem(
         depth_lr_fp=depth_lr_fp,
         output_fp=output_fp,
         force_tiling=fetch_force_tiling,
+        show_progress=show_progress,
         logger=log,
     )

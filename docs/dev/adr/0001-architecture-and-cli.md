@@ -66,6 +66,7 @@ requirements:
 - should accept an alternate machine-interface JSON of CLI-equivalent parameters (e.g., model version and tiling settings). should use the same parameter schema as CLI args  
 - no `truth` or `metrics`. just inference
 - provide progress bar and final diagnostics on completion (runtime, shape in, shape out, model version used, file size out)
+- CLI and Python APIs should use positive progress naming with `show_progress=True` / `--show-progress` as the default interface
 - default output should be in cwd with the same name (and filetype and properties... other than shape) as the input but with `_sr.tif` suffix. allow `--out` to specify a different path.
  
 
