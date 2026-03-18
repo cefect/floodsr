@@ -245,7 +245,15 @@ def test_public_hrdem_asset_without_boto3_is_suppressed_during_hrdem_fetch(
     synthetic_lowres_builder,
     caplog,
 ):
-    """HRDEM fetches should suppress rasterio DummySession info logs for public S3-backed assets."""
+    """HRDEM fetches should suppress rasterio DummySession info logs for public S3-backed assets.
+
+    Observed with rasterio 1.5.0: public HRDEM asset hrefs contain
+    ``amazonaws.com``, which causes rasterio.session to probe AWS-session
+    handling. When boto3 is absent, rasterio logs an ``INFO`` fallback to
+    ``DummySession`` even though the read still succeeds. This test keeps the
+    baseline rasterio behavior visible, then verifies that our fetch wrapper
+    suppresses only that non-actionable info message.
+    """
     depth_lr_fp, _, _ = synthetic_lowres_builder(
         "depth_lr_session_probe",
         (2, 2),
@@ -262,6 +270,8 @@ def test_public_hrdem_asset_without_boto3_is_suppressed_during_hrdem_fetch(
     )
     asset_href = asset_hrefs[0]
 
+    # Public HRDEM assets are S3-backed HTTPS URLs, which is what triggers the
+    # rasterio.session AWS-session detection path.
     assert "amazonaws.com" in asset_href
     with caplog.at_level("INFO", logger="rasterio.session"):
         session_cls = rasterio.session.Session.cls_from_path(asset_href)

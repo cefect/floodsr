@@ -78,7 +78,16 @@ TEMP_OUTPUT_PREFIX = "floodsr_hrdem_output"
 
 @contextmanager
 def _quiet_rasterio_session_info_logs():
-    """Temporarily suppress rasterio.session info chatter during HRDEM fetches."""
+    """Temporarily suppress rasterio.session info chatter during HRDEM fetches.
+
+    With rasterio 1.5.0, public HRDEM assets resolved from STAC currently point
+    at S3-backed ``amazonaws.com`` URLs. Rasterio's session selection treats
+    those URLs as AWS-session candidates and logs an ``INFO`` message when
+    ``boto3`` is not installed, even though the public read still succeeds via
+    ``DummySession``. We suppress that narrow logger only around the fetch path
+    so users do not see non-actionable AWS chatter while preserving the default
+    rasterio behavior everywhere else.
+    """
     session_logger = logging.getLogger("rasterio.session")
     prev_level = session_logger.level
     session_logger.setLevel(max(prev_level, logging.WARNING) if prev_level else logging.WARNING)
@@ -1113,6 +1122,8 @@ def main_fetch_hrdem_for_lowres_tile(
 
     # Discover candidate assets from STAC using the query bbox in WGS84.
     # STAC bbox search is intentionally coarse and can over-return assets near edges.
+    # Keep rasterio's boto3/DummySession fallback chatter out of user logs only
+    # for this fetch workflow. Public HRDEM reads still work without boto3.
     with _quiet_rasterio_session_info_logs():
         item_ids, asset_hrefs, _ = _query_hrdem_assets(
             bbox_4326=bbox_4326,
