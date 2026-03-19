@@ -461,13 +461,22 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
         "--max-depth",
         type=float,
         default=None,
-        help="Override the max-depth value used during log-space scaling.",
+        help=(
+            "Maximum depth used when clipping low-res depth values before log1p scaling into the model input range. "
+            "Values above this threshold are capped during preprocessing and after inverse scaling. "
+            "The current ResUNet_16x_DEM default resolves to 5.0."
+        ),
     )
     tohr_parser.add_argument(
         "--dem-pct-clip",
         type=float,
         default=None,
-        help="Override the DEM percentile clip used when training stats are incomplete.",
+        help=(
+            "Percentile used to cap high DEM values before min-max normalization to [0, 1]. "
+            "Lower values clip high terrain more aggressively; higher values preserve more of the upper tail. "
+            "Used when explicit DEM normalization stats are unavailable. "
+            "The current ResUNet_16x_DEM default resolves to 95.0."
+        ),
     )
     tohr_parser.add_argument(
         "--window-method",
