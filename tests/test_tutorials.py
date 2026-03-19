@@ -13,7 +13,7 @@ import pytest
     "notebook_fp",
     [
         pytest.param(pathlib.Path("docs/user/notebooks/tutorial_1.ipynb"), id="tutorial_1"),
-        pytest.param(pathlib.Path("docs/user/notebooks/tutorial_2.ipynb"), id="tutorial_2"),
+        pytest.param(pathlib.Path("docs/user/notebooks/tutorial_3.ipynb"), id="tutorial_3"),
     ],
 )
 @pytest.mark.network
