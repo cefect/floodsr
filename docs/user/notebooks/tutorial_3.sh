@@ -4,8 +4,8 @@ set -euo pipefail
 # Resolve notebook, staging, and cache paths up front so execution is reproducible.
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/../../.." && pwd)"
-notebook_fp="${script_dir}/tutorial_2.ipynb"
-cache_dir="${FLOODSR_NOTEBOOK_CACHE_DIR:-${repo_root}/_cache/notebook_tmp/tutorial_2}"
+notebook_fp="${script_dir}/tutorial_3.ipynb"
+cache_dir="${FLOODSR_NOTEBOOK_CACHE_DIR:-${repo_root}/_cache/notebook_tmp/tutorial_3}"
 run_dir="${cache_dir}/run"
 tmp_dir="${cache_dir}/tmp"
 timeout_s="${FLOODSR_NOTEBOOK_TIMEOUT:-3600}"
@@ -20,14 +20,14 @@ export TMPDIR="${tmp_dir}"
 export TEMP="${tmp_dir}"
 export TMP="${tmp_dir}"
 
-echo "[tutorial_2] notebook_fp=${notebook_fp}"
-echo "[tutorial_2] repo_root=${repo_root}"
-echo "[tutorial_2] cache_dir=${cache_dir}"
-echo "[tutorial_2] run_dir=${run_dir}"
-echo "[tutorial_2] python=$(python -c 'import sys; print(sys.executable)')"
-echo "[tutorial_2] jupyter=$(python -m jupyter --version | tr '\n' ' ' )"
-echo "[tutorial_2] staging notebook execution in ${run_dir}"
-echo "[tutorial_2] note: the HRDEM fetch and tohr cells can take a while"
+echo "[tutorial_3] notebook_fp=${notebook_fp}"
+echo "[tutorial_3] repo_root=${repo_root}"
+echo "[tutorial_3] cache_dir=${cache_dir}"
+echo "[tutorial_3] run_dir=${run_dir}"
+echo "[tutorial_3] python=$(python -c 'import sys; print(sys.executable)')"
+echo "[tutorial_3] jupyter=$(python -m jupyter --version | tr '\n' ' ' )"
+echo "[tutorial_3] staging notebook execution in ${run_dir}"
+echo "[tutorial_3] note: the HRDEM fetch and tohr cells can take a while"
 
 cp "${notebook_fp}" "${run_dir}/"
 cd "${run_dir}"
@@ -40,6 +40,6 @@ time python -m jupyter nbconvert \
     "$(basename "${notebook_fp}")"
 
 cp "${run_dir}/$(basename "${notebook_fp}")" "${notebook_fp}"
-find "${run_dir}" -maxdepth 1 -type f ! -name "$(basename "${notebook_fp}")" -print | sed 's#^#[tutorial_2] staged output: #'
+find "${run_dir}" -maxdepth 1 -type f ! -name "$(basename "${notebook_fp}")" -print | sed 's#^#[tutorial_3] staged output: #'
 rm -rf "${run_dir}" "${tmp_dir}"
-echo "[tutorial_2] refreshed source notebook without leaving side files in ${script_dir}"
+echo "[tutorial_3] refreshed source notebook without leaving side files in ${script_dir}"

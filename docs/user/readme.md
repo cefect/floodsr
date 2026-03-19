@@ -45,7 +45,7 @@ cd /workspace
 conda run -n dev bash docs/user/notebooks/tutorial_1.sh
 
 # large-raster tutorial; also runs from cache and copies the executed notebook back
-conda run -n dev bash docs/user/notebooks/tutorial_2.sh
+conda run -n dev bash docs/user/notebooks/tutorial_3.sh
 
  
 ```
