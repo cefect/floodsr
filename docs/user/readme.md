@@ -44,6 +44,9 @@ cd /workspace
 # quick-start tutorial; runs from cache and copies the executed notebook back
 conda run -n dev bash docs/user/notebooks/tutorial_1.sh
 
+# plotting and CLI-options tutorial; runs from cache and copies the executed notebook back
+conda run -n dev bash docs/user/notebooks/tutorial_2.sh
+
 # large-raster tutorial; also runs from cache and copies the executed notebook back
 conda run -n dev bash docs/user/notebooks/tutorial_3.sh
 
