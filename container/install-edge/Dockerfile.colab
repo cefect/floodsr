@@ -1,0 +1,8 @@
+# syntax=docker/dockerfile:1.7
+
+FROM us-docker.pkg.dev/colab-images/public/cpu-runtime:latest
+
+# Keep the image close to the managed Colab runtime and only pin the workflow shell defaults.
+WORKDIR /workspace
+
+ENTRYPOINT ["/bin/bash", "-lc"]

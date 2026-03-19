@@ -1,0 +1,10 @@
+# syntax=docker/dockerfile:1.7
+
+FROM condaforge/miniforge3:25.3.1-0
+
+# Approximate a user-managed local notebook environment with Jupyter already available.
+RUN python -m pip install --no-cache-dir jupyterlab notebook ipykernel
+
+WORKDIR /workspace
+
+ENTRYPOINT ["/bin/bash", "-lc"]

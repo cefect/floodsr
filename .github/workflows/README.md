@@ -24,7 +24,7 @@ gh workflow run --ref "$(git branch --show-current)"
 ## `install-edge.yml`
 
 - Purpose: manual install-matrix validation without slowing normal CI.
-- Scope: builds `dist/*` on the self-hosted Linux runner fleet, then runs each install smoke case in a fresh `condaforge/miniforge3:25.3.1-0` Docker container on `CEFTOP25M`; the matrix covers Linux-only basic `pipx` host-GDAL contexts plus one extended conda-forge GDAL case.
+- Scope: builds `dist/*` on the self-hosted Linux runner fleet, then proves each documented Unix install path from `docs/user/installation.rst` in a fresh context-specific Docker container; notebook cases use sparse checkout shims from `.github/workflows/artifacts`, and notebook containers pull from `cefect/floodsr:install-edge-jupyter-v0.1` or `cefect/floodsr:install-edge-colab-v0.1`.
 - Trigger: None (i.e., `workflow_dispatch`).
 
 ## `all-tests.yml`
