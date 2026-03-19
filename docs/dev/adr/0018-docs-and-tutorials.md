@@ -23,20 +23,25 @@ The current docs stack uses Sphinx with `myst_nb` for notebook rendering and the
 - Each tutorial should have:
   - a short title
   - a one-line description on the landing page
-- The tutorials landing page should rely on the normal docs navigation/toctree flow to move readers into notebook pages rather than inline cross-links.
 - Tutorial numbering should be explicit and stable, e.g. `Tutorial 1: Quick Start`.
+- each tutorial notebook should be runnable in the *dev* layer of the .devcontainer (`container/miniforge/environment.dev.yml`). this includes setup tutorials (see below). 
 
 ### setup tutorials (1 and 2)
 As these provide commands for patching the environment, they are a special case. 
 
-
+- the same notebook should support the user in all 3 execution contexts through .md instructions, cross-links tot he rst docs, and commented-out cells for notebook users.
+- runnability: per-above, these notebooks ALSO need to run inside the dev environment. we accomplish this by commenting out install commands in the notebook cells and providing instructions to un-comment if needed.
 - Each setup tutorial notebook (i.e., 1 and 2) should start with a short summary of the three execution contexts:
   - command line (CLI)
   - local notebook (Jupyter)
   - hosted notebook (Colab)
 - That summary should link readers to the corresponding section of the installation page rather than duplicating the full install guidance inline.
-- Each tutorial notebook should include a code block with local and hosted notebook kernel-patching commands commented out.
-- The surrounding notebook text should instruct readers to uncomment the commands that match their execution context before running the install/setup cell.
+- Each tutorial notebook should adopt the user flow described for install/setup in the docs, which depends on the execution environment.
+  - notebook, this is a mix of CLI and notebook cells with guidance for both local and hosted notebook users.
+  - notebook cell install commands should be commented out, with instructions to un-comment if applicable.
+  - CLI, this is a pure CLI flow with instructions to switch to the notebook if desired.
+
+ 
 
 ## Notebook Rendering Strategy
 
