@@ -55,6 +55,8 @@ As these provide commands for patching the environment, they are a special case.
 
 Tutorial notebooks are rendered by the docs toolchain, but they are not expected to run inside the docs devcontainer as part of normal docs authoring.
 
+Notebook proofing may still be added under `pytest` as a separate `notebook`-marked suite, but that execution should remain outside the default `deploy` test path and should run from the `dev` conda environment so the notebook runtime stays isolated from the runtime-locked package environment.
+
 Future work for a Colab-backed interactive launch button is tracked in issue `#18`.
 
 ## Consequences
