@@ -30,6 +30,7 @@ from floodsr.dem_sources.base import DemFetchResult
 
 try:
     from osgeo import gdal
+    gdal.DontUseExceptions()
 except ImportError:
     gdal = None
 
