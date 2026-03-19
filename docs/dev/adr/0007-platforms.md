@@ -9,7 +9,7 @@ CPU-first is officially supported. GPU may be considered in the future.
 - `extended`
 
 Those tiers are not available in every environment. The project also runs in several distinct execution contexts with different install and support constraints:
-- CLI
+- command line (CLI)
 - local notebook (Jupyter)
 - hosted notebook (Colab)
 
@@ -20,11 +20,11 @@ Those tiers are not available in every environment. The project also runs in sev
 We track support across three dimensions:
 - Capability tier: `basic`, `extended`
 - Platform: `Linux`, `Windows`, `macOS`
-- Execution context: `CLI`, `local notebook (Jupyter)`, `hosted notebook (Colab)`
+- Execution context: `command line (CLI)`, `local notebook (Jupyter)`, `hosted notebook (Colab)`
 
 ## Support Matrix
  
-- CLI
+- command line (CLI)
   - `basic`: supported
   - `extended`: supported
 - local notebook (Jupyter)
@@ -43,13 +43,18 @@ not implemented yet
 ## Notes
 
 - `basic` is the default capability tier for the broadest user base.
+- `basic` assumes the user already has a working Python installation in the target execution context.
 - `extended` requires a conda-managed environment with GDAL already installed before `pip install floodsr`.
-- `local notebook (Jupyter)` means a notebook kernel launched from a user-managed local environment.
-- `hosted notebook (Colab)` means installs occur inside a managed Colab runtime and should use `pip` inside the notebook session. 
+- `command line (CLI)` means a local shell-driven workflow and should recommend `pipx` for the `basic` install path.
+- `local notebook (Jupyter)` means a notebook kernel launched from a user-managed local environment and assumes the user already has Jupyter working there.
+- `local notebook (Jupyter)` should recommend `pip` into the environment that backs the selected kernel, not `pipx`.
+- `hosted notebook (Colab)` means installs occur inside a managed Colab runtime and should use `pip` inside the notebook session.
 
 ### colab + gdal
 there are some hacky ways to get gdal to work with colab, that will probably break at some point when the colab backends are updated.
 This setup seems to work: https://colab.research.google.com/drive/1QCdoW1_MZU_eWucLaUMjxf5osOxr94v0?usp=sharing
+
+let's include these for now with a warning. 
 
 
 
@@ -58,7 +63,7 @@ This setup seems to work: https://colab.research.google.com/drive/1QCdoW1_MZU_eW
 ## Consequences
 
 - User docs should describe capability tier separately from platform and execution context.
-- CLI and local Jupyter guidance may share the same underlying environment recipe when the capability tier is the same.
+- Command line (CLI) and local Jupyter guidance may share the same underlying Python environment when the capability tier is the same, but their recommended install commands differ.
 - Colab guidance should stay limited to the `basic` tier unless hosted `extended` support becomes an explicit project goal.
 - If platform support changes, update this ADR rather than broadening packaging claims in `ADR-0002`.
 
