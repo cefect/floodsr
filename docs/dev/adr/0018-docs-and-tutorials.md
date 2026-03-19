@@ -43,12 +43,13 @@ As these provide commands for patching the environment, they are a special case.
 
  
 
-## Notebook Rendering Strategy
+## Tutorial Notebook Rendering Strategy
 
 - Tutorial source files should be committed as real Jupyter notebooks (`.ipynb`), not generated artifacts and not Markdown stand-ins.
 - Notebook files should live under `docs/user/notebooks/`.
 - Sphinx should render these notebooks with `myst_nb`.
-- Notebook execution should remain disabled via the docs configuration so that builds are deterministic and do not depend on runtime services, package installation side effects, network availability, or notebook kernel behavior.
+- Notebook execution should remain disabled via the docs configuration so that builds are deterministic
+- Tutorial execution for documentation refreshes should use per-notebook shell shims that live beside the notebooks under `docs/user/notebooks/` (for example `tutorial_1.sh` and `tutorial_2.sh`).
  
 
 ## Docs Devcontainer Limitation
@@ -57,25 +58,5 @@ Tutorial notebooks are rendered by the docs toolchain, but they are not expected
 
 Notebook proofing may still be added under `pytest` as a separate `notebook`-marked suite, but that execution should remain outside the default `deploy` test path and should run from the `dev` conda environment so the notebook runtime stays isolated from the runtime-locked package environment.
 
-Future work for a Colab-backed interactive launch button is tracked in issue `#18`.
 
-## Consequences
 
-### Positive
-
-- Tutorials stay close to the user docs and are easy to discover.
-- Notebook tutorials are authored in a format users can download and reuse directly.
-- Docs builds remain stable because notebooks are rendered, not executed.
-
-### Negative
-
-- Notebook rendering and notebook execution are intentionally separated, which may confuse contributors at first.
-- The docs devcontainer is not a guaranteed runtime for tutorial execution.
-
-## Implementation Notes
-
-- Keep tutorial notebooks small and task-oriented.
-- Prefer CLI-first tutorial flows that match the existing user docs.
-- Keep install/setup cells aligned with the execution-context split in `ADR-0007`: `pipx` for CLI, `pip` for notebook kernels, and separate hosted-notebook guidance.
-- Avoid introducing notebook outputs into version control unless there is a strong reason to preserve them.
-- If interactive execution becomes a core product feature later, revisit whether Colab remains sufficient or whether a more integrated notebook hosting model is needed.
