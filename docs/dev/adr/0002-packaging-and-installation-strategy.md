@@ -44,6 +44,8 @@ Because of that, the package should expose one progressive capability model rath
 - Treat the extended path as a pinned conda stack, not an open-ended dependency range.
 - Keep publishing target as PyPI/TestPyPI wheels and source distributions.
 - Validate published artifacts against the capability level they claim to support.
+- Treat each documented install path as a support contract that should have a matching install-proof case.
+- Prove documented Unix install paths from built release artifacts in isolated containerized environments that best match user expectations for that path.
 - Keep current platform and execution-context support boundaries in `ADR-0007`.
 
 
