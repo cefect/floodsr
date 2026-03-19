@@ -13,11 +13,7 @@ import pytest
     "notebook_fp",
     [
         pytest.param(pathlib.Path("docs/user/notebooks/tutorial_1.ipynb"), id="tutorial_1"),
-        pytest.param(
-            pathlib.Path("docs/user/notebooks/tutorial_2.ipynb"),
-            id="tutorial_2",
-            marks=pytest.mark.skip(reason="tutorial_2 is intentionally out of scope for notebook proofing"),
-        ),
+        pytest.param(pathlib.Path("docs/user/notebooks/tutorial_2.ipynb"), id="tutorial_2"),
     ],
 )
 @pytest.mark.network
@@ -38,6 +34,11 @@ def test_tutorial_notebook_executes(notebook_fp, tmp_path):
     env = os.environ.copy()
     env["PATH"] = f"{tmp_path}{os.pathsep}{env['PATH']}"
     env["PYTHONPATH"] = f"{pathlib.Path.cwd()}{os.pathsep}{env.get('PYTHONPATH', '')}".rstrip(os.pathsep)
+    notebook_tmp_dir = pathlib.Path.cwd() / "_cache" / "notebook_tmp" / notebook_fp.stem
+    notebook_tmp_dir.mkdir(parents=True, exist_ok=True)
+    env["TMPDIR"] = str(notebook_tmp_dir)
+    env["TEMP"] = str(notebook_tmp_dir)
+    env["TMP"] = str(notebook_tmp_dir)
 
     # Execute the temporary copy in place so relative notebook outputs stay isolated in tmp_path.
     subprocess.run(
