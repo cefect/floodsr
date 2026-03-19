@@ -35,7 +35,7 @@ Here we provide instructions for the three most common:
 .. _basic_install_cli: 
 
 Command line (CLI)
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``floodsr`` was designed as a CLI-first Python package, so we recommend installing with `pipx <https://pipx.pypa.io/stable/>`__ for simple environment isolation.
 For this, you need a working `Python 3.12+ <https://realpython.com/installing-python/>`_ and pip (which usually comes already shipped with Python).
@@ -73,7 +73,7 @@ This should show the version and status of the backends used by ``floodsr``.
 .. _basic_install_local_notebook:
 
 Local notebook (Jupyter)
-^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Running ``floodsr`` in a local notebook environment is a nice way to process individual rasters interactively and visualize the results.
 To do this, you need to have `Jupyter <https://jupyter.org/install>`_ installed in a `Python 3.12+ <https://realpython.com/installing-python/>`_ environment.
@@ -119,7 +119,7 @@ Finally, confirm the CLI is available from the notebook:
 .. _basic_install_google_colab:
 
 Hosted notebook (Colab)
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 `Google Colab <https://colab.research.google.com/>`__  is a popular hosted notebook environment that provides a nice web-based interface with common libraries pre-installed, which makes it great for quick experiments or interactive tutorials. 
 However, patching in new packages (like ``floodsr``) can be a bit tricky, so we don't recommend this for regular use.
@@ -146,15 +146,14 @@ Extended Install
 ----------------
 For handling rasters too large for memory, floodsr uses GDAL backends.
 To enable these features, install `floodsr` into an environment with `GDAL <https://gdal.org/en/stable/>`_.
-The popular `conda <https://docs.conda.io/en/latest/>`_ package manager is the easiest way to do this.
-The best way to install conda is via the open-source `Miniforge <https://github.com/conda-forge/miniforge?tab=readme-ov-file#install>`_ project, NOT the `proprietary Anaconda distribution <https://www.theregister.com/2024/08/08/anaconda_puts_the_squeeze_on/>`_.
 
 
 .. _extended_install_cli:
 
-Command line (CLI)
-^^^^^^^^^^^^^^^^^^
-
+Command line (CLI) - Extended
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The popular `conda <https://docs.conda.io/en/latest/>`_ package manager is the easiest way to build an isolated environment with GDAL.
+The best way to install conda is via the open-source `Miniforge <https://github.com/conda-forge/miniforge?tab=readme-ov-file#install>`_ project, NOT the `proprietary Anaconda distribution <https://www.theregister.com/2024/08/08/anaconda_puts_the_squeeze_on/>`_.
 Once you have conda installed, use it to create a dedicated environment with GDAL, activate it, then install ``floodsr`` with ``pip`` into that same environment:
 
 .. code-block:: bash
@@ -170,34 +169,38 @@ Then confirm the GDAL-backed environment is active:
    floodsr doctor
 
 
+You should see something like *gdal_config_installed=True*. 
+
 .. _extended_install_notebook:
 
-Local notebook (Jupyter)
-^^^^^^^^^^^^^^^^^^^^^^^^
-If you want to work through the tutorial notebooks, first complete :ref:`extended_install_cli`.
-
-Then install and launch `Project Jupyter <https://jupyter.org/install>`_ from that same conda environment. Creating or activating a new environment from inside a running notebook kernel is not reliable, so do the setup first, then launch Jupyter or switch the notebook kernel to that environment.
-
-After completing :ref:`extended_install_cli`, the typical Jupyter-specific steps are:
+Local notebook (Jupyter) - Extended
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Follow the same :ref:`extended_install_cli` instructions to set up your GDAL-backed ``floodsr`` environment, then install Jupyter into that same environment and register a dedicated kernel:
 
 .. code-block:: bash
 
-   conda install -n floodsr-gdal -c conda-forge matplotlib pip ipykernel jupyterlab -y
-   conda run -n floodsr-gdal python -m ipykernel install --user --name floodsr-gdal --display-name "Python (floodsr-gdal)"
-   conda run -n floodsr-gdal jupyter lab
+   python -m pip install jupyterlab ipykernel
+   python -m ipykernel install --user --name floodsr-gdal --display-name "Python (floodsr-gdal)"
 
-This gives the notebook environment GDAL support, the plotting stack used in the tutorials, and a dedicated Jupyter kernel for ``floodsr`` work. Once Jupyter is running, open the tutorial and select the ``Python (floodsr-gdal)`` kernel before executing any cells.
+Then launch Jupyter from that environment and select the "Python (floodsr-gdal)" kernel:
 
-For a worked example, see :doc:`notebooks/tutorial_2`.
+.. code-block:: bash
 
-The ``doctor`` command from :ref:`extended_install_cli` should report GDAL Python bindings as installed and VRT support as enabled.
+   python -m jupyter lab
+
+Finally, confirm the GDAL-backed environment is active from the notebook:
+
+.. code-block:: bash
+
+   !floodsr doctor
 
 .. _extended_install_hosted_notebook:
 
-Hosted notebook (Colab)
-^^^^^^^^^^^^^^^^^^^^^^^
+Hosted notebook (Colab) - Extended
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The extended GDAL-backed workflow is not currently supported in hosted notebook environments such as Google Colab.
+While Colab is nice for standard environments, GDAL is not standard... so the extended ``floodsr`` with GDAL install is finnicky and probably won't work. 
+For the foolhardy, the below seems to be working as of March 2026, but this will probably break when Colab updates their base images so maybe don't waste your time:
 
 .. code-block:: bash
 
