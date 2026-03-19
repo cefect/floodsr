@@ -131,6 +131,7 @@ def _build_tohr_machine_cli_tokens(payload: dict[str, object], argv: list[str]) 
         "backend": "--backend",
         "force": "--force",
         "max_depth": "--max-depth",
+        "min_depth_threshold": "--min-depth-threshold",
         "dem_pct_clip": "--dem-pct-clip",
         "window_method": "--window-method",
         "tile_overlap": "--tile-overlap",
@@ -255,6 +256,7 @@ def main_cli(args: argparse.Namespace) -> int:
             output_fp=output_fp,
             crs_policy=args.crs_policy,
             max_depth=args.max_depth,
+            min_depth_threshold=args.min_depth_threshold,
             dem_pct_clip=args.dem_pct_clip,
             window_method=args.window_method,
             tile_overlap=args.tile_overlap,
@@ -465,6 +467,16 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
             "Maximum depth used when clipping low-res depth values before log1p scaling into the model input range. "
             "Values above this threshold are capped during preprocessing and after inverse scaling. "
             "The current ResUNet_16x_DEM default resolves to 5.0."
+        ),
+    )
+    tohr_parser.add_argument(
+        "--min-depth-threshold",
+        type=float,
+        default=None,
+        help=(
+            "Minimum predicted depth retained in the final raster. "
+            "Values below this threshold are written as 0.0 after inference. "
+            "The current ResUNet_16x_DEM default resolves to 0.01."
         ),
     )
     tohr_parser.add_argument(
