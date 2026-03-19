@@ -102,7 +102,24 @@ pytest -q -m "sphinx"
 
 ## miniforge3
 ```bash
-docker run --rm --init -it -v "$(mktemp -d):/tmp/work" -w /tmp/work condaforge/miniforge3:25.3.1-0 bash
+# launch one-time use interactive shell
+docker run --rm --init -it -v "$(mktemp -d):/tmp/work" -w /tmp/work -p 8888:8888 condaforge/miniforge3:25.3.1-0 bash
+
+
+# install jupyter
+python -m pip install jupyterlab
+
+# launch notebook
+python -m jupyter lab \
+  --ip=0.0.0.0 \
+  --port=8888 \
+  --no-browser \
+  --allow-root \
+  --ServerApp.token='' \
+  --ServerApp.password=''
+
+
+# open in windows browser
 ```
 
 ## ubuntu:24.04
