@@ -459,6 +459,69 @@ def test_write_dem_from_asset_hrefs_non_windowed_outputs_float32_non_empty(
 
     _read_output_dem_with_basic_assertions(dem_fp)
 
+
+@pytest.mark.fast
+def test_write_dem_from_asset_hrefs_honors_explicit_cache_dir(
+    tmp_path: Path,
+    logger,
+    synthetic_lowres_builder,
+):
+    """Explicit cache_dir should persist fetched DEM tiles outside the system temp directory."""
+    depth_lr_fp, depth_arr, depth_transform = synthetic_lowres_builder(
+        "depth_lr_cache",
+        SYNTHETIC_LOCAL_WRITE_BASE_D["depth_shape"],
+        SYNTHETIC_LOCAL_WRITE_BASE_D["depth_res"],
+        SYNTHETIC_LOCAL_WRITE_BASE_D["depth_crs"],
+    )
+    depth_bounds = array_bounds(depth_arr.shape[0], depth_arr.shape[1], depth_transform)
+    asset_fp = tmp_path / "asset_cache_source.tif"
+    cache_dir = tmp_path / "explicit_hrdem_cache"
+    output_fp = tmp_path / "fetched_dem_cached.tif"
+    output_fp_second = tmp_path / "fetched_dem_cached_second.tif"
+
+    # Build one local asset that fully covers the synthetic query extent.
+    asset_arr = np.arange(
+        1,
+        (SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"][0] * SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"][1]) + 1,
+        dtype=np.float32,
+    ).reshape(SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"])
+    asset_transform = from_bounds(
+        *depth_bounds,
+        SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"][1],
+        SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"][0],
+    )
+    _write_single_band_geotiff(
+        asset_fp,
+        asset_arr,
+        asset_transform,
+        SYNTHETIC_LOCAL_WRITE_BASE_D["asset_crs"],
+        nodata=-9999.0,
+    )
+
+    # Run the same request twice so the second output can reuse the first cached tile.
+    dem_fp = floodsr.dem_sources.hrdem_mosaic.write_dem_from_asset_hrefs(
+        depth_lr_fp=depth_lr_fp,
+        asset_hrefs=[str(asset_fp)],
+        output_fp=output_fp,
+        cache_dir=cache_dir,
+        use_cache=True,
+        logger=logger,
+        fetch_window_size=None,
+    )
+    dem_fp_second = floodsr.dem_sources.hrdem_mosaic.write_dem_from_asset_hrefs(
+        depth_lr_fp=depth_lr_fp,
+        asset_hrefs=[str(asset_fp)],
+        output_fp=output_fp_second,
+        cache_dir=cache_dir,
+        use_cache=True,
+        logger=logger,
+        fetch_window_size=None,
+    )
+
+    arr, _ = _read_output_dem_with_basic_assertions(dem_fp)
+    assert Path(dem_fp_second).exists() is True
+    assert len(list((cache_dir / "floodsr_hrdem_tile_cache").glob("*.tif"))) == 1
+
  
 
 

@@ -222,6 +222,25 @@ def test_parse_tohr_allows_fetch_force_tiling_flag(tile_case_d: dict):
     assert parsed_args.fetch_force_tiling is True
 
 
+@pytest.mark.parametrize("case_id", [pytest.param("2407_FHIMP_tile", id="data_case_min_depth_threshold_2407_fhimp_tile")])
+@pytest.mark.fast
+def test_parse_tohr_accepts_min_depth_threshold(tile_case_d: dict):
+    """Ensure tohr parser accepts an explicit minimum retained depth threshold."""
+    case_spec = tile_case_d["case_spec"]
+    parsed_args = _parse_arguments(
+        [
+            "tohr",
+            "--in",
+            str(tile_case_d["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
+            "--fetch-hrdem",
+            "--min-depth-threshold",
+            "0.01",
+        ]
+    )
+    assert parsed_args.fetch_hrdem is True
+    assert parsed_args.min_depth_threshold == pytest.approx(0.01)
+
+
 @pytest.mark.parametrize("case_id", [pytest.param("2407_FHIMP_tile", id="data_case_machine_json_2407_fhimp_tile")])
 @pytest.mark.fast
 def test_parse_tohr_allows_machine_json_only(tile_case_d: dict, tmp_path: Path):
@@ -266,6 +285,42 @@ def test_parse_tohr_cli_args_override_machine_json(tile_case_d: dict, tmp_path: 
     )
     assert parsed_args.in_fp == override_input_fp
     assert parsed_args.dem == override_dem_fp
+
+
+@pytest.mark.parametrize("case_id", [pytest.param("rss_dudelange_A", id="data_case_min_depth_zeroes_output_rss_dudelange_a")])
+@pytest.mark.e2e
+def test_main_tohr_honors_min_depth_threshold(
+    tohr_model_fp: Path,
+    tmp_path: Path,
+    tile_case_d: dict,
+):
+    """Ensure a high minimum depth threshold masks all predicted depths to zero."""
+    pytest.importorskip("onnxruntime")
+    rasterio = pytest.importorskip("rasterio")
+    case_spec = tile_case_d["case_spec"]
+    tile_dir = tile_case_d["tile_dir"]
+    output_fp = tmp_path / f"{tile_case_d['case_name']}_pred_cli_min_depth.tif"
+
+    exit_code = main(
+        [
+            "tohr",
+            "--in",
+            str(tile_dir / case_spec["inputs"]["lowres_fp"]),
+            "--dem",
+            str(tile_dir / case_spec["inputs"]["dem_fp"]),
+            "--out",
+            str(output_fp),
+            "--model-path",
+            str(tohr_model_fp),
+            "--min-depth-threshold",
+            "10.0",
+        ]
+    )
+    with rasterio.open(output_fp) as ds:
+        pred = ds.read(1)
+
+    assert exit_code == 0
+    assert np.count_nonzero(pred) == 0
 
 
 @pytest.mark.parametrize("case_id", [pytest.param("2407_FHIMP_tile", id="data_case_dem_and_fetch_hrdem_2407_fhimp_tile")])

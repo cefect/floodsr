@@ -24,13 +24,13 @@ gh workflow run --ref "$(git branch --show-current)"
 ## `install-edge.yml`
 
 - Purpose: manual install-matrix validation without slowing normal CI.
-- Scope: builds `dist/*` on the self-hosted Linux runner fleet, then runs each install smoke case in a fresh `condaforge/miniforge3:25.3.1-0` Docker container on `CEFTOP25M`; the matrix covers Linux-only basic `pipx` host-GDAL contexts plus one extended conda-forge GDAL case.
+- Scope: builds `dist/*` on the self-hosted Linux runner fleet, then proves each documented Unix install path from `docs/user/installation.rst` in a fresh context-specific Docker container; notebook cases use sparse checkout shims from `.github/workflows/artifacts`, and the matrix now collapses to `cefect/floodsr:install-edge-main-v0.2` for non-Colab paths plus `cefect/floodsr:install-edge-colab-v0.2` for Colab paths.
 - Trigger: None (i.e., `workflow_dispatch`).
 
 ## `all-tests.yml`
 
 - Purpose: manual full-suite validation on the self-hosted Linux runner fleet without changing branch CI scope.
-- Scope: recreates the locked `deploy` conda environment, runs `pytest -m "not sphinx"` once, preserves the full pytest log plus JUnit XML even when tests fail, and publishes warning/error extracts for review.
+- Scope: runs two self-hosted jobs: one recreates the locked `deploy` conda environment and runs `pytest -m "not sphinx and not notebook"`; the second starts from the same locked deploy environment, layers on the notebook runtime packages, and runs `pytest -m "notebook" tests/test_notebooks.py`, preserving logs and JUnit XML for both jobs.
 - Trigger: None (i.e., `workflow_dispatch`).
 
 ## `release.yml`
