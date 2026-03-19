@@ -1,17 +1,41 @@
 # ADR-0006: Testing and Test Data Contract
 
-- Use `pytest`.
-- Keep tests human-readable and behavior-oriented.
-- Prefer fewer tests with clear intent over many overlapping tests.
-- Keep test data in `tests/data` and keep artifacts small enough for quick fast-test runs.
-- Use shared fixtures in `tests/conftest.py` for common setup.
-- Store per-case metadata in `tests/data/<case>/case_spec.json`.
-- Put provenance/source details in `tests/data/<case>/readme.md` under `## Provenance`.
-- Keep case compatibility/applicability switches under `flags` in `case_spec.json`.
-- Include `flags.in_hrdem` when a case depends on HRDEM-specific behavior.
-- conclude test with a simple print statement to confirm test completion and provide a clear signal in test output.
+See `ADR-0017` for CI/CD workflow policy.
 
-`case_spec.json` should follow this contract:
+## Context
+
+- `floodsr` is a pip-installable, CLI-first package.
+- Tests should stay human-readable, behavior-oriented, and fast enough for local development while still supporting reliable cross-platform CI and a smaller set of slower end-to-end and network checks.
+- Test layout should mirror the package structure, not test tiers.
+- Test data should stay small enough for quick fast-test runs.
+- Shared fixtures should live in `tests/conftest.py`.
+- Per-case metadata should live in `tests/data/<case>/case_spec.json`, with provenance and source details in `tests/data/<case>/readme.md` under `## Provenance`.
+
+## Decision
+
+- Use `pytest` throughout and prefer fewer clear tests over overlapping coverage.
+- Organize tests by module path as `tests/<module_path>/test_*.py`; classify tiers with markers, not directories.
+
+
+### regression tests
+- `tests/test_tohr_regression.py` should contain one parameterized regression test over all `case_spec.json` cases.
+- Parameterize ToHR regression by the human-readable run labels under `expected`; each run label defines CLI-style `params` and expected `metrics`.
+- Each ToHR regression case should assert output dtype, non-empty output, and expected metrics, then print a simple completion message.
+
+
+### Marks
+
+- `fast`: fast, deterministic tests.
+- `e2e`: end-to-end CLI or system tests. small enough for PR feedback loops.
+- `network`: tests that require network access. must use pinned URLs and expected hashes, fail with actionable messages
+- `sphinx`: tests that require the documentation environment.
+- `local`: local-only tests that depend on local fixture data.
+- Do not use a `dev` mark; classify those tests as `local`.
+- Register these marks in `pytest.ini`.
+
+### data-driven tests
+- Keep compatibility or applicability switches under `flags` in `case_spec.json`, including `flags.in_hrdem` when a case depends on HRDEM-specific behavior.
+- `case_spec.json` follows this contract:
 
 ```json
 {
@@ -53,69 +77,3 @@
   }
 }
 ```
-
-Test suite should follow this structure:
-
-- `tests/test_tohr_regression.py` should contain one parameterized regression test over all `case_spec.json` cases.
-- ToHR regression should parameterize by human-readable run labels under `expected`.
-- Each run label should define CLI-style `params` and expected `metrics`.
-- ToHR regression should assert output dtype, non-empty output, and expected metrics for each run label.
-
-
-
-
-# Test Strategy
-
- 
-## Context
-
-`floodsr` is a pip-installable, CLI-first package. We want:
-- Fast, deterministic feedback in local development (e.g., VS Code).
-- Reliable cross-platform verification on clean machines via GitHub Actions.
-- A clear separation between fast tests and slower, higher-fidelity end-to-end checks.
-- Occasional tests that require network access (pinned artifacts), without making local defaults or CI flaky.
-
-We also want to keep tests organized by *module* (mirroring the package layout), while classifying tests by *tier* (`fast` / `e2e` / `network`).
-
-## Decision
-
-1. **All tests are written in `pytest`**, organized by module path, and classified using **markers**: see below. 
-
-2. **Test organization mirrors modules**, not tiers:
-   - `tests/<module_path>/test_*.py`
-   - Markers determine tier; directory structure does not.
-
- 
-
-4. **CI/CD policy references**:
-   - See `ADR-0017` for CI/CD workflow policy.
-
- 
-
- 
- 
-## Consequences
-
-- E2E tests must be kept small enough to run on PRs (or they will slow feedback loops).
-- Network tests must:
-  - Use pinned URLs and expected hashes.
-  - Fail with actionable messages when downloads change or are unavailable.
-  - Be explicitly marked with `@pytest.mark.network` so they never leak into CI.
-- Developers must remember to run E2E/network tiers locally when changing pipeline behavior.
-
-## Implementation Notes
-
-### Markers
-Add to  `pytest.ini`  marker registration (NOTE: multiple markers can be used per test):
-- `fast`: fast, deterministic tests (not exlcusive)
-- `e2e`: end-to-end CLI/system tests
-- `network`: requires network access  
-- `sphinx`: documentation env (requires sphinx)
-- `local`: local-only tests that depend on local fixture data
-- do not register a `dev` marker; classify those tests as `local`
-
- 
-## Cross-References
-
-- `ADR-0017` owns CI/CD workflow policy.
- 
