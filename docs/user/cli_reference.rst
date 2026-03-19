@@ -1,7 +1,7 @@
 CLI Reference
 =============
 
-
+Auto-generated from live command help output.
 
 Main Command
 ------------
@@ -38,10 +38,12 @@ tohr
                        [--model-version MODEL_VERSION] [--model-path MODEL_PATH]
                        [--manifest MANIFEST] [--cache-dir CACHE_DIR]
                        [--backend {http,file}] [--force] [--max-depth MAX_DEPTH]
+                       [--min-depth-threshold MIN_DEPTH_THRESHOLD]
                        [--dem-pct-clip DEM_PCT_CLIP]
                        [--window-method {hard,feather}]
                        [--tile-overlap TILE_OVERLAP] [--tile-size TILE_SIZE]
                        [--crs-policy {strict,use-dem,use-lores}]
+                       [--show-progress | --no-show-progress]
    
    Run one super-resolution pass for a low-res depth raster.
    
@@ -78,14 +80,29 @@ tohr
      --force               Redownload a versioned model when cache resolution
                            would otherwise reuse it.
      --max-depth MAX_DEPTH
-                           Override the max-depth value used during log-space
-                           scaling.
+                           Maximum depth used when clipping low-res depth values
+                           before log1p scaling into the model input range.
+                           Values above this threshold are capped during
+                           preprocessing and after inverse scaling. The current
+                           ResUNet_16x_DEM default resolves to 5.0.
+     --min-depth-threshold MIN_DEPTH_THRESHOLD
+                           Minimum predicted depth retained in the final raster.
+                           Values below this threshold are written as 0.0 after
+                           inference. The current ResUNet_16x_DEM default
+                           resolves to 0.01.
      --dem-pct-clip DEM_PCT_CLIP
-                           Override the DEM percentile clip used when training
-                           stats are incomplete.
+                           Percentile used to cap high DEM values before min-max
+                           normalization to [0, 1]. Lower values clip high
+                           terrain more aggressively; higher values preserve more
+                           of the upper tail. Used when explicit DEM
+                           normalization stats are unavailable. The current
+                           ResUNet_16x_DEM default resolves to 95.0.
      --window-method {hard,feather}
                            Tile mosaicing method used when stitching model
-                           windows.
+                           windows. `hard` uses non-overlapping tiles with direct
+                           writes; `feather` uses overlapping tiles with weighted
+                           blending to reduce seam artifacts. The current default
+                           is `feather`.
      --tile-overlap TILE_OVERLAP
                            Feather overlap in low-res pixels. Ignored unless
                            `--window-method=feather`.
@@ -95,6 +112,9 @@ tohr
      --crs-policy {strict,use-dem,use-lores}
                            Policy for CRS mismatches between the low-res depth
                            raster and DEM.
+     --show-progress, --no-show-progress
+                           Show model download, DEM fetch, and tiled runtime
+                           progress output.
 
 models
 ------
@@ -133,6 +153,7 @@ models fetch
 
    usage: floodsr models fetch [-h] [--manifest MANIFEST] [--cache-dir CACHE_DIR]
                                [--backend {http,file}] [--force]
+                               [--show-progress | --no-show-progress]
                                version
    
    Fetch one manifest model into the local cache.
@@ -150,6 +171,8 @@ models fetch
                            Override weight retrieval backend selection.
      --force               Redownload even when a valid cached weight file
                            already exists.
+     --show-progress, --no-show-progress
+                           Show model download progress output.
 
 doctor
 ------

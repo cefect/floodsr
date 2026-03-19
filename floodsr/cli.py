@@ -494,7 +494,12 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
         "--window-method",
         choices=("hard", "feather"),
         default="feather",
-        help="Tile mosaicing method used when stitching model windows.",
+        help=(
+            "Tile mosaicing method used when stitching model windows. "
+            "`hard` uses non-overlapping tiles with direct writes; "
+            "`feather` uses overlapping tiles with weighted blending to reduce seam artifacts. "
+            "The current default is `feather`."
+        ),
     )
     tohr_parser.add_argument(
         "--tile-overlap",
