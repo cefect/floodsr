@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from functools import partial
 from pathlib import Path
 from typing import Callable
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit, urlunsplit
 from urllib.request import urlopen
 
 import geopandas as gpd
@@ -120,15 +120,28 @@ def _build_tile_cache_key(
     bounds_token = ",".join(f"{float(v):.8f}" for v in tile_bounds)
     shape_token = f"{int(tile_shape[0])}x{int(tile_shape[1])}"
     crs_token = source_crs.to_string() if hasattr(source_crs, "to_string") else str(source_crs)
-    asset_token = "|".join(str(v) for v in asset_hrefs)
+    # Ignore query/fragment noise so signed URLs or timestamps do not defeat cache reuse.
+    asset_token = "|".join(sorted(_normalize_cache_asset_href(v) for v in asset_hrefs))
     payload = f"{request_token}|bounds={bounds_token}|shape={shape_token}|crs={crs_token}|assets={asset_token}"
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:32]
 
 
-def _resolve_tile_cache_fp(cache_key: str, cache_dir: str | Path | None = None) -> Path:
-    """Resolve cache filepath for one GeoTIFF tile."""
+def _normalize_cache_asset_href(asset_href: str) -> str:
+    """Normalize one asset href for cache-key construction."""
+    parts = urlsplit(str(asset_href))
+    return urlunsplit((parts.scheme.lower(), parts.netloc.lower(), parts.path, "", ""))
+
+
+def _resolve_tile_cache_root(cache_dir: str | Path | None = None) -> Path:
+    """Resolve the directory that stores cached HRDEM tile GeoTIFFs."""
     cache_root = get_cache_dir(cache_dir) / TILE_CACHE_DIR_NAME
     cache_root.mkdir(parents=True, exist_ok=True)
+    return cache_root
+
+
+def _resolve_tile_cache_fp(cache_key: str, cache_dir: str | Path | None = None) -> Path:
+    """Resolve cache filepath for one GeoTIFF tile."""
+    cache_root = _resolve_tile_cache_root(cache_dir)
     return (cache_root / f"{cache_key}.tif").resolve()
 
 
@@ -977,6 +990,8 @@ def write_dem_from_asset_hrefs(
     if fetch_window_size is None and out_path.suffix.lower() == ".vrt":
         out_path = out_path.with_suffix(".tif")
     out_path.parent.mkdir(parents=True, exist_ok=True)
+    cache_root = _resolve_tile_cache_root(cache_dir) if bool(use_cache) else None
+    cache_file_count = len(list(cache_root.glob("*.tif"))) if cache_root is not None else 0
     geom = _estimate_fetch_geometry(depth_query["depth_crs"], depth_query["depth_bounds"], asset_hrefs[0])
     first_crs = geom["source_crs"]
     source_nodata = geom["source_nodata"]
@@ -991,6 +1006,10 @@ def write_dem_from_asset_hrefs(
     log.info(
         f"raw fetch request grid: width={est_width:,}, height={est_height:,}, "
         f"pixels={est_pixels:,}, non_windowed_peak_estimate={est_float32_gb:.2f} GiB"
+    )
+    log.info(
+        f"HRDEM tile cache state: enabled={int(bool(use_cache))}, dir={cache_root}, "
+        f"existing_files={cache_file_count:,}, request_token={request_token}"
     )
 
     base_profile = {
