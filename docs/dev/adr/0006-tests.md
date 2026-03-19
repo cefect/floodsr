@@ -28,6 +28,7 @@ See `ADR-0017` for CI/CD workflow policy.
 - `fast`: fast, deterministic tests.
 - `e2e`: end-to-end CLI or system tests. small enough for PR feedback loops.
 - `network`: tests that require network access. must use pinned URLs and expected hashes, fail with actionable messages
+- `notebook`: notebook execution tests for `docs/user/notebooks`. run these from the `dev` conda environment rather than the default `deploy` environment.
 - `sphinx`: tests that require the documentation environment.
 - `local`: local-only tests that depend on local fixture data.
 - Do not use a `dev` mark; classify those tests as `local`.

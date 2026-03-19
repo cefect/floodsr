@@ -41,6 +41,19 @@ pytest -q -m "sphinx"
 
 ```
 
+### notebook tests
+NOTE: these run in the `dev` conda environment, not `deploy`.
+
+```bash
+# move to the repository root
+cd /workspace
+
+# run only the notebook tests in the notebook-capable environment
+conda run -n dev pytest -q -m "notebook" tests/test_notebooks.py
+
+# run all notebook-marked tests
+conda run -n dev pytest -q -m "notebook"
+```
 
 ## Notes
 - Marker definitions live in [`pytest.ini`](../pytest.ini).
