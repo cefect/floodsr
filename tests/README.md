@@ -122,6 +122,11 @@ python -m jupyter lab \
 # open in windows browser
 ```
 
+## colab
+```bash
+us-docker.pkg.dev/colab-images/public/cpu-runtime:latest
+```
+
 ## ubuntu:24.04
 ```bash
 docker run --rm --init -it -v "$(mktemp -d):/tmp/work" -w /tmp/work ubuntu:24.04 bash
