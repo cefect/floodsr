@@ -15,6 +15,18 @@ The current docs stack uses Sphinx with `myst_nb` for notebook rendering and the
 - Keep notebook execution disabled during docs builds.
 - Treat tutorial notebooks as documentation artifacts first, not as build-time executed tests.
 - Track any future interactive-launch button as a separate implementation issue rather than in this ADR.
+- Keep English as the source language for user docs.
+- Add Canadian French (`fr_CA`) as a translated docs target using Sphinx i18n catalogs under `docs/user/locale/`.
+- Keep one shared Sphinx source tree under `docs/user` rather than duplicating content per language.
+- Keep the docs in the main repo and publish translations from separate Read the Docs projects that point at the same repository.
+
+## Localization
+
+- The canonical authored docs remain the English files already stored under `docs/user`.
+- French content should be maintained as `.po` translation catalogs under `docs/user/locale/fr_CA/LC_MESSAGES/`.
+ 
+
+ 
 
 ## Tutorials
 
@@ -59,5 +71,4 @@ As these provide commands for patching the environment, they are a special case.
 Tutorial notebooks are rendered by the docs toolchain, but they are not expected to run inside the docs devcontainer as part of normal docs authoring.
 
 Notebook proofing may still be added under `pytest` as a separate `notebook`-marked suite, but that execution should remain outside the default `deploy` test path and should run from the `dev` conda environment so the notebook runtime stays isolated from the runtime-locked package environment.
-
 
