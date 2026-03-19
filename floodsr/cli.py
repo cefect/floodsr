@@ -240,6 +240,7 @@ def main_cli(args: argparse.Namespace) -> int:
                 source_id="hrdem",
                 depth_lr_fp=args.in_fp,
                 output_fp=args.fetch_out,
+                cache_dir=args.cache_dir,
                 fetch_force_tiling=args.fetch_force_tiling,
                 show_progress=args.show_progress,
                 logger=log,

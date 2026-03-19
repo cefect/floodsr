@@ -24,7 +24,7 @@ The current docs stack uses Sphinx with `myst_nb` for notebook rendering and the
   - a short title
   - a one-line description on the landing page
 - Tutorial numbering should be explicit and stable, e.g. `Tutorial 1: Quick Start`.
-- each tutorial notebook should be runnable in the *dev* layer of the .devcontainer (`container/miniforge/environment.dev.yml`). this includes setup tutorials (see below). 
+- each tutorial notebook should be runnable in the *dev* layer of the .devcontainer (`container/miniforge/environment.dev.yml`). this includes setup tutorials (see below). Tutorial execution for documentation refreshes should use per-notebook shell shims that live beside the notebooks under `docs/user/notebooks/` (for example `tutorial_1.sh` and `tutorial_2.sh`).
 
 ### setup tutorials (1 and 2)
 As these provide commands for patching the environment, they are a special case. 
@@ -50,6 +50,8 @@ As these provide commands for patching the environment, they are a special case.
 - Sphinx should render these notebooks with `myst_nb`.
 - Notebook execution should remain disabled via the docs configuration so that builds are deterministic
 - Tutorial execution for documentation refreshes should use per-notebook shell shims that live beside the notebooks under `docs/user/notebooks/` (for example `tutorial_1.sh` and `tutorial_2.sh`).
+- Those shell shims should execute a temporary copy of the notebook under a cache-backed working directory, then copy the completed `.ipynb` back into `docs/user/notebooks/`.
+- Generated side files from tutorial execution should stay in the cache-backed staging area, not beside the tracked source notebooks.
  
 
 ## Docs Devcontainer Limitation
@@ -57,6 +59,5 @@ As these provide commands for patching the environment, they are a special case.
 Tutorial notebooks are rendered by the docs toolchain, but they are not expected to run inside the docs devcontainer as part of normal docs authoring.
 
 Notebook proofing may still be added under `pytest` as a separate `notebook`-marked suite, but that execution should remain outside the default `deploy` test path and should run from the `dev` conda environment so the notebook runtime stays isolated from the runtime-locked package environment.
-
 
 

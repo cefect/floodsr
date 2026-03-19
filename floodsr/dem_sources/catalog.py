@@ -17,6 +17,7 @@ def fetch_dem(
     source_id: str,
     depth_lr_fp: str | Path,
     output_fp: str | Path | None = None,
+    cache_dir: str | Path | None = None,
     fetch_force_tiling: bool = False,
     show_progress: bool = True,
     logger=None,
@@ -32,6 +33,7 @@ def fetch_dem(
     return fetch_fn(
         depth_lr_fp=depth_lr_fp,
         output_fp=output_fp,
+        cache_dir=cache_dir,
         force_tiling=fetch_force_tiling,
         show_progress=show_progress,
         logger=log,
