@@ -26,6 +26,10 @@ Because of that, the package should expose one progressive capability model rath
   - **Basic**
     - Must not require `osgeo.gdal`.
     - Must not require system GDAL.
+    - Assumes the user already has a working system Python for the target execution context.
+    - For command line (CLI) use, the recommended install path is `pipx`.
+    - For local notebook (Jupyter) use, the recommended install path is `pip` into the environment backing the notebook kernel.
+    - For hosted notebook (Colab) use, installs happen inside the managed runtime with `pip`.
     - Is supported via `pip` and `pipx` on wheel-supported platforms.
     - Provides the default CLI and library surface for users who only need the non-VRT path.
     - VRT-dependent commands are unavailable.
@@ -58,6 +62,7 @@ The basic-versus-extended split keeps the package surface unified while making t
 
 - The package name and primary entrypoints stay simple: users always install `floodsr`.
 - Basic remains the lowest-friction path for the default CLI and library experience.
+- Basic documentation must state the preconditions separately from the package install itself: working Python for all local contexts, plus a working Jupyter setup for local notebook use.
 - Extended remains available for GDAL-backed workflows without turning GDAL into an unreliable PyPI extra.
 - Documentation and testing must clearly distinguish capability tier from platform and execution-context support.
 

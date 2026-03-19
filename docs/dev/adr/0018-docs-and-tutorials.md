@@ -26,6 +26,18 @@ The current docs stack uses Sphinx with `myst_nb` for notebook rendering and the
 - The tutorials landing page should rely on the normal docs navigation/toctree flow to move readers into notebook pages rather than inline cross-links.
 - Tutorial numbering should be explicit and stable, e.g. `Tutorial 1: Quick Start`.
 
+### setup tutorials (1 and 2)
+As these provide commands for patching the environment, they are a special case. 
+
+
+- Each setup tutorial notebook (i.e., 1 and 2) should start with a short summary of the three execution contexts:
+  - command line (CLI)
+  - local notebook (Jupyter)
+  - hosted notebook (Colab)
+- That summary should link readers to the corresponding section of the installation page rather than duplicating the full install guidance inline.
+- Each tutorial notebook should include a code block with local and hosted notebook kernel-patching commands commented out.
+- The surrounding notebook text should instruct readers to uncomment the commands that match their execution context before running the install/setup cell.
+
 ## Notebook Rendering Strategy
 
 - Tutorial source files should be committed as real Jupyter notebooks (`.ipynb`), not generated artifacts and not Markdown stand-ins.
@@ -57,5 +69,6 @@ Future work for a Colab-backed interactive launch button is tracked in issue `#1
 
 - Keep tutorial notebooks small and task-oriented.
 - Prefer CLI-first tutorial flows that match the existing user docs.
+- Keep install/setup cells aligned with the execution-context split in `ADR-0007`: `pipx` for CLI, `pip` for notebook kernels, and separate hosted-notebook guidance.
 - Avoid introducing notebook outputs into version control unless there is a strong reason to preserve them.
 - If interactive execution becomes a core product feature later, revisit whether Colab remains sufficient or whether a more integrated notebook hosting model is needed.
