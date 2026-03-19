@@ -7,13 +7,14 @@
   "expected": {
     "ResUNet_16x_DEM_default": {
       "params": {
-        "model_version": "ResUNet_16x_DEM"
+        "model_version": "ResUNet_16x_DEM",
+        "min_depth_threshold": 0.01
       },
       "metrics": {
         "precision": 3,
-        "mase_m": 0.03275433880831328,
-        "rmse_m": 0.18901252658183912,
-        "ssim": 0.4688561808417386
+        "mase_m": 0.03230191931606555,
+        "rmse_m": 0.18907998990181463,
+        "ssim": 0.4653350104325243
       }
     }
   },

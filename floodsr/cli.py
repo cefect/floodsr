@@ -131,6 +131,7 @@ def _build_tohr_machine_cli_tokens(payload: dict[str, object], argv: list[str]) 
         "backend": "--backend",
         "force": "--force",
         "max_depth": "--max-depth",
+        "min_depth_threshold": "--min-depth-threshold",
         "dem_pct_clip": "--dem-pct-clip",
         "window_method": "--window-method",
         "tile_overlap": "--tile-overlap",
@@ -240,6 +241,7 @@ def main_cli(args: argparse.Namespace) -> int:
                 source_id="hrdem",
                 depth_lr_fp=args.in_fp,
                 output_fp=args.fetch_out,
+                cache_dir=args.cache_dir,
                 fetch_force_tiling=args.fetch_force_tiling,
                 show_progress=args.show_progress,
                 logger=log,
@@ -254,6 +256,7 @@ def main_cli(args: argparse.Namespace) -> int:
             output_fp=output_fp,
             crs_policy=args.crs_policy,
             max_depth=args.max_depth,
+            min_depth_threshold=args.min_depth_threshold,
             dem_pct_clip=args.dem_pct_clip,
             window_method=args.window_method,
             tile_overlap=args.tile_overlap,
@@ -460,19 +463,43 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
         "--max-depth",
         type=float,
         default=None,
-        help="Override the max-depth value used during log-space scaling.",
+        help=(
+            "Maximum depth used when clipping low-res depth values before log1p scaling into the model input range. "
+            "Values above this threshold are capped during preprocessing and after inverse scaling. "
+            "The current ResUNet_16x_DEM default resolves to 5.0."
+        ),
+    )
+    tohr_parser.add_argument(
+        "--min-depth-threshold",
+        type=float,
+        default=None,
+        help=(
+            "Minimum predicted depth retained in the final raster. "
+            "Values below this threshold are written as 0.0 after inference. "
+            "The current ResUNet_16x_DEM default resolves to 0.01."
+        ),
     )
     tohr_parser.add_argument(
         "--dem-pct-clip",
         type=float,
         default=None,
-        help="Override the DEM percentile clip used when training stats are incomplete.",
+        help=(
+            "Percentile used to cap high DEM values before min-max normalization to [0, 1]. "
+            "Lower values clip high terrain more aggressively; higher values preserve more of the upper tail. "
+            "Used when explicit DEM normalization stats are unavailable. "
+            "The current ResUNet_16x_DEM default resolves to 95.0."
+        ),
     )
     tohr_parser.add_argument(
         "--window-method",
         choices=("hard", "feather"),
         default="feather",
-        help="Tile mosaicing method used when stitching model windows.",
+        help=(
+            "Tile mosaicing method used when stitching model windows. "
+            "`hard` uses non-overlapping tiles with direct writes; "
+            "`feather` uses overlapping tiles with weighted blending to reduce seam artifacts. "
+            "The current default is `feather`."
+        ),
     )
     tohr_parser.add_argument(
         "--tile-overlap",

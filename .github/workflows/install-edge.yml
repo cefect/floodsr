@@ -1,7 +1,7 @@
 name: Install Edge
 
 on:
-  # Run the expanded install-context matrix only when requested.
+  # Run the documented install-path proof matrix only when requested.
   workflow_dispatch:
 
 permissions:
@@ -16,7 +16,7 @@ concurrency:
 jobs:
   build-artifacts:
     name: build wheel and sdist (self-hosted container)
-    # Target the current self-hosted Linux runner fleet, which is presently CEFTOP25M.
+    # Target the current self-hosted Linux runner fleet.
     runs-on:
       - self-hosted
       - Linux
@@ -39,7 +39,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Build artifacts once and reuse them across install-context jobs.
+      # Build artifacts once and reuse them across downstream install-proof jobs.
       - name: Build artifacts
         shell: bash
         run: |
@@ -47,47 +47,87 @@ jobs:
           python -m build
           python -m twine check dist/*
 
-      # Upload the wheel and sdist for downstream smoke jobs.
+      # Upload the wheel and sdist for downstream install-path proofs.
       - name: Upload dist artifacts
         uses: actions/upload-artifact@v6
         with:
           name: python-dist
           path: dist/*
 
-  install-smoke:
+  install-proof:
     name: ${{ matrix.case_name }} (self-hosted container)
-    # Run each case in its own fresh container on the self-hosted Linux runner.
+    # Run each documented Unix install path in its own fresh container.
     runs-on:
       - self-hosted
       - Linux
       - X64
     container:
-      image: condaforge/miniforge3:25.3.1-0
-    timeout-minutes: 20
+      image: ${{ matrix.container_image }}
+    timeout-minutes: 45
     needs: build-artifacts
     strategy:
       fail-fast: false
       matrix:
         include:
-          - case_name: basic pipx / no_system_gdal
-            install_mode: pipx
-            gdal_context: no_system_gdal
+          - case_id: basic_cli
+            case_name: basic CLI / pipx
+            container_image: cefect/floodsr:install-edge-main-v0.2
+            notebook_fp: "__none__"
+            expect_python_bindings_installed: "false"
             expect_gdal_config_installed: "false"
+            expect_vrt_enabled: "false"
             expected_gdal_config_version: "__none__"
-          - case_name: basic pipx / unsupported_system_gdal
-            install_mode: pipx
-            gdal_context: unsupported_system_gdal
+          - case_id: basic_local_notebook
+            case_name: basic local notebook / jupyter
+            container_image: cefect/floodsr:install-edge-main-v0.2
+            notebook_fp: .github/workflows/artifacts/basic_local_notebook.ipynb
+            expect_python_bindings_installed: "false"
+            expect_gdal_config_installed: "false"
+            expect_vrt_enabled: "false"
+            expected_gdal_config_version: "__none__"
+          - case_id: basic_hosted_notebook
+            case_name: basic hosted notebook / colab
+            container_image: cefect/floodsr:install-edge-colab-v0.2
+            notebook_fp: .github/workflows/artifacts/basic_hosted_notebook_colab.ipynb
+            expect_python_bindings_installed: "true"
             expect_gdal_config_installed: "true"
-            expected_gdal_config_version: "0.0.0"
-          - case_name: basic pipx / supported_system_gdal
-            install_mode: pipx
-            gdal_context: supported_system_gdal
+            expect_vrt_enabled: "true"
+            expected_gdal_config_version: "__skip__"
+          - case_id: extended_cli
+            case_name: extended CLI / conda
+            container_image: cefect/floodsr:install-edge-main-v0.2
+            notebook_fp: "__none__"
+            expect_python_bindings_installed: "true"
             expect_gdal_config_installed: "true"
-            expected_gdal_config_version: "3.12.2"
-          - case_name: extended conda / conda-forge gdal
-            install_mode: conda
+            expect_vrt_enabled: "true"
+            expected_gdal_config_version: "__skip__"
+          - case_id: extended_local_notebook
+            case_name: extended local notebook / jupyter
+            container_image: cefect/floodsr:install-edge-main-v0.2
+            notebook_fp: .github/workflows/artifacts/extended_local_notebook.ipynb
+            expect_python_bindings_installed: "true"
+            expect_gdal_config_installed: "true"
+            expect_vrt_enabled: "true"
+            expected_gdal_config_version: "__skip__"
+          - case_id: extended_hosted_notebook
+            case_name: extended hosted notebook / colab
+            container_image: cefect/floodsr:install-edge-colab-v0.2
+            notebook_fp: .github/workflows/artifacts/extended_hosted_notebook_colab.ipynb
+            expect_python_bindings_installed: "true"
+            expect_gdal_config_installed: "true"
+            expect_vrt_enabled: "true"
+            expected_gdal_config_version: "__skip__"
 
     steps:
+      # Fetch only the notebook shim artifacts needed by notebook cases.
+      - name: Checkout notebook proof artifacts
+        if: matrix.notebook_fp != '__none__'
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            .github/workflows/artifacts
+
       # Fetch the previously built artifacts instead of rebuilding from source.
       - name: Download dist artifacts
         uses: actions/download-artifact@v5
@@ -95,87 +135,140 @@ jobs:
           name: python-dist
           path: dist
 
-      # Simulate host GDAL visibility without installing Python GDAL into the pipx env.
-      - name: Configure host GDAL context
-        if: matrix.install_mode == 'pipx'
+      # Expose the built artifacts through a tiny local simple index.
+      - name: Create local simple index
         shell: bash
         run: |
-          if [ "${{ matrix.gdal_context }}" = "no_system_gdal" ]; then
-            exit 0
-          fi
+          python - <<'PY'
+          import html, os
+          from pathlib import Path
 
-          mkdir -p fake-bin
-          if [ "${{ matrix.gdal_context }}" = "supported_system_gdal" ]; then
-            GDAL_VERSION="3.12.2"
-          else
-            GDAL_VERSION="0.0.0"
-          fi
+          dist_dir = Path("dist")
+          simple_dir = Path("simple") / "floodsr"
+          simple_dir.mkdir(parents=True, exist_ok=True)
+          links = []
+          for artifact_fp in sorted(dist_dir.iterdir()):
+              if artifact_fp.is_file():
+                  href = os.path.relpath(artifact_fp, simple_dir)
+                  name = html.escape(artifact_fp.name)
+                  links.append(f'<a href="{href}">{name}</a>')
+          assert links, "no dist artifacts found for simple index"
+          simple_dir.joinpath("index.html").write_text("\n".join(links) + "\n", encoding="utf-8")
+          PY
+          {
+            echo "PIP_INDEX_URL=file://${GITHUB_WORKSPACE}/simple"
+            echo "PIP_EXTRA_INDEX_URL=https://pypi.org/simple"
+            echo "PIP_DISABLE_PIP_VERSION_CHECK=1"
+            echo "PIP_ROOT_USER_ACTION=ignore"
+          } >> "${GITHUB_ENV}"
 
-          cat > fake-bin/gdal-config <<EOF
-          #!/usr/bin/env bash
-          if [ "\$1" = "--version" ]; then
-            echo "${GDAL_VERSION}"
-            exit 0
-          fi
-          exit 1
-          EOF
-          chmod +x fake-bin/gdal-config
-
-          echo "$PWD/fake-bin" >> "$GITHUB_PATH"
-
-      # Install the built wheel with pipx and publish the bin directory for later steps.
-      - name: Install basic pipx wheel
-        if: matrix.install_mode == 'pipx'
+      # Run the documented basic CLI install commands against the built artifact.
+      - name: Run documented basic CLI install
+        if: matrix.case_id == 'basic_cli'
         shell: bash
         run: |
-          WHEEL=$(echo dist/*.whl)
-          python -m pip install --upgrade pip pipx
+          python -m pip install --upgrade pip
+          python -m pip install --user pipx
+          export PATH="$HOME/.local/bin:$PATH"
+          python -m pipx ensurepath
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          python -m pipx install --force "$WHEEL"
+          pipx install floodsr
 
-      # Smoke test the basic install from the built wheel after PATH updates take effect.
-      - name: Smoke test basic pipx CLI
-        if: matrix.install_mode == 'pipx'
+      # Run the documented local Jupyter preflight and basic install commands.
+      - name: Run documented basic local notebook install
+        if: matrix.case_id == 'basic_local_notebook'
+        shell: bash
+        run: |
+          python --version
+          python -m jupyter --version
+          python -m pip install floodsr ipykernel
+          python -m ipykernel install --user --name floodsr --display-name "Python (floodsr)"
+
+      # Run the documented extended CLI install commands in one activated conda env.
+      - name: Run documented extended CLI install
+        if: matrix.case_id == 'extended_cli'
+        shell: bash
+        run: |
+          eval "$(conda shell.bash hook)"
+          conda create -n floodsr-gdal -c conda-forge python=3.12 gdal -y
+          conda activate floodsr-gdal
+          python -m pip install floodsr
+
+      # Run the documented extended local notebook install commands in one activated conda env.
+      - name: Run documented extended local notebook install
+        if: matrix.case_id == 'extended_local_notebook'
+        shell: bash
+        run: |
+          eval "$(conda shell.bash hook)"
+          conda create -n floodsr-gdal -c conda-forge python=3.12 gdal -y
+          conda activate floodsr-gdal
+          python -m pip install floodsr
+          python -m pip install jupyterlab ipykernel
+          python -m ipykernel install --user --name floodsr-gdal --display-name "Python (floodsr-gdal)"
+
+      # Execute each notebook shim from the sparse checkout copy.
+      - name: Execute notebook shim
+        if: matrix.notebook_fp != '__none__'
+        shell: bash
+        run: |
+          if [ "${{ matrix.case_id }}" = "extended_local_notebook" ]; then
+            conda run -n floodsr-gdal jupyter nbconvert \
+              --to notebook \
+              --execute \
+              --inplace \
+              --ExecutePreprocessor.timeout=1200 \
+              "${{ matrix.notebook_fp }}"
+            exit 0
+          fi
+
+          jupyter nbconvert \
+            --to notebook \
+            --execute \
+            --inplace \
+            --ExecutePreprocessor.timeout=1200 \
+            "${{ matrix.notebook_fp }}"
+
+      # Capture the final doctor payload from the target execution environment.
+      - name: Capture doctor JSON
+        shell: bash
+        run: |
+          if [ "${{ matrix.case_id }}" = "extended_cli" ] || [ "${{ matrix.case_id }}" = "extended_local_notebook" ]; then
+            conda run -n floodsr-gdal floodsr doctor --json > doctor.json
+            exit 0
+          fi
+
+          floodsr doctor --json > doctor.json
+
+      # Check the runtime capability claims for the documented install path.
+      - name: Verify doctor JSON
         shell: bash
         env:
+          EXPECT_PYTHON_BINDINGS_INSTALLED: ${{ matrix.expect_python_bindings_installed }}
           EXPECT_GDAL_CONFIG_INSTALLED: ${{ matrix.expect_gdal_config_installed }}
-          EXPECTED_GDAL_CONFIG_VERSION: ${{ matrix.expected_gdal_config_version }}
+          EXPECT_VRT_ENABLED: ${{ matrix.expect_vrt_enabled }}
+          EXPECT_GDAL_CONFIG_VERSION: ${{ matrix.expected_gdal_config_version }}
         run: |
-          floodsr --help
-          floodsr doctor --json > doctor.json
-          floodsr models list
           python - <<'PY'
           import json, os
           from pathlib import Path
 
-          payload = json.loads(Path("doctor.json").read_text(encoding="utf-8"))
-          expect_config = os.environ["EXPECT_GDAL_CONFIG_INSTALLED"] == "true"
-          expected_version = os.environ["EXPECTED_GDAL_CONFIG_VERSION"]
+          def parse_bool(raw_value):
+              if raw_value == "true":
+                  return True
+              if raw_value == "false":
+                  return False
+              raise ValueError(f"unsupported boolean token: {raw_value}")
 
-          assert payload["gdal"]["python_bindings_installed"] is False
-          assert payload["gdal"]["vrt_enabled"] is False
-          assert payload["gdal"]["gdal_config_installed"] is expect_config
+          payload = json.loads(Path("doctor.json").read_text(encoding="utf-8"))
+          assert payload["onnxruntime"]["installed"] is True
+          assert payload["rasterio"]["installed"] is True
+          assert payload["gdal"]["python_bindings_installed"] is parse_bool(os.environ["EXPECT_PYTHON_BINDINGS_INSTALLED"])
+          assert payload["gdal"]["gdal_config_installed"] is parse_bool(os.environ["EXPECT_GDAL_CONFIG_INSTALLED"])
+          assert payload["gdal"]["vrt_enabled"] is parse_bool(os.environ["EXPECT_VRT_ENABLED"])
+
+          expected_version = os.environ["EXPECT_GDAL_CONFIG_VERSION"]
           if expected_version == "__none__":
               assert payload["gdal"]["gdal_config_version"] is None
-          else:
+          elif expected_version != "__skip__":
               assert payload["gdal"]["gdal_config_version"] == expected_version
-          PY
-
-      # Smoke test the documented conda-backed extended install path.
-      - name: Smoke test extended conda CLI
-        if: matrix.install_mode == 'conda'
-        shell: bash
-        run: |
-          WHEEL=$(echo dist/*.whl)
-          conda create -n floodsr-gdal -c conda-forge python=3.12 gdal pip -y
-          conda run -n floodsr-gdal python -m pip install --upgrade pip
-          conda run -n floodsr-gdal python -m pip install "$WHEEL"
-          conda run -n floodsr-gdal floodsr doctor --json > doctor-extended.json
-          python - <<'PY'
-          import json
-          from pathlib import Path
-
-          payload = json.loads(Path("doctor-extended.json").read_text(encoding="utf-8"))
-          assert payload["gdal"]["python_bindings_installed"] is True
-          assert payload["gdal"]["vrt_enabled"] is True
           PY

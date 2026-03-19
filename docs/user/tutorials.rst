@@ -20,3 +20,5 @@ Select ``Tutorial 1: Quick Start`` from the list below to get started.
    :maxdepth: 1
 
    notebooks/tutorial_1
+   notebooks/tutorial_2
+   notebooks/tutorial_3
