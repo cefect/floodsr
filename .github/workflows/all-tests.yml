@@ -1,7 +1,7 @@
 name: All Tests
 
 on:
-  # Run the full non-Sphinx pytest suite only when requested.
+  # Run the full deploy-environment pytest suite only when requested.
   workflow_dispatch:
 
 permissions:
@@ -53,7 +53,7 @@ jobs:
           conda run -n deploy-ci python -m pip install --upgrade pip
           conda run -n deploy-ci python -m pip install -e ".[dev]"
 
-      # Run the full non-Sphinx suite once, keep going through failures, and persist logs.
+      # Run the full deploy-environment suite once, excluding docs-only notebook proofing.
       - name: Run pytest
         id: pytest
         continue-on-error: true
@@ -62,7 +62,7 @@ jobs:
           set -o pipefail
           mkdir -p artifacts
           conda run -n deploy-ci python -m pytest \
-            -m "not sphinx" \
+            -m "not sphinx and not notebook" \
             --junitxml=artifacts/pytest-junit.xml \
             2>&1 | tee artifacts/pytest.log
           status=${PIPESTATUS[0]}

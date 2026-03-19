@@ -50,10 +50,10 @@ jobs:
           python -m pip install "gdal==$(gdal-config --version)"
           python -m pip install -e ".[dev]"
 
-      # Run the CI-safe fast suite only.
+      # Run the CI-safe fast suite only, excluding local docs notebook proofing.
       - name: Run fast tests
         run: |
-          pytest -m "fast and not local and not sphinx"
+          pytest -m "fast and not local and not sphinx and not notebook"
 
   build-artifacts:
     name: build wheel and sdist (ubuntu-latest)

@@ -9,6 +9,7 @@ Several ADRs define packaging, testing, and publishing intent, but the GitHub Ac
 - CI owns packaging validation for published artifacts.
 - CI builds release artifacts once and reuses them across downstream workflow steps.
 - GitHub Actions test selection is limited to `fast` tests and excludes `local`.
+- Notebook execution tests marked `notebook` are not part of the default remote CI, release, or manual `all-tests` workflow paths because they require the separate notebook-capable `dev` environment rather than the runtime-locked `deploy` environment.
 - Branch CI and release publishing are separate workflows with separate privileges:
     - `ci.yaml` for branch CI and PR validation.
     - `release.yaml` for tag-triggered release publishing. 

@@ -30,7 +30,7 @@ gh workflow run --ref "$(git branch --show-current)"
 ## `all-tests.yml`
 
 - Purpose: manual full-suite validation on the self-hosted Linux runner fleet without changing branch CI scope.
-- Scope: recreates the locked `deploy` conda environment, runs `pytest -m "not sphinx"` once, preserves the full pytest log plus JUnit XML even when tests fail, and publishes warning/error extracts for review.
+- Scope: recreates the locked `deploy` conda environment, runs `pytest -m "not sphinx and not notebook"` once, preserves the full pytest log plus JUnit XML even when tests fail, and publishes warning/error extracts for review.
 - Trigger: None (i.e., `workflow_dispatch`).
 
 ## `release.yml`
