@@ -23,7 +23,7 @@ python -m sphinx -b html . "_build/manual"
 ```
 
 ## update tutorial notebooks
-
+NOTE: needs to be done from main .devcontainer (not docs)
 ```bash
 # run from the repository root in the notebook-capable dev environment
 cd /workspace
@@ -34,7 +34,5 @@ conda run -n dev bash docs/user/notebooks/tutorial_1.sh
 # large-raster tutorial; also runs from cache and copies the executed notebook back
 conda run -n dev bash docs/user/notebooks/tutorial_2.sh
 
-# optional: override the shared notebook cache root for either shim
-FLOODSR_NOTEBOOK_CACHE_DIR=/workspace/_cache/notebook_tmp/tutorial_2 \
-  conda run -n dev bash docs/user/notebooks/tutorial_2.sh
+ 
 ```
