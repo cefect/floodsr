@@ -1,5 +1,6 @@
 """Docs build tests."""
 
+import runpy
 from pathlib import Path
 import subprocess, sys
 
@@ -7,6 +8,7 @@ import pytest
 
 
 DOCS_SOURCE_DIR = Path("docs/user")
+DOCS_CONF_PATH = DOCS_SOURCE_DIR / "conf.py"
 
 
 @pytest.mark.sphinx
@@ -41,3 +43,22 @@ def test_docs_linkcheck_builds(tmp_path: Path) -> None:
         f"stdout:\n{result.stdout}\n"
         f"stderr:\n{result.stderr}"
     )
+
+
+@pytest.mark.parametrize(
+    ("raw_language", "expected"),
+    [
+        pytest.param("en", "en", id="explicit_en"),
+        pytest.param("fr-ca", "fr_CA", id="fr_ca_rtd"),
+    ],
+)
+def test_resolve_docs_language(raw_language, expected):
+    """Normalize RTD docs language values for Sphinx locale discovery."""
+    pytest.importorskip("setuptools_scm", reason="Docs config dependency missing.")
+
+    # Load the live docs config so the test exercises the shipped resolver.
+    conf_globals = runpy.run_path(str(DOCS_CONF_PATH))
+    result = conf_globals["_resolve_docs_language"](raw_language)
+
+    assert isinstance(result, str)
+    assert result == expected
