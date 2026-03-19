@@ -61,7 +61,7 @@ This should show the version and status of the backends used by ``floodsr``.
 .. _basic_install_google_colab:
 
 Basic Install (Google Colab)
-----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Google Colab already gives you an isolated Python environment, so ``pipx`` is unnecessary there. Install the core package with ``pip`` in a notebook cell:
 
@@ -75,6 +75,8 @@ Then confirm the CLI is available:
 
    !floodsr --help
 
+
+.. _extended_install:
 
 Extended Install
 ----------------
@@ -92,10 +94,45 @@ Once you have conda installed, use it to create a dedicated environment with GDA
    conda activate floodsr-gdal
    python -m pip install floodsr
 
+
+.. _extended_install_notebook:
+
+Notebook
+^^^^^^^^
+If you want to work through the tutorial notebooks, install and launch `Project Jupyter <https://jupyter.org/install>`_ from the same conda environment as ``floodsr``. Creating or activating a new environment from inside a running notebook kernel is not reliable, so do the setup first, then launch Jupyter or switch the notebook kernel to that environment.
+
+The typical pattern is:
+
+.. code-block:: bash
+
+   conda create -n floodsr-gdal -c conda-forge python=3.12 gdal matplotlib pip ipykernel jupyterlab -y
+   conda run -n floodsr-gdal python -m pip install floodsr
+   conda run -n floodsr-gdal python -m ipykernel install --user --name floodsr-gdal --display-name "Python (floodsr-gdal)"
+   conda run -n floodsr-gdal jupyter lab
+
+This gives the notebook environment GDAL support, the plotting stack used in the tutorials, and a dedicated Jupyter kernel for ``floodsr`` work. Once Jupyter is running, open the tutorial and select the ``Python (floodsr-gdal)`` kernel before executing any cells.
+
+For a worked example, see :doc:`notebooks/tutorial_2`.
+
 Now the ``doctor`` command should report GDAL Python bindings as installed and VRT support as enabled:
 
 .. code-block:: bash
 
    floodsr doctor
+
+Hosted Notebook (Google Colab)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+   # setup an experimental GDAL environment in Colab
+   !apt-get update -qq
+   !apt-get install -y -qq gdal-bin libgdal-dev
+   !pip install -q --upgrade pip
+   !pip install -q "gdal[numpy]==$(gdal-config --version).*" rasterio geopandas pyproj shapely fiona
+
+   # install floodsr
+   !pip install -q floodsr
+
 
 Good job. You deserve some hi-res flood rasters now.
