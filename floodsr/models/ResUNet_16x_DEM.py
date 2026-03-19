@@ -91,6 +91,7 @@ from rasterio.warp import Resampling, reproject
 
 try:
     from osgeo import gdal
+    gdal.DontUseExceptions()
 except ImportError:
     gdal = None
 
