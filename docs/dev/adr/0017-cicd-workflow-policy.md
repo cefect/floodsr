@@ -10,6 +10,9 @@ Several ADRs define packaging, testing, and publishing intent, but the GitHub Ac
 - CI builds release artifacts once and reuses them across downstream workflow steps.
 - GitHub Actions test selection is limited to `fast` tests and excludes `local`.
 - Notebook execution tests marked `notebook` are not part of the default remote CI, release, or manual `all-tests` workflow paths because they require the separate notebook-capable `dev` environment rather than the runtime-locked `deploy` environment.
+- The manual `all-tests.yml` workflow is split into two jobs:
+    - one job recreates the locked `deploy` environment and runs the non-notebook pytest suite
+    - one job recreates the same locked `deploy` environment, layers notebook runtime packages on top, and runs the `notebook`-marked pytest suite separately
 - Branch CI and release publishing are separate workflows with separate privileges:
     - `ci.yaml` for branch CI and PR validation.
     - `release.yaml` for tag-triggered release publishing. 

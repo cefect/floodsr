@@ -125,3 +125,121 @@ jobs:
           if [ "${status}" -ne 0 ]; then
             exit "${status}"
           fi
+
+  notebook-tests:
+    name: notebook tests (self-hosted container)
+    # Target the current self-hosted Linux runner fleet.
+    runs-on:
+      - self-hosted
+      - Linux
+      - X64
+    container:
+      image: condaforge/miniforge3:25.3.1-0
+    timeout-minutes: 90
+
+    steps:
+      # Install git inside the fresh container before checkout.
+      - name: Install checkout dependency
+        shell: bash
+        run: |
+          apt-get update
+          apt-get install -y git
+
+      # Fetch repository contents for test execution.
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      # Recreate the locked deploy environment, then layer notebook runtime packages on top.
+      - name: Create notebook-capable environment
+        shell: bash
+        run: |
+          mamba env create -n notebook-ci -f container/miniforge/conda-env-deploy.lock.yml
+          mamba install -n notebook-ci -c conda-forge -y \
+            jupyterlab=4.5.4 \
+            notebook=7.5.3 \
+            ipykernel=7.2.0 \
+            matplotlib=3.10.8
+          conda run -n notebook-ci python --version
+
+      # Install the editable package plus pytest extras into the layered notebook env.
+      - name: Install package into notebook environment
+        shell: bash
+        run: |
+          conda run -n notebook-ci python -m pip install --upgrade pip
+          conda run -n notebook-ci python -m pip install -e ".[dev]"
+
+      # Run the notebook proofing suite once, keep going through failures, and persist logs.
+      - name: Run notebook pytest
+        id: pytest-notebook
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p artifacts-notebook
+          conda run -n notebook-ci python -m pytest \
+            -m "notebook" \
+            --junitxml=artifacts-notebook/pytest-junit.xml \
+            tests/test_notebooks.py \
+            2>&1 | tee artifacts-notebook/pytest.log
+          status=${PIPESTATUS[0]}
+          printf "%s\n" "${status}" > artifacts-notebook/pytest.exitcode
+
+      # Extract the warning and error lines into separate artifacts for quick review.
+      - name: Summarize notebook warnings and errors
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import pathlib, re
+
+          artifact_dir = pathlib.Path("artifacts-notebook")
+          log_fp = artifact_dir / "pytest.log"
+          lines = log_fp.read_text(encoding="utf-8", errors="replace").splitlines() if log_fp.exists() else []
+
+          warning_re = re.compile(r"\bwarning\b", re.IGNORECASE)
+          error_re = re.compile(r"\berror\b", re.IGNORECASE)
+
+          warning_lines = [line for line in lines if warning_re.search(line)]
+          error_lines = [line for line in lines if error_re.search(line)]
+
+          (artifact_dir / "warnings.log").write_text("\n".join(warning_lines) + ("\n" if warning_lines else ""), encoding="utf-8")
+          (artifact_dir / "errors.log").write_text("\n".join(error_lines) + ("\n" if error_lines else ""), encoding="utf-8")
+
+          exit_code = (artifact_dir / "pytest.exitcode").read_text(encoding="utf-8").strip() if (artifact_dir / "pytest.exitcode").exists() else "missing"
+          summary_lines = [
+              f"pytest exit code: {exit_code}",
+              f"warning line count: {len(warning_lines)}",
+              f"error line count: {len(error_lines)}",
+          ]
+          (artifact_dir / "summary.txt").write_text("\n".join(summary_lines) + "\n", encoding="utf-8")
+          PY
+
+      # Upload all notebook test outputs even when pytest fails.
+      - name: Upload notebook pytest artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: all-tests-notebook-artifacts
+          path: artifacts-notebook/*
+
+      # Publish a compact notebook run summary in the Actions UI.
+      - name: Publish notebook step summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Notebook Tests Summary"
+            cat artifacts-notebook/summary.txt
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      # Fail only after logs and summaries have been captured.
+      - name: Fail on notebook pytest errors
+        if: always()
+        shell: bash
+        run: |
+          status=$(cat artifacts-notebook/pytest.exitcode)
+          if [ "${status}" -ne 0 ]; then
+            exit "${status}"
+          fi
