@@ -2,7 +2,6 @@
 
 import hashlib, json, logging, pathlib
 
-import numpy as np
 import pytest
 
 
@@ -12,6 +11,13 @@ TEST_TILE_CASES = tuple(
 )
 assert TEST_TILE_CASES, "no data-driven test cases found in tests/data/*/case_spec.json"
 LOCAL_TILE_CASES = tuple(case_name for case_name in TEST_TILE_CASES if case_name.startswith(("fathom", "rss_")))
+
+
+def _get_numpy():
+    """Import numpy only for fixtures that actually need array helpers."""
+    # Keep conftest import-light so docs-only environments do not need runtime deps.
+    # Do not add unconditional third-party imports here unless every test env ships them.
+    return pytest.importorskip("numpy", reason="numpy not detected in environment.")
 
 
 def _read_tile_case(case_name: str) -> dict:
@@ -62,10 +68,11 @@ def _read_tile_case(case_name: str) -> dict:
     }
 
 
-def _write_single_band_geotiff(fp: pathlib.Path, array: np.ndarray, transform, crs: str, nodata: float = -9999.0) -> None:
+def _write_single_band_geotiff(fp: pathlib.Path, array, transform, crs: str, nodata: float = -9999.0) -> None:
     """Write a one-band float32 GeoTIFF with deterministic defaults."""
     import rasterio
 
+    np = _get_numpy()
     fp.parent.mkdir(parents=True, exist_ok=True)
     profile = {
         "driver": "GTiff",
@@ -191,6 +198,7 @@ def tile_case_d(case_id, tile_case_catalog):
 @pytest.fixture(scope="session")
 def ort_tile_inputs():
     """Create synthetic arrays that match a single model tile size."""
+    np = _get_numpy()
     return {
         "depth_lr": np.full((32, 32), 1.5, dtype=np.float32),
         "dem_hr": np.linspace(500.0, 1000.0, 512 * 512, dtype=np.float32).reshape((512, 512)),
@@ -202,6 +210,7 @@ def ort_tile_inputs():
 @pytest.fixture(scope="session")
 def synthetic_tohr_tiles(tmp_path_factory):
     """Create temporary raster inputs for on-the-fly ToHR coverage tests."""
+    np = _get_numpy()
     rasterio = pytest.importorskip("rasterio")
     from rasterio.transform import from_origin
 
@@ -243,6 +252,7 @@ def synthetic_tohr_tiles(tmp_path_factory):
 @pytest.fixture(scope="session")
 def synthetic_tohr_windowed_tiles(tmp_path_factory):
     """Create a large-output synthetic case that should trigger windowed hard IO."""
+    np = _get_numpy()
     pytest.importorskip("rasterio")
     from rasterio.transform import from_origin
 
