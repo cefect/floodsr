@@ -153,7 +153,7 @@ To enable these features, install `floodsr` into an environment with `GDAL <http
 Command line (CLI) - Extended
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The popular `conda <https://docs.conda.io/en/latest/>`_ package manager is the easiest way to build an isolated environment with GDAL.
-The best way to install conda is via the open-source `Miniforge <https://github.com/conda-forge/miniforge?tab=readme-ov-file#install>`_ project, NOT the `proprietary Anaconda distribution <https://www.theregister.com/2024/08/08/anaconda_puts_the_squeeze_on/>`_.
+The best way to install conda is via the open-source `Miniforge <https://github.com/conda-forge/miniforge>`_ project, NOT the `proprietary Anaconda distribution <https://www.theregister.com/2024/08/08/anaconda_puts_the_squeeze_on/>`_.
 Once you have conda installed, use it to create a dedicated environment with GDAL, activate it, then install ``floodsr`` with ``pip`` into that same environment:
 
 .. code-block:: bash
