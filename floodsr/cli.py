@@ -94,6 +94,25 @@ def _flag_present(argv: list[str], flag: str) -> bool:
     return any(token == flag or token.startswith(f"{flag}=") for token in argv)
 
 
+def _add_progress_arguments(parser: argparse.ArgumentParser, help_text: str) -> None:
+    """Add shared positive/negative progress flags with an explicit default."""
+    # Keep the positive flag as the canonical interface while offering a short negative alias.
+    progress_group = parser.add_mutually_exclusive_group()
+    progress_group.add_argument(
+        "--show-progress",
+        dest="show_progress",
+        action="store_true",
+        default=True,
+        help=help_text,
+    )
+    progress_group.add_argument(
+        "--no-progress",
+        dest="show_progress",
+        action="store_false",
+        help="Disable progress output. Default: progress is shown.",
+    )
+
+
 def _read_tohr_machine_json(machine_json_fp: Path) -> dict[str, object]:
     """Load a `tohr` machine-json payload from disk."""
     machine_json_path = machine_json_fp.expanduser().resolve()
@@ -131,6 +150,7 @@ def _build_tohr_machine_cli_tokens(payload: dict[str, object], argv: list[str]) 
         "backend": "--backend",
         "force": "--force",
         "max_depth": "--max-depth",
+        "min_depth_threshold": "--min-depth-threshold",
         "dem_pct_clip": "--dem-pct-clip",
         "window_method": "--window-method",
         "tile_overlap": "--tile-overlap",
@@ -152,7 +172,7 @@ def _build_tohr_machine_cli_tokens(payload: dict[str, object], argv: list[str]) 
             if not isinstance(value, bool):
                 raise ValueError(f"machine-json key '{raw_key}' must be boolean, got {type(value)!r}")
             if key == "show_progress":
-                cli_tokens.append(cli_flag if value else "--no-show-progress")
+                cli_tokens.append(cli_flag if value else "--no-progress")
             elif value:
                 cli_tokens.append(cli_flag)
             continue
@@ -240,6 +260,7 @@ def main_cli(args: argparse.Namespace) -> int:
                 source_id="hrdem",
                 depth_lr_fp=args.in_fp,
                 output_fp=args.fetch_out,
+                cache_dir=args.cache_dir,
                 fetch_force_tiling=args.fetch_force_tiling,
                 show_progress=args.show_progress,
                 logger=log,
@@ -254,6 +275,7 @@ def main_cli(args: argparse.Namespace) -> int:
             output_fp=output_fp,
             crs_policy=args.crs_policy,
             max_depth=args.max_depth,
+            min_depth_threshold=args.min_depth_threshold,
             dem_pct_clip=args.dem_pct_clip,
             window_method=args.window_method,
             tile_overlap=args.tile_overlap,
@@ -300,8 +322,8 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
 
-def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
-    """Parse CLI arguments after optional `tohr --machine-json` expansion."""
+def build_parser() -> argparse.ArgumentParser:
+    """Build the FloodSR CLI parser."""
     parser = argparse.ArgumentParser(
         prog="floodsr",
         description="Run FloodSR model, cache, and runtime utility commands.",
@@ -377,11 +399,9 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Redownload even when a valid cached weight file already exists.",
     )
-    models_fetch_parser.add_argument(
-        "--show-progress",
-        action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Show model download progress output.",
+    _add_progress_arguments(
+        models_fetch_parser,
+        help_text="Show progress output during model download. Use `--no-progress` to disable it. Default: enabled.",
     )
 
     # Register ToHR command.
@@ -460,19 +480,43 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
         "--max-depth",
         type=float,
         default=None,
-        help="Override the max-depth value used during log-space scaling.",
+        help=(
+            "Maximum depth used when clipping low-res depth values before log1p scaling into the model input range. "
+            "Values above this threshold are capped during preprocessing and after inverse scaling. "
+            "The current ResUNet_16x_DEM default resolves to 5.0."
+        ),
+    )
+    tohr_parser.add_argument(
+        "--min-depth-threshold",
+        type=float,
+        default=None,
+        help=(
+            "Minimum predicted depth retained in the final raster. "
+            "Values below this threshold are written as 0.0 after inference. "
+            "The current ResUNet_16x_DEM default resolves to 0.01."
+        ),
     )
     tohr_parser.add_argument(
         "--dem-pct-clip",
         type=float,
         default=None,
-        help="Override the DEM percentile clip used when training stats are incomplete.",
+        help=(
+            "Percentile used to cap high DEM values before min-max normalization to [0, 1]. "
+            "Lower values clip high terrain more aggressively; higher values preserve more of the upper tail. "
+            "Used when explicit DEM normalization stats are unavailable. "
+            "The current ResUNet_16x_DEM default resolves to 95.0."
+        ),
     )
     tohr_parser.add_argument(
         "--window-method",
         choices=("hard", "feather"),
         default="feather",
-        help="Tile mosaicing method used when stitching model windows.",
+        help=(
+            "Tile mosaicing method used when stitching model windows. "
+            "`hard` uses non-overlapping tiles with direct writes; "
+            "`feather` uses overlapping tiles with weighted blending to reduce seam artifacts. "
+            "The current default is `feather`."
+        ),
     )
     tohr_parser.add_argument(
         "--tile-overlap",
@@ -492,11 +536,12 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
         default="strict",
         help="Policy for CRS mismatches between the low-res depth raster and DEM.",
     )
-    tohr_parser.add_argument(
-        "--show-progress",
-        action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Show model download, DEM fetch, and tiled runtime progress output.",
+    _add_progress_arguments(
+        tohr_parser,
+        help_text=(
+            "Show progress output during model download, DEM fetch, and tiled runtime work. "
+            "Use `--no-progress` to disable it. Default: enabled."
+        ),
     )
 
     # Register diagnostic command.
@@ -510,7 +555,12 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Emit machine-readable JSON instead of line-oriented text.",
     )
-    return parser.parse_args(_inject_tohr_machine_json_args(argv))
+    return parser
+
+
+def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
+    """Parse CLI arguments after optional `tohr --machine-json` expansion."""
+    return build_parser().parse_args(_inject_tohr_machine_json_args(argv))
 
 
 if __name__ == "__main__":

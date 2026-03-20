@@ -68,6 +68,20 @@ def test_main_models_fetch_prints_existing_path(
     assert output_fp.exists()
 
 
+@pytest.mark.parametrize(
+    "progress_flag, expected_show_progress",
+    [
+        pytest.param("--show-progress", True, id="explicit_show_progress"),
+        pytest.param("--no-progress", False, id="explicit_no_progress"),
+    ],
+)
+def test_parse_models_fetch_progress_flags(progress_flag: str, expected_show_progress: bool):
+    """Ensure models fetch exposes the documented progress flag pair."""
+    parsed_args = _parse_arguments(["models", "fetch", "v-cli", progress_flag])
+    assert isinstance(parsed_args.show_progress, bool)
+    assert parsed_args.show_progress is expected_show_progress
+
+
 def test_main_models_fetch_routes_errors_to_stderr(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],

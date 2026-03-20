@@ -1,0 +1,35 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: floodsr\n"
+"POT-Creation-Date: 2026-03-19 00:00+0000\n"
+"PO-Revision-Date: 2026-03-20 00:00+0000\n"
+"Language: fr_CA\n"
+"Language-Team: fr_CA\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "Tutorials"
+msgstr "Tutoriels"
+
+msgid "This page collects hands-on ``floodsr`` walkthroughs."
+msgstr "Cette page regroupe des tutoriels pratiques pour ``floodsr``."
+
+msgid "Running Tutorials"
+msgstr "Exécuter les tutoriels"
+
+msgid "To best use the tutorials, we recommend running them in a notebook environment:"
+msgstr "Pour tirer le meilleur parti des tutoriels, nous recommandons de les exécuter dans un environnement de carnet :"
+
+msgid ":raw-html:`<i class=\"fas fa-download\"></i>` Download the notebook as an ``.ipynb`` file, save it to your local machine, and open it with your local Jupyter kernel. See :ref:`basic_install_local_notebook`."
+msgstr ":raw-html:`<i class=\"fas fa-download\"></i>` Téléchargez le carnet sous forme de fichier ``.ipynb``, enregistrez-le sur votre machine, puis ouvrez-le avec votre noyau Jupyter local. Voir :ref:`basic_install_local_notebook`."
+
+msgid ":raw-html:`<i class=\"fas fa-rocket\"></i>` Launch the same notebook directly in Google Colab for a browser-based interactive session. See :ref:`basic_install_google_colab`."
+msgstr ":raw-html:`<i class=\"fas fa-rocket\"></i>` Ouvrez ce même carnet directement dans Google Colab pour une session interactive dans le navigateur. Voir :ref:`basic_install_google_colab`."
+
+msgid "Alternatively, you can copy/paste the commands from the tutorials into your terminal. See :ref:`basic_install_cli`."
+msgstr "Sinon, vous pouvez copier-coller les commandes des tutoriels directement dans votre terminal. Voir :ref:`basic_install_cli`."
+
+msgid "Select Tutorial 1 from the list below to get started."
+msgstr "Sélectionnez le tutoriel 1 dans la liste ci-dessous pour commencer."

@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from functools import partial
 from pathlib import Path
 from typing import Callable
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit, urlunsplit
 from urllib.request import urlopen
 
 import geopandas as gpd
@@ -24,11 +24,13 @@ from shapely.geometry import shape
 from tqdm.auto import tqdm
 
 
+from floodsr.cache_paths import get_cache_dir
 from floodsr.dem_sources.base import DemFetchResult
 
 
 try:
     from osgeo import gdal
+    gdal.DontUseExceptions()
 except ImportError:
     gdal = None
 
@@ -119,28 +121,42 @@ def _build_tile_cache_key(
     bounds_token = ",".join(f"{float(v):.8f}" for v in tile_bounds)
     shape_token = f"{int(tile_shape[0])}x{int(tile_shape[1])}"
     crs_token = source_crs.to_string() if hasattr(source_crs, "to_string") else str(source_crs)
-    asset_token = "|".join(str(v) for v in asset_hrefs)
+    # Ignore query/fragment noise so signed URLs or timestamps do not defeat cache reuse.
+    asset_token = "|".join(sorted(_normalize_cache_asset_href(v) for v in asset_hrefs))
     payload = f"{request_token}|bounds={bounds_token}|shape={shape_token}|crs={crs_token}|assets={asset_token}"
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:32]
 
 
-def _resolve_tile_cache_fp(cache_key: str) -> Path:
+def _normalize_cache_asset_href(asset_href: str) -> str:
+    """Normalize one asset href for cache-key construction."""
+    parts = urlsplit(str(asset_href))
+    return urlunsplit((parts.scheme.lower(), parts.netloc.lower(), parts.path, "", ""))
+
+
+def _resolve_tile_cache_root(cache_dir: str | Path | None = None) -> Path:
+    """Resolve the directory that stores cached HRDEM tile GeoTIFFs."""
+    cache_root = get_cache_dir(cache_dir) / TILE_CACHE_DIR_NAME
+    cache_root.mkdir(parents=True, exist_ok=True)
+    return cache_root
+
+
+def _resolve_tile_cache_fp(cache_key: str, cache_dir: str | Path | None = None) -> Path:
     """Resolve cache filepath for one GeoTIFF tile."""
-    cache_dir = (Path(tempfile.gettempdir()) / TILE_CACHE_DIR_NAME).resolve()
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    return (cache_dir / f"{cache_key}.tif").resolve()
+    cache_root = _resolve_tile_cache_root(cache_dir)
+    return (cache_root / f"{cache_key}.tif").resolve()
 
 
 def _materialize_tif_with_cache(
     out_fp: Path,
     use_cache: bool,
     cache_key: str,
+    cache_dir: str | Path | None,
     writer: Callable[[Path], None],
     logger=None,
 ) -> tuple[Path, bool]:
     """Materialize one GeoTIFF tile to output, reading/writing cache when enabled."""
     log = logger or logging.getLogger(__name__)
-    cache_fp = _resolve_tile_cache_fp(cache_key)
+    cache_fp = _resolve_tile_cache_fp(cache_key, cache_dir=cache_dir)
     if use_cache and cache_fp.exists():
         if out_fp != cache_fp:
             out_fp.parent.mkdir(parents=True, exist_ok=True)
@@ -597,6 +613,7 @@ def _02_read_dem_non_windowed(
     base_profile: dict[str, object],
     use_cache: bool,
     request_token: str,
+    cache_dir: str | Path | None,
     logger=None,
 ) -> dict[str, object]:
     """Read/write DEM using one full-scene merge streamed to disk in chunks."""
@@ -652,6 +669,7 @@ def _02_read_dem_non_windowed(
         out_fp=out_path,
         use_cache=bool(use_cache),
         cache_key=tile_cache_key,
+        cache_dir=cache_dir,
         writer=_write_non_windowed_dem,
         logger=log,
     )
@@ -681,6 +699,7 @@ def _03_read_dem_windowed_tiles_to_vrt(
     out_path: Path,
     use_cache: bool,
     request_token: str,
+    cache_dir: str | Path | None,
     use_project_extent_filter: bool,
     project_extent_url: str,
     project_extent_timeout_s: float,
@@ -867,6 +886,7 @@ def _03_read_dem_windowed_tiles_to_vrt(
                     out_fp=tile_fp,
                     use_cache=bool(use_cache),
                     cache_key=tile_cache_key,
+                    cache_dir=cache_dir,
                     writer=tile_writer,
                     logger=log,
                 )
@@ -928,6 +948,7 @@ def write_dem_from_asset_hrefs(
     output_fp: str | Path,
     request_token: str | None = None,
     use_cache: bool = False,
+    cache_dir: str | Path | None = None,
     logger=None,
     fetch_window_size: int | None = None,
     use_project_extent_filter: bool = False,
@@ -970,6 +991,8 @@ def write_dem_from_asset_hrefs(
     if fetch_window_size is None and out_path.suffix.lower() == ".vrt":
         out_path = out_path.with_suffix(".tif")
     out_path.parent.mkdir(parents=True, exist_ok=True)
+    cache_root = _resolve_tile_cache_root(cache_dir) if bool(use_cache) else None
+    cache_file_count = len(list(cache_root.glob("*.tif"))) if cache_root is not None else 0
     geom = _estimate_fetch_geometry(depth_query["depth_crs"], depth_query["depth_bounds"], asset_hrefs[0])
     first_crs = geom["source_crs"]
     source_nodata = geom["source_nodata"]
@@ -984,6 +1007,10 @@ def write_dem_from_asset_hrefs(
     log.info(
         f"raw fetch request grid: width={est_width:,}, height={est_height:,}, "
         f"pixels={est_pixels:,}, non_windowed_peak_estimate={est_float32_gb:.2f} GiB"
+    )
+    log.info(
+        f"HRDEM tile cache state: enabled={int(bool(use_cache))}, dir={cache_root}, "
+        f"existing_files={cache_file_count:,}, request_token={request_token}"
     )
 
     base_profile = {
@@ -1009,6 +1036,7 @@ def write_dem_from_asset_hrefs(
             base_profile=base_profile,
             use_cache=bool(use_cache),
             request_token=request_token,
+            cache_dir=cache_dir,
             logger=log,
         )
     else:
@@ -1025,6 +1053,7 @@ def write_dem_from_asset_hrefs(
             out_path=out_path,
             use_cache=bool(use_cache),
             request_token=request_token,
+            cache_dir=cache_dir,
             use_project_extent_filter=bool(use_project_extent_filter),
             project_extent_url=project_extent_url,
             project_extent_timeout_s=float(project_extent_timeout_s),
@@ -1048,6 +1077,7 @@ def write_dem_from_asset_hrefs(
 def main_fetch_hrdem_for_lowres_tile(
     depth_lr_fp: str | Path,
     output_fp: str | Path | None = None,
+    cache_dir: str | Path | None = None,
     logger=None,
     stac_url: str = STAC_URL,
     collection: str = COLLECTION,
@@ -1096,6 +1126,7 @@ def main_fetch_hrdem_for_lowres_tile(
         f"  stac_query_limit={stac_query_limit}\n"
         f"  use_project_extent_filter={use_project_extent_filter}\n"
         f"  use_cache={use_cache}\n"
+        f"  cache_dir={cache_dir}\n"
         f"  show_progress={show_progress}\n"
         f"  project_extent_url={project_extent_url}\n"
         f"  depth_lr_fp=\n    {depth_path}"
@@ -1179,6 +1210,7 @@ def main_fetch_hrdem_for_lowres_tile(
             output_fp=out_path,
             request_token=request_token,
             use_cache=bool(use_cache),
+            cache_dir=cache_dir,
             logger=log,
             fetch_window_size=fetch_window_size if tiling_enabled else None,
             use_project_extent_filter=bool(tiling_enabled and use_project_extent_filter),

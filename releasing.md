@@ -52,16 +52,13 @@ Configure GitHub Actions Trusted Publishing in both TestPyPI and PyPI for the `f
 git checkout master
 git pull --ff-only origin master
 
-# 2) optional local sanity check before tagging
-conda activate dev
-python -m build
-python -m twine check dist/*
+ 
 
 # check existing tags and decide on yours. tags must look like v0.1.3, v0.1.3rc1, v0.1.3a1, v0.1.3b1
 git tag --sort=-v:refname | grep '^v' | head -n4
 
 # 3) create and push an annotated pre-release tag
-tag="v0.0.8"
+tag="v0.0.9"
 git tag -a $tag -m "Release $tag"
 git push origin master
 git push origin $tag

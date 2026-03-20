@@ -37,6 +37,7 @@ venv.bak/
 
 # docs
 docs/user/_build
+*.mo
 
 #windows shortcuts
 *.lnk
@@ -44,6 +45,7 @@ docs/user/_build
 
 _inputs/
 _scratch/
+_cache/
 
 
 # pip

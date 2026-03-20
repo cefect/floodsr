@@ -22,17 +22,20 @@ Because of that, the package should expose one progressive capability model rath
 - Ship one Python package providing:
   - Python library: `floodsr`
   - CLI entrypoint: `floodsr`
-- Adopt a **progressive capability model** with two installation modes:
-  - **Core install**
+- Adopt a **progressive capability model** with two capability tiers:
+  - **Basic**
     - Must not require `osgeo.gdal`.
     - Must not require system GDAL.
+    - Assumes the user already has a working system Python for the target execution context.
+    - For command line (CLI) use, the recommended install path is `pipx`.
+    - For local notebook (Jupyter) use, the recommended install path is `pip` into the environment backing the notebook kernel.
+    - For hosted notebook (Colab) use, installs happen inside the managed runtime with `pip`.
     - Is supported via `pip` and `pipx` on wheel-supported platforms.
     - Provides the default CLI and library surface for users who only need the non-VRT path.
-    - User docs should recommend `pipx` for local CLI-first installs and `pip` for Google Colab notebook sessions.
     - VRT-dependent commands are unavailable.
     - Lower bounds in `pyproject.toml` should match one explicitly tested minimum core stack rather than a broad historical compatibility promise.
-  - **Extended install**
-    - Is a Linux/conda-supported environment recipe rather than a PyPI extra.
+  - **Extended**
+    - Is a conda-managed environment recipe rather than a PyPI extra.
     - Requires GDAL to be installed in the target conda environment before `pip install floodsr`.
     - Requires matching Python bindings in that same environment.
     - Enables VRT-dependent commands and any future direct-GDAL features.
@@ -41,30 +44,31 @@ Because of that, the package should expose one progressive capability model rath
 - Treat the extended path as a pinned conda stack, not an open-ended dependency range.
 - Keep publishing target as PyPI/TestPyPI wheels and source distributions.
 - Validate published artifacts against the capability level they claim to support.
+- Treat each documented install path as a support contract that should have a matching install-proof case.
+- Prove documented Unix install paths from built release artifacts in isolated containerized environments that best match user expectations for that path.
+- Keep current platform and execution-context support boundaries in `ADR-0007`.
 
 
-yes, this is complicated... but we spent a lot of time building the in-memory HRDEM fetcher.
-So we either:
-- break our **install must be simple** rule
-- revert and have no in-memory HRDEM fetcher (could do some more testing with `merge(mem_limit....)`.. but ran out of time, and this won't support pre-filter)
-- or we do the work to support both install paths and validate them properly, with core validated across host GDAL contexts and extended validated as a conda-first Linux path
+## rationale
 
+This project needs both a simple default install and a higher-capability path for GDAL-backed workflows.
 
-## development container strategy
+Without this split we would need to either:
+- break the simple-install goal for the default user path
+- drop GDAL-backed workflows that depend on environment-provided GDAL and matching Python bindings
+- or treat all installs as equally supported even though they have materially different dependency constraints
 
-The development and deployment Docker images are always built for **x86_64 (`linux/amd64`)**:
+The basic-versus-extended split keeps the package surface unified while making the capability boundary explicit.
 
-1. **pcraster availability**: pcraster, a key dependency, only has x86_64 builds on conda-forge
-2. **Cross-platform consistency**: Using `docker buildx build --platform linux/amd64` ensures the same image regardless of host architecture
-3. **Host platform support**:
-   - x86_64 hosts: builds natively
-   - ARM64 hosts (Apple Silicon): uses QEMU emulation transparently via Docker
-4. **Lock files**: conda lock files are platform-specific (x86_64); created during image build and verified on x86_64 hosts only
+## consequences
 
-## deployment strategy
+- The package name and primary entrypoints stay simple: users always install `floodsr`.
+- Basic remains the lowest-friction path for the default CLI and library experience.
+- Basic documentation must state the preconditions separately from the package install itself: working Python for all local contexts, plus a working Jupyter setup for local notebook use.
+- Extended remains available for GDAL-backed workflows without turning GDAL into an unreliable PyPI extra.
+- Documentation and testing must clearly distinguish capability tier from platform and execution-context support.
 
-See `ADR-0017` for CI/CD workflow policy.
+## related decisions
 
-## CI/CD summary
-
-See `ADR-0017` for CI/CD workflow policy.
+- See `ADR-0007` for platform and execution-context support policy.
+- See `ADR-0017` for CI/CD workflow policy.

@@ -46,6 +46,7 @@ def get_gdal_info() -> dict[str, object]:
     # Probe Python GDAL separately so core installs stay importable.
     try:
         from osgeo import gdal
+        gdal.DontUseExceptions()
     except ImportError:
         return {
             "python_bindings_installed": False,

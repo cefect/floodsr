@@ -91,6 +91,7 @@ from rasterio.warp import Resampling, reproject
 
 try:
     from osgeo import gdal
+    gdal.DontUseExceptions()
 except ImportError:
     gdal = None
 
@@ -122,7 +123,7 @@ class ModelWorker(Model):
     """Model worker implementing notebook-parity ToHR flow for version `ResUNet_16x_DEM`."""
 
     model_version = "ResUNet_16x_DEM"
-    low_depth_mask_m = 1e-3
+    low_depth_mask_m = 1e-2
     windowed_io_min_bytes = 32 * 1024 * 1024
 
     def __init__(
@@ -219,14 +220,19 @@ class ModelWorker(Model):
             return "windowed"
         return "simple"
 
-    def _postprocess_output_in_place(self, output_fp: str | Path, max_depth: float) -> None:
+    def _postprocess_output_in_place(
+        self,
+        output_fp: str | Path,
+        max_depth: float,
+        min_depth_threshold: float,
+    ) -> None:
         """Apply clipping and low-depth masking to an on-disk raster."""
         out_path = Path(output_fp).expanduser().resolve()
         with rasterio.open(out_path, "r+") as ds:
             for _, window in ds.block_windows(1):
                 arr = ds.read(1, window=window).astype(np.float32, copy=False)
                 arr = np.clip(arr, 0.0, float(max_depth)).astype(np.float32, copy=False)
-                arr = np.where(arr < float(self.low_depth_mask_m), 0.0, arr).astype(np.float32, copy=False)
+                arr = np.where(arr < float(min_depth_threshold), 0.0, arr).astype(np.float32, copy=False)
                 ds.write(arr, 1, window=window)
 
     def _gdal_is_available(self) -> bool:
@@ -254,6 +260,7 @@ class ModelWorker(Model):
         prediction_out_m: np.ndarray,
         output_profile: dict,
         max_depth: float,
+        min_depth_threshold: float,
         show_progress: bool,
     ) -> Path:
         """Clip, mask, and write an in-memory prediction array blockwise."""
@@ -273,7 +280,7 @@ class ModelWorker(Model):
                     copy=False,
                 )
                 arr = np.clip(arr, 0.0, float(max_depth)).astype(np.float32, copy=False)
-                arr = np.where(arr < float(self.low_depth_mask_m), 0.0, arr).astype(np.float32, copy=False)
+                arr = np.where(arr < float(min_depth_threshold), 0.0, arr).astype(np.float32, copy=False)
                 dst_ds.write(arr, 1, window=window)
         return out_path
 
@@ -618,6 +625,7 @@ class ModelWorker(Model):
         output_fp: str | Path,
         crs_policy: str = "strict",
         max_depth: float | None = None,
+        min_depth_threshold: float | None = None,
         dem_pct_clip: float | None = None,
         window_method: str = "feather",
         tile_overlap: int | None = None,
@@ -638,6 +646,8 @@ class ModelWorker(Model):
         window_method = (window_method or "feather").strip().lower()
         assert window_method in {"hard", "feather"}, f"unsupported window_method={window_method}"
         assert isinstance(show_progress, bool), f"show_progress must be bool, got {type(show_progress)!r}"
+        min_depth_threshold = float(self.low_depth_mask_m if min_depth_threshold is None else min_depth_threshold)
+        assert min_depth_threshold >= 0.0, f"min_depth_threshold must be >= 0; got {min_depth_threshold}"
 
         log.info(
             f"starting tohr inference with model_version={self.model_version}\n"
@@ -854,6 +864,7 @@ class ModelWorker(Model):
                 prediction_out_m=prediction_out_m,
                 output_profile=output_profile,
                 max_depth=float(preprocess_cfg["max_depth"]),
+                min_depth_threshold=min_depth_threshold,
                 show_progress=show_progress,
             )
         else:
@@ -920,7 +931,11 @@ class ModelWorker(Model):
                         resampling=Resampling.bilinear,
                         num_threads=1,
                     )
-                self._postprocess_output_in_place(output_tile_fp, float(preprocess_cfg["max_depth"]))
+                self._postprocess_output_in_place(
+                    output_tile_fp,
+                    float(preprocess_cfg["max_depth"]),
+                    min_depth_threshold,
+                )
                 out_written_fp = (
                     self._build_windowed_output_vrt(out_path, [output_tile_fp], output_profile.get("nodata"))
                     if self._gdal_is_available()
@@ -956,6 +971,7 @@ class ModelWorker(Model):
             "execution_path": execution_path,
             "preprocess": {
                 "max_depth": float(preprocess_cfg["max_depth"]),
+                "min_depth_threshold": float(min_depth_threshold),
                 "dem_pct_clip": float(preprocess_cfg["dem_pct_clip"]),
                 "dem_ref_stats": preprocess_cfg["dem_ref_stats"],
                 "window_method": window_method,

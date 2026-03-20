@@ -41,6 +41,12 @@ pytest -q -m "sphinx"
 
 ```
 
+### notebook tests
+NOTE: these run in the `dev` conda environment, not `deploy`.
+
+```bash
+conda run -n dev pytest -q -m "notebook"
+```
 
 ## Notes
 - Marker definitions live in [`pytest.ini`](../pytest.ini).
@@ -102,7 +108,29 @@ pytest -q -m "sphinx"
 
 ## miniforge3
 ```bash
-docker run --rm --init -it -v "$(mktemp -d):/tmp/work" -w /tmp/work condaforge/miniforge3:25.3.1-0 bash
+# launch one-time use interactive shell
+docker run --rm --init -it -v "$(mktemp -d):/tmp/work" -w /tmp/work -p 8888:8888 condaforge/miniforge3:25.3.1-0 bash
+
+
+# install jupyter
+python -m pip install jupyterlab
+
+# launch notebook
+python -m jupyter lab \
+  --ip=0.0.0.0 \
+  --port=8888 \
+  --no-browser \
+  --allow-root \
+  --ServerApp.token='' \
+  --ServerApp.password=''
+
+
+# open in windows browser
+```
+
+## colab
+```bash
+us-docker.pkg.dev/colab-images/public/cpu-runtime:latest
 ```
 
 ## ubuntu:24.04

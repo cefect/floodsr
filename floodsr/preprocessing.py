@@ -14,6 +14,11 @@ from rasterio.windows import from_bounds
 from rasterio.warp import Resampling, calculate_default_transform, reproject, transform_bounds
 
 
+def _transforms_match(left, right) -> bool:
+    """Return True when two affine transforms match within a strict tolerance."""
+    return bool(np.allclose(tuple(left)[:6], tuple(right)[:6], atol=1e-9, rtol=0.0))
+
+
 def _as_numeric_np_array(
     arr: np.ndarray,
     name: str,
@@ -375,7 +380,10 @@ def _resolve_alignment_context(
 
         if depth_crs != dem_crs and crs_policy != "strict":
             log.warning(
-                f"CRS mismatch; applying --crs-policy={crs_policy}\n    depth={depth_crs}\n    dem={dem_crs}\n    target={target_crs}"
+                f"CRS mismatch; applying --crs-policy={crs_policy} to resolve a canonical target grid\n"
+                f"    depth={depth_crs}\n"
+                f"    dem={dem_crs}\n"
+                f"    target={target_crs}"
             )
 
         depth_res = (abs(float(depth_ds.res[0])), abs(float(depth_ds.res[1])))
@@ -394,7 +402,12 @@ def _resolve_alignment_context(
             )
         dem_bounds = dem_ds.bounds
         if crs_policy == "strict" and not all(np.isclose(a, b, atol=1e-6, rtol=0.0) for a, b in zip(depth_bounds_target, dem_bounds)):
-            log.warning(f"input bounds differ; clipping DEM to depth raster bounds.\n    depth={depth_bounds_target}\n    dem={dem_bounds}")
+            log.warning(
+                "input bounds differ under --crs-policy strict; continuing with the depth-derived target bounds and "
+                "reading DEM coverage from the overlapping source window.\n"
+                f"    depth={depth_bounds_target}\n"
+                f"    dem={dem_bounds}"
+            )
 
         depth_shape = (int(depth_ds.height), int(depth_ds.width))
         depth_transform = (
@@ -410,6 +423,7 @@ def _resolve_alignment_context(
             if dem_crs == target_crs
             else tuple(float(v) for v in transform_bounds(target_crs, dem_crs, *depth_bounds_target, densify_pts=21))
         )
+        # Source window rounding is only used to guarantee DEM coverage for reads.
         dem_window = from_bounds(*dem_bounds_src, dem_ds.transform).round_offsets().round_lengths()
         dem_window_transform = dem_ds.window_transform(dem_window)
         dem_crop_bounds = tuple(
@@ -424,8 +438,7 @@ def _resolve_alignment_context(
             height=int(target_hr_shape[0]),
         )
         if dem_crs == target_crs:
-            dem_raw_shape = (int(dem_window.height), int(dem_window.width))
-            dem_raw_transform = dem_window_transform
+            dem_raw_shape = (max(int(dem_window.height), 1), max(int(dem_window.width), 1))
         else:
             _, dem_raw_w, dem_raw_h = calculate_default_transform(
                 dem_crs,
@@ -435,11 +448,13 @@ def _resolve_alignment_context(
                 *dem_crop_bounds,
             )
             dem_raw_shape = (max(int(dem_raw_h), 1), max(int(dem_raw_w), 1))
-            dem_raw_transform = bounds_to_transform(
-                *depth_bounds_target,
-                width=int(dem_raw_shape[1]),
-                height=int(dem_raw_shape[0]),
-            )
+        # Always rebuild the raw DEM transform from the canonical target bounds so prepared rasters
+        # share exact bounds regardless of CRS policy or source-window rounding.
+        dem_raw_transform = bounds_to_transform(
+            *depth_bounds_target,
+            width=int(dem_raw_shape[1]),
+            height=int(dem_raw_shape[0]),
+        )
 
         return {
             "depth_path": depth_path,
@@ -479,10 +494,11 @@ def _align_depth_and_dem_inputs(
     dem_hr_fp: str | Path,
     scale: int,
     crs_policy: str = "strict",
+    ctx: dict[str, Any] | None = None,
     logger=None,
 ) -> dict[str, Any]:
     """Align raster inputs for model scale by preserving LR depth and resampling DEM."""
-    ctx = _resolve_alignment_context(
+    ctx = ctx or _resolve_alignment_context(
         depth_lr_fp,
         dem_hr_fp,
         scale=scale,
@@ -531,7 +547,11 @@ def _align_depth_and_dem_inputs(
             num_threads=1,
         )
         dem_model = replace_nodata_with_zero(dem_model, ctx["dem_nodata"])
-        if ctx["dem_crs"] == ctx["target_crs"]:
+        if (
+            ctx["dem_crs"] == ctx["target_crs"]
+            and dem_crop.shape == tuple(ctx["dem_raw_shape"])
+            and _transforms_match(ctx["dem_window_transform"], ctx["dem_raw_transform"])
+        ):
             dem_raw = dem_crop
         else:
             dem_raw = np.empty(ctx["dem_raw_shape"], dtype=np.float32)
@@ -763,6 +783,7 @@ def write_platform_prepared_rasters(
             dem_hr_fp,
             scale=1,
             crs_policy=crs_policy,
+            ctx=ctx,
             logger=log,
         )
         depth_prepared_path = _write_single_band_raster(depth_prepared_fp, aligned["depth_lr"], depth_profile)
