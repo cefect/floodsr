@@ -31,8 +31,8 @@ echo "[tutorial_3] note: the HRDEM fetch and tohr cells can take a while"
 
 cp "${notebook_fp}" "${run_dir}/"
 cd "${run_dir}"
+echo "[tutorial_3] executing notebook"
 time python -m jupyter nbconvert \
-    --debug \
     --to notebook \
     --execute \
     --inplace \
@@ -40,6 +40,5 @@ time python -m jupyter nbconvert \
     "$(basename "${notebook_fp}")"
 
 cp "${run_dir}/$(basename "${notebook_fp}")" "${notebook_fp}"
-find "${run_dir}" -maxdepth 1 -type f ! -name "$(basename "${notebook_fp}")" -print | sed 's#^#[tutorial_3] staged output: #'
 rm -rf "${run_dir}" "${tmp_dir}"
 echo "[tutorial_3] refreshed source notebook without leaving side files in ${script_dir}"
