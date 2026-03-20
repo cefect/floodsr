@@ -22,8 +22,8 @@ msgstr "Pour plus de détails, consultez le :doc:`user_guide`."
 msgid "For common questions, see :doc:`faq`."
 msgstr "Pour les questions fréquentes, consultez la :doc:`faq`."
 
-msgid "For an interactive walkthrough, see {doc}`Tutorial 1 <notebooks/tutorial_1>`."
-msgstr "Pour une visite guidée interactive, consultez {doc}`le tutoriel 1 <notebooks/tutorial_1>`."
+msgid "For an interactive walkthrough, see :doc:`Tutorial 1 <notebooks/tutorial_1>`."
+msgstr "Pour une visite guidée interactive, consultez :doc:`le tutoriel 1 <notebooks/tutorial_1>`."
 
 msgid "What Is ``floodsr``?"
 msgstr "Qu'est-ce que ``floodsr`` ?"

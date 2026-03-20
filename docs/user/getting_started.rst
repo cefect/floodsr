@@ -4,7 +4,7 @@ Getting Started
 This page contains minimal info to get you up and flooding with ``floodsr``.
 For more detailed information, see the :doc:`user_guide`.
 For common questions, see :doc:`faq`.
-For an interactive walkthrough, see {doc}`Tutorial 1 <notebooks/tutorial_1>`.
+For an interactive walkthrough, see :doc:`Tutorial 1 <notebooks/tutorial_1>`.
 
 What Is ``floodsr``?
 --------------------
