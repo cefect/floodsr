@@ -48,21 +48,23 @@ python -m sphinx -E -b html -D language=fr_CA . "_build/fr_ca_html"
 
 ## TRANSLATION REFRESH
 
-Edit the existing `fr_CA` catalogs directly. Do not regenerate the `.po` files with `gettext`.
-Always recompile before rebuilding French HTML.
+Follow [ADR-0018: Docs and Tutorials Strategy](../dev/adr/0018-docs-and-tutorials.md) for the translation policy and review expectations.
 
 ```bash
 # 1) go to the docs source directory
 cd /workspace/docs/user
 
-# 2) manually review/edit the French catalogs
- 
+# 2) manually review/edit the existing fr_CA catalogs
+
 
 # 3) compile the edited .po catalogs to .mo files
 bash scripts/compile_fr_catalogs.sh
 
  
 ```
+### Agent instructions
+
+refresh the full fr_CA docs translation per ADR-0018: update the existing French .po catalogs directly without gettext regeneration, compile the catalogs, rebuild the French HTML, review the rendered result for navigation/links/readability, and make any follow-up fixes needed to match policy. only touch/review .po files whose english source has changed since the last translation refresh.
 
 ## updating `docs/user/cli_reference.rst`
 
