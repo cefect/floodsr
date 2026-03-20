@@ -10,10 +10,10 @@ Running Tutorials
 -----------------
 To best use the tutorials, we recommend running them in a notebook environment:
 
-- :raw-html:`<i class="fas fa-download"></i>` Download the notebook as an ``.ipynb`` file, save it to your local machine, and open it with your local Jupyter kernel. For local notebook setup, see :ref:`basic_install_local_notebook`. If you need Jupyter, see `jupyter.org/install <https://jupyter.org/install>`__.
-- :raw-html:`<i class="fas fa-rocket"></i>` Launch the same notebook directly in Google Colab for a browser-based interactive session. For hosted notebook setup, see :ref:`basic_install_google_colab`.
+- :raw-html:`<i class="fas fa-download"></i>` Download the notebook as an ``.ipynb`` file, save it to your local machine, and open it with your local Jupyter kernel. See :ref:`basic_install_local_notebook`.
+- :raw-html:`<i class="fas fa-rocket"></i>` Launch the same notebook directly in Google Colab for a browser-based interactive session. See :ref:`basic_install_google_colab`.
 
-Alternatively, you can copy/paste the commands from the tutorials into your terminal. For the CLI path, see :ref:`basic_install_cli`.
+Alternatively, you can copy/paste the commands from the tutorials into your terminal. See :ref:`basic_install_cli`.
 
 Select Tutorial 1 from the list below to get started.
 
