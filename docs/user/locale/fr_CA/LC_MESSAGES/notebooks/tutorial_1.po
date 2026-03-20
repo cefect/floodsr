@@ -91,14 +91,20 @@ msgstr "Téléchargez le modèle par défaut dans le cache local."
 msgid "Run `tohr` with fetched HRDEM data"
 msgstr "Exécuter `tohr` avec des données HRDEM récupérées"
 
-msgid "If your low-resolution raster falls within HRDEM coverage, you can fetch the high-resolution DEM automatically."
-msgstr "Si votre raster basse résolution se trouve dans l'emprise HRDEM, vous pouvez récupérer automatiquement le DEM haute résolution."
-
 msgid "Run `tohr` with a local DEM"
 msgstr "Exécuter `tohr` avec un DEM local"
 
-msgid "If you already have a local DEM, point `floodsr` at it directly."
-msgstr "Si vous disposez déjà d'un DEM local, pointez `floodsr` directement vers celui-ci."
+msgid "Now let's run the **to high resolution** `tohr` command to enhance the resolution of our low-resolution depth raster against the hi-res DEM."
+msgstr "Lançons maintenant la commande **to high resolution** `tohr` pour améliorer la résolution de notre raster de profondeur basse résolution à l'aide du DEM haute résolution."
+
+msgid "If you inspect your working directory, you should see a new file called `lowres032_sr.tif`.  This is the output of the `tohr` command, and should match the resolution of the DEM (2m in this case). Because we didn't specify an output path, `floodsr` defaulted to writing the output to the same directory as the input, with `_sr` appended to the filename."
+msgstr "Si vous regardez dans votre répertoire de travail, vous devriez voir un nouveau fichier nommé `lowres032_sr.tif`. C'est la sortie de la commande `tohr`, et sa résolution devrait correspondre à celle du DEM (2 m dans ce cas). Comme nous n'avons pas précisé de chemin de sortie, `floodsr` a écrit la sortie par défaut dans le même répertoire que l'entrée, en ajoutant `_sr` au nom du fichier."
+
+msgid "Hooray! You just ran your first `floodsr` command. You deserve some <span style=\"font-size: 1.4em;\">🍰</span>."
+msgstr "Hourra ! Vous venez d'exécuter votre première commande `floodsr`. Vous méritez bien un peu de <span style=\"font-size: 1.4em;\">🍰</span>."
+
+msgid "Passing `--fetch-hrdem` tells `tohr` to attempt to fetch the HRDEM data for your raster extents.  Of course, this will only work if your raster extents overlap with the coverage of the HRDEM data. Otherwise, you'll get an error."
+msgstr "Passer `--fetch-hrdem` indique à `tohr` d'essayer de récupérer les données HRDEM correspondant à l'emprise de votre raster. Bien sûr, cela ne fonctionnera que si cette emprise chevauche la zone de couverture des données HRDEM. Sinon, vous obtiendrez une erreur."
 
 msgid "Next steps"
 msgstr "Suite"
