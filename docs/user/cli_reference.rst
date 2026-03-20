@@ -43,7 +43,7 @@ tohr
                        [--window-method {hard,feather}]
                        [--tile-overlap TILE_OVERLAP] [--tile-size TILE_SIZE]
                        [--crs-policy {strict,use-dem,use-lores}]
-                       [--show-progress | --no-show-progress]
+                       [--show-progress | --no-progress]
    
    Run one super-resolution pass for a low-res depth raster.
    
@@ -112,9 +112,10 @@ tohr
      --crs-policy {strict,use-dem,use-lores}
                            Policy for CRS mismatches between the low-res depth
                            raster and DEM.
-     --show-progress, --no-show-progress
-                           Show model download, DEM fetch, and tiled runtime
-                           progress output.
+     --show-progress       Show progress output during model download, DEM fetch,
+                           and tiled runtime work. Use `--no-progress` to disable
+                           it. Default: enabled.
+     --no-progress         Disable progress output. Default: progress is shown.
 
 models
 ------
@@ -153,7 +154,7 @@ models fetch
 
    usage: floodsr models fetch [-h] [--manifest MANIFEST] [--cache-dir CACHE_DIR]
                                [--backend {http,file}] [--force]
-                               [--show-progress | --no-show-progress]
+                               [--show-progress | --no-progress]
                                version
    
    Fetch one manifest model into the local cache.
@@ -171,8 +172,9 @@ models fetch
                            Override weight retrieval backend selection.
      --force               Redownload even when a valid cached weight file
                            already exists.
-     --show-progress, --no-show-progress
-                           Show model download progress output.
+     --show-progress       Show progress output during model download. Use `--no-
+                           progress` to disable it. Default: enabled.
+     --no-progress         Disable progress output. Default: progress is shown.
 
 doctor
 ------
