@@ -1,6 +1,7 @@
 # USER documentation
 
 - [ReadTheDocs](https://app.readthedocs.org/projects/floodsr/)
+- [ReadTheDocs french project](https://app.readthedocs.org/projects/floodsr-fr/)
 
 ## Read the Docs config
 
