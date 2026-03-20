@@ -23,7 +23,13 @@ python -m sphinx -b html . "_build/manual"
 "\\wsl.localhost\Ubuntu\home\cefect\LS\09_REPOS\04_TOOLS\floodsr\docs\user\_build\manual\index.html"
 ```
 
-### build french docs
+
+
+
+
+
+
+### FRENCH
 
 ```bash
 # 1) go to the docs source directory
