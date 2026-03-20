@@ -241,6 +241,31 @@ def test_parse_tohr_accepts_min_depth_threshold(tile_case_d: dict):
     assert parsed_args.min_depth_threshold == pytest.approx(0.01)
 
 
+@pytest.mark.parametrize(
+    ("progress_flag", "expected_show_progress"),
+    [
+        pytest.param("--show-progress", True, id="explicit_show_progress"),
+        pytest.param("--no-progress", False, id="explicit_no_progress"),
+    ],
+)
+@pytest.mark.parametrize("case_id", [pytest.param("2407_FHIMP_tile", id="data_case_progress_flag_2407_fhimp_tile")])
+@pytest.mark.fast
+def test_parse_tohr_accepts_progress_flags(tile_case_d: dict, progress_flag: str, expected_show_progress: bool):
+    """Ensure tohr parser accepts the documented positive and negative progress flags."""
+    case_spec = tile_case_d["case_spec"]
+    parsed_args = _parse_arguments(
+        [
+            "tohr",
+            "--in",
+            str(tile_case_d["tile_dir"] / case_spec["inputs"]["lowres_fp"]),
+            "--fetch-hrdem",
+            progress_flag,
+        ]
+    )
+    assert isinstance(parsed_args.show_progress, bool)
+    assert parsed_args.show_progress is expected_show_progress
+
+
 @pytest.mark.parametrize("case_id", [pytest.param("2407_FHIMP_tile", id="data_case_machine_json_2407_fhimp_tile")])
 @pytest.mark.fast
 def test_parse_tohr_allows_machine_json_only(tile_case_d: dict, tmp_path: Path):

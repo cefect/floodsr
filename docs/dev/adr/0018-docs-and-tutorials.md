@@ -19,14 +19,25 @@ The current docs stack uses Sphinx with `myst_nb` for notebook rendering and the
 - Add Canadian French (`fr_CA`) as a translated docs target using Sphinx i18n catalogs under `docs/user/locale/`.
 - Keep one shared Sphinx source tree under `docs/user` rather than duplicating content per language.
 - Keep the docs in the main repo and publish translations from separate Read the Docs projects that point at the same repository.
+- Treat the landing pages, getting-started pages, installation pages, and tutorial introductions as beginner-facing content for readers with minimal programming and GIS knowledge.
+- Treat the Python CLI parser definition as the source of truth for CLI reference documentation, rather than terminal `--help` dumps or a separate JSON schema.
 
-## Localization
+## French docs
 
-- The canonical authored docs remain the English files already stored under `docs/user`.
-- French content should be maintained as `.po` translation catalogs under `docs/user/locale/fr_CA/LC_MESSAGES/`.
- 
+- The canonical authored docs remain the English files  `docs/user`.
+- French content should be maintained as `.po` catalogs under `docs/user/locale/fr_CA/LC_MESSAGES/`.
+- Compiled `.mo` files are build artifacts, not source artifacts. They should be generated for local/CI/docs builds and should not be committed to the repository.
+- Translate top-level indexes, landing pages, and internal links along with page content so the French docs are navigable as a complete experience.
 
- 
+### translator instructions
+- target Canadian French (`fr_CA`)
+- Do not use `gettext` to generate translation files. Create the `.po` files directly, with a best-effort translation that preserves the tone and meaning of the English source.
+- After editing `.po` files, compile them to `.mo` files for the build/review step, but do not treat the compiled `.mo` files as tracked source files.
+- Keep commands, code, stdout, and project names unchanged, including `HRDEM` and `CostGrow`.
+- In `cli_reference.po`, translate the narrative help text and explanatory prose, but do not translate literal commands, subcommands, flags, option names, paths, or code-like tokens.
+- When a term should stay tied to the English wording, explain it in French rather than forcing a literal translation. For example, `to high resolution (tohr)` should note the English phrase in the French text.
+- Critically review translations for readability and fidelity rather than translating mechanically.
+- Build the docs after translation work and review the rendered result to confirm the translation, navigation, and links behave as intended.
 
 ## Tutorials
 
@@ -67,19 +78,28 @@ As these provide commands for patching the environment, they are a special case.
 
  for testing, see https://github.com/cefect/floodsr/issues/31
 
+## CLI Reference Strategy
+
+- `docs/user/cli_reference.rst` should be generated from parser metadata exposed by the Python CLI, not by capturing terminal help output into one literal code block.
+- The CLI parser should remain the canonical definition of commands, arguments, defaults, choices, and help text.
+- Generated CLI docs should keep commands, flags, metavars, and examples literal, while emitting command descriptions and option help as normal translatable prose so `cli_reference.po` can localize them.
+
 ## Tutorial Notebook Rendering Strategy
 
 - Tutorial source files should be committed as real Jupyter notebooks (`.ipynb`), not generated artifacts and not Markdown stand-ins.
 - Notebook files should live under `docs/user/notebooks/`.
 - Sphinx should render these notebooks with `myst_nb`.
-- Notebook execution should remain disabled via the docs configuration so that builds are deterministic
+- Notebook execution should remain disabled via the docs configuration so that builds are deterministic.
 - Tutorial execution for documentation refreshes should use per-notebook shell shims that live beside the notebooks under `docs/user/notebooks/` (for example `tutorial_1.sh` and `tutorial_2.sh`).
 - Those shell shims should execute a temporary copy of the notebook under a cache-backed working directory, then copy the completed `.ipynb` back into `docs/user/notebooks/`.
 - Generated side files from tutorial execution should stay in the cache-backed staging area, not beside the tracked source notebooks.
+- The committed notebook artifacts under `docs/user/notebooks/` should be pruned before rendering so they keep plot/image outputs that materially help the docs, while dropping textual execution output such as stream logs, CLI chatter, and one-off diagnostics.
+- The docs site should therefore render tutorial notebooks from this pruned state: markdown plus code cells, with plot outputs preserved where useful and non-plot outputs removed.
 - Per-notebook shell shims should assume the caller has already activated the correct notebook runtime. In this repo, proofing should be launched from the outside with `conda run -n dev ...` (or an already-active `dev` shell) rather than hard-coding a conda interpreter path inside the shim.
 - Notebook source cells should default to the same cache behavior as the application code. For `floodsr`, that means leaving cache selection to the CLI/runtime unless the user explicitly edits the notebook cell to override it.
 - When a tutorial benefits from cache reuse during docs proofing (for example, repeated HRDEM fetches in Tutorial 3), the per-notebook shell shim may inject a local shared-cache override via environment variables. That override should live in the shim, not as a hard-coded path in the committed notebook source.
 - Tutorials that expose cache overrides should tell users to edit the relevant notebook cell if they want custom cache behavior.
+- When docs are previewed from a non-`main` branch, the Colab launch button may therefore open an older `main` branch notebook rather than the previewed content.
  
 
 ## Docs Devcontainer Limitation

@@ -47,7 +47,7 @@ msgid "Here we provide instructions for the three most common:"
 msgstr "Nous donnons ici des instructions pour les trois contextes les plus courants :"
 
 msgid ":ref:`basic_install_cli`: best for operations and those comfortable with CLI."
-msgstr ":ref:`basic_install_cli` : le meilleur choix pour les usages opérationnels et pour les personnes à l'aise avec la CLI."
+msgstr ":ref:`basic_install_cli` : le meilleur choix pour les usages opérationnels et pour les personnes à l'aise avec la ligne de commande (CLI)."
 
 msgid ":ref:`basic_install_local_notebook`:  interactive use and visualization."
 msgstr ":ref:`basic_install_local_notebook` : pour un usage interactif et la visualisation."
@@ -59,7 +59,7 @@ msgid "Command line (CLI)"
 msgstr "Ligne de commande (CLI)"
 
 msgid "``floodsr`` was designed as a CLI-first Python package, so we recommend installing with `pipx <https://pipx.pypa.io/stable/>`__ for simple environment isolation."
-msgstr "``floodsr`` a été conçu comme un paquet Python orienté CLI ; nous recommandons donc une installation avec `pipx <https://pipx.pypa.io/stable/>`__ pour obtenir une isolation simple de l'environnement."
+msgstr "``floodsr`` a été conçu comme un paquet Python orienté CLI (ligne de commande) ; nous recommandons donc une installation avec `pipx <https://pipx.pypa.io/stable/>`__ pour obtenir une isolation simple de l'environnement."
 
 msgid "For this, you need a working `Python 3.12+ <https://realpython.com/installing-python/>`_ and pip (which usually comes already shipped with Python)."
 msgstr "Pour cela, il vous faut un `Python 3.12+ <https://realpython.com/installing-python/>`_ fonctionnel ainsi que ``pip`` (généralement déjà fourni avec Python)."
@@ -98,7 +98,7 @@ msgid "Check your Python and Jupyter setup by running the following in a termina
 msgstr "Vérifiez votre installation Python et Jupyter en exécutant ce qui suit dans un terminal :"
 
 msgid "Then, you can install ``floodsr`` with ``pip`` and register a dedicated Jupyter kernel for it:"
-msgstr "Vous pouvez ensuite installer ``floodsr`` avec ``pip`` et enregistrer un noyau Jupyter dédié :"
+msgstr "Vous pouvez ensuite installer ``floodsr`` avec ``pip`` et enregistrer un noyau Jupyter dédié (c'est l'environnement Python utilisé par le carnet) :"
 
 msgid "Then launch Jupyter from that environment:"
 msgstr "Lancez ensuite Jupyter depuis cet environnement :"
@@ -110,7 +110,7 @@ msgid "But this can lead to messy environments and is not recommended for regula
 msgstr "Mais cela peut produire des environnements désordonnés et n'est pas recommandé pour un usage régulier."
 
 msgid "Finally, confirm the CLI is available from the notebook:"
-msgstr "Enfin, confirmez que la CLI est disponible depuis le carnet :"
+msgstr "Enfin, confirmez que la CLI (ligne de commande) est disponible depuis le carnet :"
 
 msgid "Hosted notebook (Colab)"
 msgstr "Carnet hébergé (Colab)"
