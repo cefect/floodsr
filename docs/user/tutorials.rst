@@ -1,20 +1,21 @@
 Tutorials
 =========
 
+.. role:: raw-html(raw)
+   :format: html
+
 This page collects hands-on ``floodsr`` walkthroughs.
 
 Running Tutorials
 -----------------
-To best use the tutorials, we recommend running them in a Jupyter environment. For example, you can:
+To best use the tutorials, we recommend running them in a notebook environment:
 
-.. raw:: html
+- :raw-html:`<i class="fas fa-download"></i>` Download the notebook as an ``.ipynb`` file, save it to your local machine, and open it with your local Jupyter kernel. For local notebook setup, see :ref:`basic_install_local_notebook`. If you need Jupyter, see `jupyter.org/install <https://jupyter.org/install>`__.
+- :raw-html:`<i class="fas fa-rocket"></i>` Launch the same notebook directly in Google Colab for a browser-based interactive session. For hosted notebook setup, see :ref:`basic_install_google_colab`.
 
-   <p><i class="fas fa-download"></i> Download the notebook as an <code>.ipynb</code> file, save it to your local machine, and open it with your local Jupyter kernel. If you need Jupyter, see <a href="https://jupyter.org/install">jupyter.org/install</a>.</p>
-   <p><i class="fas fa-rocket"></i> Launch the same notebook directly in Google Colab for a browser-based interactive session.</p>
+Alternatively, you can copy/paste the commands from the tutorials into your terminal. For the CLI path, see :ref:`basic_install_cli`.
 
-Alternatively, you can copy/paste the commands from the tutorials into your terminal.
-
-Select ``Tutorial 1: Quick Start`` from the list below to get started.
+Select Tutorial 1 from the list below to get started.
 
 .. toctree::
    :maxdepth: 1
