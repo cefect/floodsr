@@ -14,7 +14,7 @@ msgid "Tutorial 3: Large rasters"
 msgstr "Tutoriel 3 : rasters de grande taille"
 
 msgid "This tutorial demonstrates `floodsr` with a larger low-res flood raster and an end-to-end CLI run that fetches HRDEM and writes the super-resolved output in one shot."
-msgstr "Ce tutoriel montre `floodsr` sur un raster d'inondation basse résolution plus grand, avec un flux CLI complet qui récupère le HRDEM et écrit la sortie super-résolue en une seule commande."
+msgstr "Ce tutoriel montre `floodsr` sur un raster d'inondation basse résolution plus grand, avec un flux CLI complet (ligne de commande) qui récupère le HRDEM et écrit la sortie super-résolue en une seule commande."
 
 msgid "**What you'll do:**"
 msgstr "**Ce que vous allez faire :**"
@@ -65,7 +65,7 @@ msgid "Set Cache"
 msgstr "Définir le cache"
 
 msgid "When rasters become large, caching downloads to disk can be a huge time saver."
-msgstr "Quand les rasters deviennent volumineux, mettre les téléchargements en cache sur disque peut faire gagner beaucoup de temps."
+msgstr "Quand les rasters (cartes en grille) deviennent volumineux, mettre les téléchargements en cache sur disque peut faire gagner beaucoup de temps."
 
 msgid "By default, this notebook follows the same cache behavior as the source code: if no cache override is supplied, `floodsr` uses its normal platform cache location."
 msgstr "Par défaut, ce carnet suit le même comportement de cache que le code source : si aucune surcharge n'est fournie, `floodsr` utilise son emplacement de cache habituel sur la plateforme."
@@ -92,7 +92,7 @@ msgid "Fetch HRDEM and Run `tohr`"
 msgstr "Récupérer le HRDEM et exécuter `tohr`"
 
 msgid "For this larger example, we use one CLI command to fetch HRDEM, resolve the model, and run super-resolution in one shot. The fetched HRDEM is projected (`EPSG:3979`) while the low-res depth raster is geographic (`EPSG:4326`), so we pass `--crs-policy=use-dem` to reproject the depth raster onto the DEM grid. The `--fetch-out` argument keeps a copy of the fetched HRDEM so we can inspect it in the next section."
-msgstr "Pour cet exemple plus grand, nous utilisons une seule commande CLI pour récupérer le HRDEM, résoudre le modèle et lancer la super-résolution en une seule fois. Le HRDEM récupéré est projeté (`EPSG:3979`), tandis que le raster de profondeur basse résolution est géographique (`EPSG:4326`) ; nous passons donc `--crs-policy=use-dem` pour reprojeter le raster de profondeur sur la grille du DEM. L'argument `--fetch-out` conserve une copie du HRDEM récupéré afin que nous puissions l'inspecter dans la section suivante."
+msgstr "Pour cet exemple plus grand, nous utilisons une seule commande CLI (ligne de commande) pour récupérer le HRDEM, résoudre le modèle et lancer la super-résolution en une seule fois. Le HRDEM récupéré est projeté (`EPSG:3979`), tandis que le raster de profondeur basse résolution est géographique (`EPSG:4326`) ; nous passons donc `--crs-policy=use-dem` pour reprojeter le raster de profondeur sur la grille du DEM. L'argument `--fetch-out` conserve une copie du HRDEM récupéré afin que nous puissions l'inspecter dans la section suivante."
 
 msgid "If you left `base_cache_dir` as `None`, this command uses the default `floodsr` cache location."
 msgstr "Si vous avez laissé `base_cache_dir` à `None`, cette commande utilise l'emplacement de cache par défaut de `floodsr`."

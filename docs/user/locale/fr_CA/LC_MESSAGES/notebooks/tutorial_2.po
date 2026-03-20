@@ -71,7 +71,7 @@ msgid "Plot the tutorial inputs"
 msgstr "Tracer les entrées du tutoriel"
 
 msgid "We start by plotting the low-resolution flood-depth raster in blue and the DEM tile with a terrain colormap."
-msgstr "Nous commençons par afficher en bleu le raster de profondeur d'inondation à basse résolution, puis la tuile DEM avec une palette de relief."
+msgstr "Nous commençons par afficher en bleu le raster de profondeur d'inondation à basse résolution (une carte grossière), puis la tuile DEM avec une palette de relief."
 
 msgid "this shows the not-so-great coarse pluvial flood raster at 32m"
 msgstr "On voit ici le raster pluvial grossier en 32 m, pas franchement idéal."
@@ -80,7 +80,7 @@ msgid "Probe the CRS of both rasters"
 msgstr "Examiner le SCR des deux rasters"
 
 msgid "A coordinate reference system (CRS) tells raster software how pixel locations map onto real-world coordinates."
-msgstr "Un système de coordonnées de référence (SCR, ou CRS en anglais) indique au logiciel raster comment les pixels se positionnent dans le monde réel."
+msgstr "Un système de coordonnées de référence (SCR, ou CRS en anglais) indique au logiciel raster comment les pixels d'une carte se positionnent dans le monde réel."
 
 msgid "Before we trigger a CRS mismatch on purpose, let's inspect the CRS metadata on the original rasters."
 msgstr "Avant de provoquer volontairement un décalage de SCR, examinons les métadonnées de SCR des rasters d'origine."
@@ -95,7 +95,7 @@ msgid "Create a CRS mismatch on purpose"
 msgstr "Créer volontairement un décalage de SCR"
 
 msgid "To demonstrate `--crs-policy`, we reproject the low-resolution raster to `3978` and save it as a new GeoTIFF."
-msgstr "Pour illustrer `--crs-policy`, nous reprojetons le raster basse résolution vers `3978` et l'enregistrons comme nouveau GeoTIFF."
+msgstr "Pour illustrer `--crs-policy`, nous reprojetons le raster basse résolution vers `3978` et l'enregistrons comme nouveau GeoTIFF (un format de fichier raster très courant)."
 
 msgid "Run `tohr` with the mismatched CRS"
 msgstr "Exécuter `tohr` avec un SCR incompatible"
