@@ -10,11 +10,6 @@ stage_dir="${FLOODSR_NOTEBOOK_CACHE_DIR:-${repo_root}/_cache/notebook_tmp/tutori
 run_dir="${stage_dir}/run"
 tmp_dir="${stage_dir}/tmp"
 timeout_s="${FLOODSR_NOTEBOOK_TIMEOUT:-3600}"
-notebook_python="${FLOODSR_NOTEBOOK_PYTHON:-/opt/conda/envs/dev/bin/python}"
-
-if [[ ! -x "${notebook_python}" ]]; then
-    notebook_python="$(command -v python)"
-fi
 
 # Reuse the same local package and cache paths as the notebook pytest workflow.
 rm -rf "${run_dir}" "${tmp_dir}"
@@ -32,8 +27,8 @@ echo "[tutorial_3] repo_root=${repo_root}"
 echo "[tutorial_3] shared_cache_dir=${shared_cache_dir}"
 echo "[tutorial_3] stage_dir=${stage_dir}"
 echo "[tutorial_3] run_dir=${run_dir}"
-echo "[tutorial_3] notebook_python=${notebook_python}"
-echo "[tutorial_3] jupyter=$("${notebook_python}" -m jupyter --version | tr '\n' ' ' )"
+echo "[tutorial_3] python=$(python -c 'import sys; print(sys.executable)')"
+echo "[tutorial_3] jupyter=$(python -m jupyter --version | tr '\n' ' ' )"
 echo "[tutorial_3] staging notebook execution in ${run_dir}"
 echo "[tutorial_3] note: the HRDEM fetch and tohr cells can take a while"
 
@@ -45,13 +40,13 @@ cat > "${run_dir}/floodsr" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
 export PYTHONPATH="${repo_root}\${PYTHONPATH:+:\${PYTHONPATH}}"
-"${notebook_python}" -m floodsr.cli "\$@"
+python -m floodsr.cli "\$@"
 EOF
 chmod +x "${run_dir}/floodsr"
 
 cd "${run_dir}"
 echo "[tutorial_3] executing notebook"
-time "${notebook_python}" -m jupyter nbconvert \
+time python -m jupyter nbconvert \
     --to notebook \
     --execute \
     --inplace \

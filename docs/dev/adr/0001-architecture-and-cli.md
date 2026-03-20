@@ -57,6 +57,8 @@ main CLI commands/positional arguments:
 each of these should have their own help sub-menu. 
 with some global kwargs (mostly logging?)
 
+- User-facing docs and tutorial notebooks should demonstrate CLI usage as direct shell commands (`floodsr ...` in terminals and `!floodsr ...` in notebooks) rather than hiding CLI calls behind Python `subprocess` wrappers.
+
 
 ## CLI: tohr
 requirements:

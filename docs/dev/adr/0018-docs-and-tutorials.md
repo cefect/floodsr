@@ -56,6 +56,7 @@ As these provide commands for patching the environment, they are a special case.
 ### tutorial execution assumptions
 
 - Tutorials should invoke `floodsr` through the CLI, including from notebooks (for example `!floodsr ...`), rather than switching to the Python API unless the tutorial explicitly says otherwise.
+- User-facing notebook tutorials should prefer literal notebook CLI cells (for example `!floodsr ...`) over Python `subprocess` wrappers so the commands remain easy to read, copy, and adapt.
 - Tutorials >1 require some **additional dependencies** (`matplotlib` and `rasterio`) in addition to `floodsr`.
 - Tutorials >1 should print the versions of additional dependencies near the start of the notebook so users can quickly confirm their runtime.
   - For the CLI path in Tutorials >1, the docs should distinguish between the `floodsr` `pipx` install and the Python environment used for notebook execution and plotting.
