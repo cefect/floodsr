@@ -494,10 +494,11 @@ def _align_depth_and_dem_inputs(
     dem_hr_fp: str | Path,
     scale: int,
     crs_policy: str = "strict",
+    ctx: dict[str, Any] | None = None,
     logger=None,
 ) -> dict[str, Any]:
     """Align raster inputs for model scale by preserving LR depth and resampling DEM."""
-    ctx = _resolve_alignment_context(
+    ctx = ctx or _resolve_alignment_context(
         depth_lr_fp,
         dem_hr_fp,
         scale=scale,
@@ -782,6 +783,7 @@ def write_platform_prepared_rasters(
             dem_hr_fp,
             scale=1,
             crs_policy=crs_policy,
+            ctx=ctx,
             logger=log,
         )
         depth_prepared_path = _write_single_band_raster(depth_prepared_fp, aligned["depth_lr"], depth_profile)
