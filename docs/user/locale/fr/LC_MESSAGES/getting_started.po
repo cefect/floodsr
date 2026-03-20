@@ -1,0 +1,83 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: floodsr\n"
+"POT-Creation-Date: 2026-03-20 00:00+0000\n"
+"PO-Revision-Date: 2026-03-20 00:00+0000\n"
+"Language: fr\n"
+"Language-Team: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "Getting Started"
+msgstr "Bien démarrer"
+
+msgid "This page contains minimal info to get you up and flooding with ``floodsr``. For more detailed information, see the :doc:`user_guide`. For common questions, see :doc:`faq`. For an interactive walkthrough, see :doc:`Tutorial 1 <notebooks/tutorial_1>`."
+msgstr "Cette page rassemble le minimum nécessaire pour commencer rapidement avec ``floodsr``. Pour plus de détails, consultez le :doc:`user_guide`. Pour les questions fréquentes, consultez la :doc:`faq`. Pour une visite guidée interactive, consultez le :doc:`notebooks/tutorial_1`."
+
+msgid "What Is ``floodsr``?"
+msgstr "Qu'est-ce que ``floodsr`` ?"
+
+msgid "``floodsr`` is a flood-depth **resolution enhancement** tool. Or a super-resolution (SR) tool in machine-speak. It takes a low-resolution depth raster as input and reconstructs higher-resolution output, using terrain (DEM) context."
+msgstr "``floodsr`` est un outil qui **améliore la résolution** des rasters de profondeur d'inondation. Autrement dit, un outil de super-résolution (SR), pour parler le langage des modèles. Il prend en entrée un raster de profondeur à basse résolution et reconstruit une sortie à plus haute résolution en utilisant le contexte du terrain (DEM, c'est-à-dire un modèle numérique d'élévation)."
+
+msgid "Downloading test data"
+msgstr "Télécharger les données de test"
+
+msgid "Before running commands, it's nice to have some data to play with. If you don't have your own data yet, you can download a test tile from the project."
+msgstr "Avant d'exécuter des commandes, il est pratique d'avoir quelques données de test sous la main. Si vous n'avez pas encore vos propres données, vous pouvez télécharger une tuile de test depuis le projet."
+
+msgid "To download manually, browse to `this release <https://github.com/cefect/floodsr/releases/tag/v0.0.3>`_ and download the assets into your current working directory."
+msgstr "Pour un téléchargement manuel, ouvrez `cette publication <https://github.com/cefect/floodsr/releases/tag/v0.0.3>`_ et téléchargez les fichiers dans votre répertoire de travail courant."
+
+msgid "Alternatively, ``bash`` users with ``curl`` can run:"
+msgstr "Sinon, les utilisateurs de ``bash`` avec ``curl`` peuvent exécuter :"
+
+msgid "Use"
+msgstr "Utilisation"
+
+msgid "Here we give a quick intro on setting up a model and using it to enhance a flood raster."
+msgstr "Voici une introduction rapide pour configurer un modèle et l'utiliser afin d'améliorer un raster d'inondation."
+
+msgid "Install"
+msgstr "Installation"
+
+msgid "``floodsr`` was designed as a CLI-first Python package, so we recommend installing with `pipx <https://pipx.pypa.io/stable/>`_ to ensure environment isolation:"
+msgstr "``floodsr`` a été conçu comme un paquet Python orienté CLI, donc nous recommandons une installation avec `pipx <https://pipx.pypa.io/stable/>`_ afin de conserver un environnement isolé :"
+
+msgid "For more detailed installation instructions, see :doc:`installation`."
+msgstr "Pour des instructions d'installation plus détaillées, consultez :doc:`installation`."
+
+msgid "Model Setup"
+msgstr "Configuration du modèle"
+
+msgid "Before using the machine-learning backend, we need to fetch the model weights. This only needs to be done once, and the weights will be cached for future runs."
+msgstr "Avant d'utiliser le moteur d'apprentissage automatique, il faut récupérer les poids du modèle. Cette étape n'est nécessaire qu'une seule fois, puis les poids seront mis en cache pour les exécutions suivantes."
+
+msgid "List available model versions:"
+msgstr "Lister les versions de modèle disponibles :"
+
+msgid "You should see `ResUNet_16x_DEM` in the list, which is the only model currently available."
+msgstr "Vous devriez voir `ResUNet_16x_DEM` dans la liste ; c'est le seul modèle actuellement disponible."
+
+msgid "Fetch a model by version into the default cache:"
+msgstr "Récupérer un modèle par version dans le cache par défaut :"
+
+msgid "Now you're ready to enhance some flood rasters!"
+msgstr "Vous êtes maintenant prêt à améliorer des rasters d'inondation."
+
+msgid "Enhance to High Resolution"
+msgstr "Passer en haute résolution"
+
+msgid "The primary tool in ``floodsr`` is the ``tohr`` command or *to high resolution*. This ingests a low-resolution flood hazard raster and a high-resolution DEM. This high-resolution DEM can either be specified as a local file or fetched from the `HRDEM Mosaic <https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b>`_ data source (for locations in Canada of course)."
+msgstr "L'outil principal de ``floodsr`` est la commande ``tohr``, c'est-à-dire *to high resolution* en anglais. Elle prend un raster d'aléa d'inondation à basse résolution et un DEM à haute résolution. Ce DEM haute résolution peut être fourni comme fichier local ou récupéré depuis la source de données `HRDEM Mosaic <https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b>`_ (pour des emplacements au Canada, bien sûr)."
+
+msgid "To enhance to high resolution, fetching the DEM from the HRDEM Mosaic, try:"
+msgstr "Pour passer en haute résolution en récupérant le DEM depuis le HRDEM Mosaic, essayez :"
+
+msgid "Alternatively, specify your own local DEM file:"
+msgstr "Sinon, indiquez votre propre fichier DEM local :"
+
+msgid "For more details, see the :doc:`user_guide`."
+msgstr "Pour plus de détails, consultez le :doc:`user_guide`."
