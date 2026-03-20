@@ -16,7 +16,7 @@ The current docs stack uses Sphinx with `myst_nb` for notebook rendering and the
 - Treat tutorial notebooks as documentation artifacts first, not as build-time executed tests.
 - Track any future interactive-launch button as a separate implementation issue rather than in this ADR.
 - Keep English as the source language for user docs.
-- Add Canadian French (`fr_CA`) as a translated docs target using Sphinx i18n catalogs under `docs/user/locale/`.
+- Add French (`fr`) as a translated docs target using Sphinx i18n catalogs under `docs/user/locale/`.
 - Keep one shared Sphinx source tree under `docs/user` rather than duplicating content per language.
 - Keep the docs in the main repo and publish translations from separate Read the Docs projects that point at the same repository.
 - Treat the landing pages, getting-started pages, installation pages, and tutorial introductions as beginner-facing content for readers with minimal programming and GIS knowledge.
@@ -25,12 +25,12 @@ The current docs stack uses Sphinx with `myst_nb` for notebook rendering and the
 ## French docs
 
 - The canonical authored docs remain the English files  `docs/user`.
-- French content should be maintained as `.po` catalogs under `docs/user/locale/fr_CA/LC_MESSAGES/`.
+- French content should be maintained as `.po` catalogs under `docs/user/locale/fr/LC_MESSAGES/`.
 - Compiled `.mo` files are build artifacts, not source artifacts. They should be generated for local/CI/docs builds and should not be committed to the repository.
 - Translate top-level indexes, landing pages, and internal links along with page content so the French docs are navigable as a complete experience.
 
 ### translator instructions
-- target Canadian French (`fr_CA`)
+- target French (`fr`)
 - Do not use `gettext` to generate translation files. Create the `.po` files directly, with a best-effort translation that preserves the tone and meaning of the English source.
 - After editing `.po` files, compile them to `.mo` files for the build/review step, but do not treat the compiled `.mo` files as tracked source files.
 - Keep commands, code, stdout, and project names unchanged, including `HRDEM` and `CostGrow`.
