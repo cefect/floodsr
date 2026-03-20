@@ -25,6 +25,7 @@ the boundary is defined as:
 - square pixels
 - all masked pixels are also nodata (and raster has a defined nodata value)
   - nodata value (e.g., -9999) is the same between dem and depths
+- exact spatial agreement should be enforced on the prepared rasters, not approximated with downstream tolerance checks
 
 
 ## input handling
@@ -79,10 +80,16 @@ Requirements:
 - This stage is executed as part of `tohr` before model-worker execution.
 - Keep this logic shared/model-agnostic in `floodsr/preprocessing.py` where practical.
 - CRS mismatch policy handling (`--crs-policy`) is owned by this platform stage, not by model workers.
+- `crs_policy` selects the canonical target CRS, but the platform stage owns the full target spatial contract:
+  - canonical target bounds
+  - canonical LR/HR output transforms
+  - canonical LR/HR output shapes
 - Keep two preprocessing/materialization paths:
   - a simple path that may materialize full prepared rasters in memory
   - a raster-backed windowed path that reads and writes windows on demand to avoid materializing the full HRDEM-sized raster
 - In this phase, the raster-backed windowed path only needs to support hard-window inference. Feathered mosaicking can continue to require the simple path.
+- DEM clipping/windowing should be treated as a source-read coverage step only. source window rounding must not define the final prepared raster bounds.
+- both preprocessing/materialization paths should write prepared rasters onto the same canonical target grid so the platform-model boundary contract remains exact regardless of `crs_policy`.
 
 
 
@@ -114,3 +121,4 @@ post-inference, assert:
 - large scenes must not require a full in-memory read of the clipped raw DEM or a full in-memory allocation of the final raw-grid output raster
 - the raster-backed windowed path should preserve the same CRS/bounds/output contract as the simple path
 - `crs_policy` behavior is unchanged across both paths; only the materialization strategy differs
+- if a DEM source window must be padded or rounded to ensure source coverage, that should happen before reprojection and should not change the final prepared raster profile
