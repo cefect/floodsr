@@ -18,6 +18,7 @@ Select ``Tutorial 1: Quick Start`` from the list below to get started.
 
 .. toctree::
    :maxdepth: 1
+   :titlesonly:
 
    notebooks/tutorial_1
    notebooks/tutorial_2
