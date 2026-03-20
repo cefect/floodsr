@@ -1,0 +1,113 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: floodsr\n"
+"POT-Creation-Date: 2026-03-19 00:00+0000\n"
+"PO-Revision-Date: 2026-03-19 00:00+0000\n"
+"Language: fr_CA\n"
+"Language-Team: fr_CA\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "User Guide"
+msgstr "Guide d'utilisation"
+
+msgid "Introduction"
+msgstr "Introduction"
+
+msgid "``floodsr`` is a flood-depth **resolution enhancement** tool."
+msgstr "``floodsr`` est un outil d'**amélioration de résolution** pour les rasters de profondeur d'inondation."
+
+msgid "Or a super-resolution (SR) tool in machine-speak."
+msgstr "Autrement dit, un outil de super-résolution (SR), pour parler le langage des modèles."
+
+msgid "It takes a low-resolution depth raster as input and reconstructs higher-resolution output, using terrain (DEM) context."
+msgstr "Il prend en entrée un raster de profondeur à basse résolution et reconstruit une sortie à plus haute résolution en utilisant le contexte du terrain (DEM)."
+
+msgid "Basically, moving from the blocky grid on the left to the smooth grid on the right:"
+msgstr "En gros, il s'agit de passer de la grille pixellisée de gauche à la grille plus lisse de droite :"
+
+msgid "Super-resolution example"
+msgstr "Exemple de super-résolution"
+
+msgid "Digital Elevation Models (DEMs)"
+msgstr "Modèles numériques d'élévation (DEM)"
+
+msgid "Unlike some other super-resolution tools, ``floodsr`` leverages terrain information to provide more physically based flood reconstructions."
+msgstr "Contrairement à certains autres outils de super-résolution, ``floodsr`` exploite l'information topographique pour produire des reconstructions d'inondation plus plausibles sur le plan physique."
+
+msgid "This information is supplied as a high-resolution DEM."
+msgstr "Cette information est fournie sous la forme d'un DEM à haute résolution."
+
+msgid "``floodsr tohr`` will propagate water across whatever DEM grid is provided, so a user must take care to ensure the DEM reflects the intended propagation surface."
+msgstr "``floodsr tohr`` propage l'eau sur la grille du DEM fournie ; il faut donc veiller à ce que le DEM représente bien la surface de propagation visée."
+
+msgid "For example, removing buildings or burning flow paths through roads."
+msgstr "Par exemple, en retirant les bâtiments ou en ouvrant des chemins d'écoulement à travers les routes."
+
+msgid "Difference between a digital surface model and a digital terrain model"
+msgstr "Différence entre un modèle numérique de surface et un modèle numérique de terrain"
+
+msgid "Image: Arbec, CC BY 4.0, via Wikimedia Commons."
+msgstr "Image : Arbec, CC BY 4.0, via Wikimedia Commons."
+
+msgid "The hi-res DEM input can be specified with the ``--dem`` flag."
+msgstr "Le DEM haute résolution peut être fourni avec l'option ``--dem``."
+
+msgid "HRDEM Mosaic"
+msgstr "HRDEM Mosaic"
+
+msgid "For Canadian work, Natural Resources Canada develops and hosts the `High Resolution Digital Elevation Model Mosaic <https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b>`_, which provides a unique and continuous representation of the high resolution elevation data available across Canada."
+msgstr "Pour les travaux au Canada, Ressources naturelles Canada développe et héberge le `High Resolution Digital Elevation Model Mosaic <https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b>`_, qui fournit une représentation continue et cohérente des données altimétriques haute résolution disponibles au pays."
+
+msgid "In Southern Canada, this is built mainly from fixed wing LiDAR, providing an awesome resource for fetchable terrain data via their Web Coverage Services (WCS)."
+msgstr "Dans le sud du Canada, cet ensemble est principalement construit à partir de LiDAR aéroporté, ce qui en fait une excellente ressource de données de terrain accessibles via leurs services WCS."
+
+msgid "Coverage circa Feb 2026 is shown below:"
+msgstr "La couverture vers février 2026 est montrée ci-dessous :"
+
+msgid "To automate the use of HRDEM data for resolution enhancement of flood grids in Canada, ``floodsr tohr`` can directly fetch HRDEM tiles with the ``--fetch-hrdem`` flag."
+msgstr "Pour automatiser l'utilisation des données HRDEM lors de l'amélioration de résolution de grilles d'inondation au Canada, ``floodsr tohr`` peut récupérer directement les tuiles HRDEM avec l'option ``--fetch-hrdem``."
+
+msgid "Models"
+msgstr "Modèles"
+
+msgid "To support a wide range of use cases and adaptability, ``floodsr`` employs *models* to perform resolution enhancement."
+msgstr "Pour couvrir un large éventail de cas d'usage et rester adaptable, ``floodsr`` s'appuie sur des *modèles* pour réaliser l'amélioration de résolution."
+
+msgid "To see the supported models, use the ``floodsr models list`` command."
+msgstr "Pour voir les modèles pris en charge, utilisez la commande ``floodsr models list``."
+
+msgid "This is the original machine-learning-based model implemented in `floodsr`."
+msgstr "C'est le modèle d'origine, basé sur l'apprentissage automatique, implémenté dans `floodsr`."
+
+msgid "It uses a DEM-aware ResUNet that fuses low-resolution depth with high-resolution terrain context, reconstructs features on the low-resolution grid, and upsamples them by 16x to predict high-resolution depth."
+msgstr "Il utilise un ResUNet sensible au DEM qui fusionne la profondeur basse résolution avec le contexte topographique haute résolution, reconstruit les structures sur la grille basse résolution, puis les suréchantillonne par un facteur 16 pour prédire la profondeur haute résolution."
+
+msgid "Training"
+msgstr "Entraînement"
+
+msgid "Used Rim2D to simulate a large set of inundation tiles for training and HRDEM."
+msgstr "Utilise Rim2D pour simuler un grand ensemble de tuiles d'inondation pour l'entraînement et le HRDEM."
+
+msgid "Depth and DEM inputs were normalized for stable learning."
+msgstr "Les entrées de profondeur et de DEM ont été normalisées pour stabiliser l'apprentissage."
+
+msgid "Optimization used Adam with gradient clipping and a scheduled learning rate."
+msgstr "L'optimisation utilise Adam avec écrêtage des gradients et planification du taux d'apprentissage."
+
+msgid "Inference"
+msgstr "Inférence"
+
+msgid "Inference validates the inputs and applies model-specific preprocessing."
+msgstr "L'inférence valide les entrées et applique un prétraitement propre au modèle."
+
+msgid "The model runs tile by tile, then blends overlapping predictions into a continuous surface."
+msgstr "Le modèle s'exécute tuile par tuile, puis fusionne les prédictions chevauchantes en une surface continue."
+
+msgid "The final output is converted back to depth units on the target grid."
+msgstr "La sortie finale est reconvertie en unités de profondeur sur la grille cible."
+
+msgid "Rules-based. Not implemented yet."
+msgstr "Basé sur des règles. Pas encore implémenté."

@@ -10,8 +10,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-msgid "``floodsr`` documentation"
-msgstr "Documentation de ``floodsr``"
+msgid "CLI Reference"
+msgstr "Référence CLI"
 
-msgid "Contents"
-msgstr "Contenu"
+msgid "Auto-generated from live command help output."
+msgstr "Générée automatiquement à partir de l'aide des commandes en direct."
+
+msgid "Main Command"
+msgstr "Commande principale"
