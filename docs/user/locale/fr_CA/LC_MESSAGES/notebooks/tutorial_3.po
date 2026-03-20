@@ -1,0 +1,255 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: floodsr\n"
+"POT-Creation-Date: 2026-03-19 00:00+0000\n"
+"PO-Revision-Date: 2026-03-19 00:00+0000\n"
+"Language: fr_CA\n"
+"Language-Team: fr_CA\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid ""
+"# Tutorial 3: Large rasters\n"
+"\n"
+"**What you'll do:**\n"
+"- Execute {ref}`extended_install` and verify \n"
+"- Download and visualize a  test tile with large extents\n"
+"- Run the Python API and compare a few options\n"
+msgstr ""
+"# Tutoriel 3 : grands rasters\n"
+"\n"
+"**Ce que vous allez faire :**\n"
+"- Exécuter {ref}`extended_install` et vérifier l'environnement\n"
+"- Télécharger puis visualiser une tuile de test de grande emprise\n"
+"- Exécuter l'API Python et comparer quelques options\n"
+
+msgid ""
+"## 1. Setup\n"
+"\n"
+"The {ref}`extended_install` is more challenging as we leverage the powerful [GDAL library](https://gdal.org/en/stable/) for raster processing large rasters. \n"
+"Because GDAL is a performance-first, open-source, C++ library with Python layered on top and 100+ drivers that depends on a large stack of native libraries itself, new installs often break.\n"
+"\n"
+"Therefore, the most reliable execution context for `floodsr` is local (i.e., not google colab), but we still give some experimental guidance for hosted environments.\n"
+"\n"
+"Proceed based on your execution context:\n"
+"- **command line (CLI)**: copy/paste the commands from {ref}`extended_install_cli` into your terminal\n"
+"- **local notebook (Jupyter)**: same as above. then run the additional commands from {ref}`extended_install_notebook`. then re-launch this notebook or switch the kernel to that environment.\n"
+"- **hosted notebook (Colab)**: see {ref}`extended_install_hosted_notebook` or un-comment the below and run.\n"
+msgstr ""
+"## 1. Mise en place\n"
+"\n"
+"L'{ref}`extended_install` est plus exigeante, car nous utilisons la puissante [bibliothèque GDAL](https://gdal.org/en/stable/) pour traiter de grands rasters.\n"
+"Comme GDAL est une bibliothèque C++ libre pensée d'abord pour la performance, avec une couche Python par-dessus et plus de 100 pilotes, elle dépend elle-même d'une pile importante de bibliothèques natives ; les nouvelles installations cassent donc souvent.\n"
+"\n"
+"Par conséquent, le contexte d'exécution le plus fiable pour `floodsr` reste local (c.-à-d. pas Google Colab), même si nous donnons quand même quelques indications expérimentales pour les environnements hébergés.\n"
+"\n"
+"Poursuivez selon votre contexte d'exécution :\n"
+"- **ligne de commande (CLI)** : copiez-collez dans votre terminal les commandes de {ref}`extended_install_cli`\n"
+"- **carnet local (Jupyter)** : même chose, puis exécutez les commandes supplémentaires de {ref}`extended_install_notebook`. Relancez ensuite ce carnet ou basculez le noyau vers cet environnement.\n"
+"- **carnet hébergé (Colab)** : consultez {ref}`extended_install_hosted_notebook` ou décommentez la cellule ci-dessous avant de l'exécuter.\n"
+
+msgid ""
+"## 1.1 Install Matplotlib\n"
+"\n"
+"Uncomment the below if you do not have matplotlib installed\n"
+msgstr ""
+"## 1.1 Installer Matplotlib\n"
+"\n"
+"Décommentez la cellule ci-dessous si ``matplotlib`` n'est pas déjà installé.\n"
+
+msgid "## 1.2 Environment Check\n"
+msgstr "## 1.2 Vérification de l'environnement\n"
+
+msgid "## 1.3 Imports\n"
+msgstr "## 1.3 Importations\n"
+
+msgid ""
+"## 1.4 Configure Logging\n"
+"\n"
+"`floodsr`'s Python bindings use the standard Python logging system.\n"
+"A simple `logging.basicConfig(...)` call is enough to surface progress and diagnostics while the notebook runs.\n"
+msgstr ""
+"## 1.4 Configurer la journalisation\n"
+"\n"
+"Les liaisons Python de `floodsr` utilisent le système standard de journalisation de Python.\n"
+"Un simple appel à `logging.basicConfig(...)` suffit pour faire remonter la progression et les diagnostics pendant l'exécution du carnet.\n"
+
+msgid ""
+"## 2. Download Test Data\n"
+"\n"
+"We use a clipped tile from the old [Aqueduct Floods Hazard Maps](https://wri-projects.s3.amazonaws.com/AqueductFloodTool/download/v2/index.html) dataset.\n"
+"You can download this from our repo with the below:\n"
+msgstr ""
+"## 2. Télécharger les données de test\n"
+"\n"
+"Nous utilisons une tuile découpée provenant de l'ancien jeu de données [Aqueduct Floods Hazard Maps](https://wri-projects.s3.amazonaws.com/AqueductFloodTool/download/v2/index.html).\n"
+"Vous pouvez la télécharger depuis notre dépôt avec ce qui suit :\n"
+
+msgid "## 3. Visualize the Low-Res Input\n"
+msgstr "## 3. Visualiser l'entrée basse résolution\n"
+
+msgid ""
+"## 4. Fetch HRDEM\n"
+"\n"
+"Here we use `floodsr`s builtin HRDEM fetcher.\n"
+"\n"
+"This step can take a while on a first run because it may need to query the HRDEM catalog, download one or more source windows, and populate the local tile cache.\n"
+msgstr ""
+"## 4. Récupérer le HRDEM\n"
+"\n"
+"Ici, nous utilisons le récupérateur HRDEM intégré à `floodsr`.\n"
+"\n"
+"Cette étape peut prendre un certain temps au premier passage, car il faut parfois interroger le catalogue HRDEM, télécharger une ou plusieurs fenêtres sources et remplir le cache local de tuiles.\n"
+
+msgid "If you are fetching large HRDEM tiles repeatedly, setting `HRDEM_CACHE_DIR` to a persistent location is useful because it lets later runs reuse cached fetch tiles instead of downloading the same source windows again. If you do not set it, this notebook defaults to your Python temp directory.\n"
+msgstr "Si vous récupérez souvent de grandes tuiles HRDEM, définir `HRDEM_CACHE_DIR` vers un emplacement persistant est utile, car cela permet aux exécutions suivantes de réutiliser les tuiles déjà en cache au lieu de retélécharger les mêmes fenêtres sources. Si vous ne le définissez pas, ce carnet utilisera par défaut le répertoire temporaire de Python.\n"
+
+msgid "## 4.1 Visualize the Fetched HRDEM\n"
+msgstr "## 4.1 Visualiser le HRDEM récupéré\n"
+
+msgid ""
+"## 5. Fetch the Model\n"
+"\n"
+"Download model weights once, then reuse the cached copy on later runs.\n"
+msgstr ""
+"## 5. Récupérer le modèle\n"
+"\n"
+"Téléchargez les poids du modèle une seule fois, puis réutilisez la copie en cache lors des exécutions suivantes.\n"
+
+msgid ""
+"## 6. Run `tohr()`\n"
+"\n"
+"The basic Python call takes a low-res depth raster with `depth_lr_fp` and a high-res DEM with `dem_hr_fp`.\n"
+"\n"
+"This step can also take a while because it runs the full preprocessing and model inference pipeline on the fetched HRDEM raster.\n"
+msgstr ""
+"## 6. Exécuter `tohr()`\n"
+"\n"
+"L'appel Python de base prend un raster de profondeur basse résolution avec `depth_lr_fp` et un DEM haute résolution avec `dem_hr_fp`.\n"
+"\n"
+"Cette étape peut elle aussi prendre un certain temps, car elle exécute toute la chaîne de prétraitement et d'inférence du modèle sur le raster HRDEM récupéré.\n"
+
+msgid "## 6.1 Visualize the Output\n"
+msgstr "## 6.1 Visualiser la sortie\n"
+
+msgid "Tutorial 3: Large rasters"
+msgstr "Tutoriel 3 : grands rasters"
+
+msgid "What you'll do:"
+msgstr "Ce que vous allez faire :"
+
+msgid "Setup"
+msgstr "Mise en place"
+
+msgid "Install Matplotlib"
+msgstr "Installer Matplotlib"
+
+msgid "Uncomment the below if you do not have matplotlib installed"
+msgstr "Décommentez la cellule ci-dessous si ``matplotlib`` n'est pas déjà installé."
+
+msgid "Environment Check"
+msgstr "Vérification de l'environnement"
+
+msgid "Imports"
+msgstr "Importations"
+
+msgid "Configure Logging"
+msgstr "Configurer la journalisation"
+
+msgid "Download Test Data"
+msgstr "Télécharger les données de test"
+
+msgid "Visualize the Low-Res Input"
+msgstr "Visualiser l'entrée basse résolution"
+
+msgid "Fetch HRDEM"
+msgstr "Récupérer le HRDEM"
+
+msgid "Here we use"
+msgstr "Ici, nous utilisons"
+
+msgid "s builtin HRDEM fetcher."
+msgstr "et son récupérateur HRDEM intégré."
+
+msgid "This step can take a while on a first run because it may need to query the HRDEM catalog, download one or more source windows, and populate the local tile cache."
+msgstr "Cette étape peut prendre un certain temps au premier passage, car il faut parfois interroger le catalogue HRDEM, télécharger une ou plusieurs fenêtres sources et remplir le cache local de tuiles."
+
+msgid "If you are fetching large HRDEM tiles repeatedly, setting"
+msgstr "Si vous récupérez souvent de grandes tuiles HRDEM, définir"
+
+msgid "to a persistent location is useful because it lets later runs reuse cached fetch tiles instead of downloading the same source windows again. If you do not set it, this notebook defaults to your Python temp directory."
+msgstr "vers un emplacement persistant est utile, car cela permet aux exécutions suivantes de réutiliser les tuiles déjà en cache au lieu de retélécharger les mêmes fenêtres sources. Si vous ne le définissez pas, ce carnet utilisera par défaut le répertoire temporaire de Python."
+
+msgid "Visualize the Fetched HRDEM"
+msgstr "Visualiser le HRDEM récupéré"
+
+msgid "Fetch the Model"
+msgstr "Récupérer le modèle"
+
+msgid "Download model weights once, then reuse the cached copy on later runs."
+msgstr "Téléchargez les poids du modèle une seule fois, puis réutilisez la copie en cache lors des exécutions suivantes."
+
+msgid "Run"
+msgstr "Exécuter"
+
+msgid "Visualize the Output"
+msgstr "Visualiser la sortie"
+
+msgid "1. Setup"
+msgstr "1. Mise en place"
+
+msgid "1.1 Install Matplotlib"
+msgstr "1.1 Installer Matplotlib"
+
+msgid "1.2 Environment Check"
+msgstr "1.2 Vérification de l'environnement"
+
+msgid "1.3 Imports"
+msgstr "1.3 Importations"
+
+msgid "1.4 Configure Logging"
+msgstr "1.4 Configurer la journalisation"
+
+msgid "2. Download Test Data"
+msgstr "2. Télécharger les données de test"
+
+msgid "3. Visualize the Low-Res Input"
+msgstr "3. Visualiser l'entrée basse résolution"
+
+msgid "4. Fetch HRDEM"
+msgstr "4. Récupérer le HRDEM"
+
+msgid "4.1 Visualize the Fetched HRDEM"
+msgstr "4.1 Visualiser le HRDEM récupéré"
+
+msgid "5. Fetch the Model"
+msgstr "5. Récupérer le modèle"
+
+msgid "6.1 Visualize the Output"
+msgstr "6.1 Visualiser la sortie"
+
+msgid "Proceed based on your execution context:"
+msgstr "Poursuivez selon votre contexte d'exécution :"
+
+msgid "The basic Python call takes a low-res depth raster with"
+msgstr "L'appel Python de base prend un raster de profondeur basse résolution avec"
+
+msgid "and a high-res DEM with"
+msgstr "et un DEM haute résolution avec"
+
+msgid "## 1. Setup"
+msgstr "## 1. Mise en place"
+
+msgid "## 2. Download Test Data"
+msgstr "## 2. Télécharger les données de test"
+
+msgid "## 3. Visualize the Low-Res Input"
+msgstr "## 3. Visualiser l'entrée basse résolution"
+
+msgid "## 4. Fetch HRDEM"
+msgstr "## 4. Récupérer le HRDEM"
+
+msgid "## 5. Fetch the Model"
+msgstr "## 5. Récupérer le modèle"
