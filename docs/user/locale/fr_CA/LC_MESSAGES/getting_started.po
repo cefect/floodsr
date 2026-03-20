@@ -29,13 +29,13 @@ msgid "What Is ``floodsr``?"
 msgstr "Qu'est-ce que ``floodsr`` ?"
 
 msgid "``floodsr`` is a flood-depth **resolution enhancement** tool."
-msgstr "``floodsr`` est un outil d'**amélioration de résolution** pour les rasters de profondeur d'inondation."
+msgstr "``floodsr`` est un outil d'**amélioration de résolution** pour les rasters de profondeur d'inondation (autrement dit, des cartes en grille de profondeur d'eau)."
 
 msgid "Or a super-resolution (SR) tool in machine-speak."
 msgstr "Autrement dit, un outil de super-résolution (SR), pour parler le langage des modèles."
 
 msgid "It takes a low-resolution depth raster as input and reconstructs higher-resolution output, using terrain (DEM) context."
-msgstr "Il prend en entrée un raster de profondeur à basse résolution et reconstruit une sortie à plus haute résolution en utilisant le contexte du terrain (DEM)."
+msgstr "Il prend en entrée un raster de profondeur à basse résolution (une carte grossière) et reconstruit une sortie à plus haute résolution en utilisant le contexte du terrain (DEM, c'est-à-dire un modèle numérique d'élévation)."
 
 msgid "Downloading test data"
 msgstr "Télécharger les données de test"
@@ -95,7 +95,7 @@ msgid "The primary tool in ``floodsr`` is the ``tohr`` command or *to high resol
 msgstr "L'outil principal de ``floodsr`` est la commande ``tohr``, c'est-à-dire *to high resolution* en anglais."
 
 msgid "This ingests a low-resolution flood hazard raster and a high-resolution DEM."
-msgstr "Elle prend un raster d'aléa d'inondation à basse résolution et un DEM à haute résolution."
+msgstr "Elle prend un raster d'aléa d'inondation à basse résolution (une carte grossière) et un DEM à haute résolution (un fichier de relief)."
 
 msgid "This high-resolution DEM can either be specified as a local file or fetched from the `HRDEM Mosaic <https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b>`_ data source (for locations in Canada of course)."
 msgstr "Ce DEM haute résolution peut être fourni comme fichier local ou récupéré depuis la source de données `HRDEM Mosaic <https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b>`_ (pour des emplacements au Canada, bien sûr)."
