@@ -1,6 +1,7 @@
 """Sphinx configuration for floodsr documentation."""
 
 import os
+from pathlib import Path
 from datetime import datetime
 from setuptools_scm import get_version
 
@@ -40,19 +41,9 @@ source_suffix = {
 nb_execution_mode = "off"
 
 
-def _resolve_docs_language(raw_language=None):
-    """Return the Sphinx language code for the active docs build."""
-    raw_language = raw_language or os.environ.get("READTHEDOCS_LANGUAGE") or "en"
-    normalized = raw_language.strip().replace("-", "_")
-    if normalized.lower() in {"fr", "fr_ca"}:
-        return "fr_CA"
-    if normalized.lower() == "en":
-        return "en"
-    return normalized
-
-
 # Normalize RTD language slugs so Sphinx can find locale catalogs.
-language = _resolve_docs_language()
+language = os.environ.get("READTHEDOCS_LANGUAGE") or "en"
+assert language != "fr" or (Path(__file__).resolve().parent / "locale" / "fr" / "LC_MESSAGES" / "index.po").is_file(), "French docs require docs/user/locale/fr/LC_MESSAGES/index.po; RTD would otherwise fall back to English."
 locale_dirs = ["locale/"]
 gettext_compact = False
 gettext_uuid = True
