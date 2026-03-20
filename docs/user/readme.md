@@ -31,9 +31,9 @@ python -m sphinx -b html . "_build/manual"
 # 1) go to the docs source directory
 cd /workspace/docs/user
 
-# 2) verify sphinx is available in the current environment
-python -m sphinx --version
-
+# compile the fr_CA .po catalogs to .mo files
+bash scripts/compile_fr_catalogs.sh
+ 
 # 3) build the fr_CA html docs into a separate build directory
 python -m sphinx -E -b html -D language=fr_CA . "_build/fr_ca_html"
 
@@ -49,22 +49,19 @@ python -m sphinx -E -b html -D language=fr_CA . "_build/fr_ca_html"
 ## TRANSLATION REFRESH
 
 Edit the existing `fr_CA` catalogs directly. Do not regenerate the `.po` files with `gettext`.
+Always recompile before rebuilding French HTML.
 
 ```bash
 # 1) go to the docs source directory
 cd /workspace/docs/user
 
 # 2) manually review/edit the French catalogs
-$EDITOR locale/fr_CA/LC_MESSAGES/*.po
-$EDITOR locale/fr_CA/LC_MESSAGES/notebooks/*.po
+ 
 
 # 3) compile the edited .po catalogs to .mo files
-while IFS= read -r fp; do
-  msgfmt "$fp" -o "${fp%.po}.mo"
-done < <(find locale/fr_CA/LC_MESSAGES -name '*.po' | sort)
+bash scripts/compile_fr_catalogs.sh
 
-# 4) render the French HTML and review the result
-python -m sphinx -E -b html -D language=fr_CA . "_build/fr_ca_html"
+ 
 ```
 
 ## updating `docs/user/cli_reference.rst`
