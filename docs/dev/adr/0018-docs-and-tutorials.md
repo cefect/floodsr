@@ -20,7 +20,7 @@ The current docs stack uses Sphinx with `myst_nb` for notebook rendering and the
 - Keep one shared Sphinx source tree under `docs/user` rather than duplicating content per language.
 - Keep the docs in the main repo and publish translations from separate Read the Docs projects that point at the same repository.
 - Treat the landing pages, getting-started pages, installation pages, and tutorial introductions as beginner-facing content for readers with minimal programming and GIS knowledge.
-- Treat the Python CLI parser definition as the source of truth for CLI reference documentation, rather than terminal `--help` dumps or a separate JSON schema.
+- Treat the Python CLI parser definition as the source of truth for CLI reference documentation, while maintaining the committed docs page as a manually refreshed artifact rather than regenerating it during docs builds.
 
 ## French docs
 
@@ -80,9 +80,11 @@ As these provide commands for patching the environment, they are a special case.
 
 ## CLI Reference Strategy
 
-- `docs/user/cli_reference.rst` should be generated from parser metadata exposed by the Python CLI, not by capturing terminal help output into one literal code block.
+- `docs/user/cli_reference.rst` should be refreshed from parser metadata exposed by the Python CLI, not by capturing terminal help output into one literal code block.
 - The CLI parser should remain the canonical definition of commands, arguments, defaults, choices, and help text.
 - Generated CLI docs should keep commands, flags, metavars, and examples literal, while emitting command descriptions and option help as normal translatable prose so `cli_reference.po` can localize them.
+- Docs builds should read the committed `docs/user/cli_reference.rst` artifact directly and should not try to regenerate it on Read the Docs or other build hosts.
+- Refreshing `docs/user/cli_reference.rst` is therefore a manual maintenance step performed by a developer in a runtime where `floodsr` is importable.
 
 ## Tutorial Notebook Rendering Strategy
 
