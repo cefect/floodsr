@@ -20,13 +20,19 @@ The current docs stack uses Sphinx with `myst_nb` for notebook rendering and the
 - Keep one shared Sphinx source tree under `docs/user` rather than duplicating content per language.
 - Keep the docs in the main repo and publish translations from separate Read the Docs projects that point at the same repository.
 
-## Localization/translation
+## French docs
 
-- The canonical authored docs remain the English files already stored under `docs/user`.
-- French content should be maintained as `.po` translation catalogs under `docs/user/locale/fr_CA/LC_MESSAGES/`.
- 
+- The canonical authored docs remain the English files  `docs/user`.
+- French content should be maintained as `.po` catalogs under `docs/user/locale/fr_CA/LC_MESSAGES/`.
+- Translate top-level indexes, landing pages, and internal links along with page content so the French docs are navigable as a complete experience.
 
- 
+### translator instructions
+- target Canadian French (`fr_CA`)
+- Do not use `gettext` to generate translation files. Create the `.po` files directly, with a best-effort translation that preserves the tone and meaning of the English source.
+- Keep commands, code, stdout, and project names unchanged, including `HRDEM` and `CostGrow`.
+- When a term should stay tied to the English wording, explain it in French rather than forcing a literal translation. For example, `to high resolution (tohr)` should note the English phrase in the French text.
+- Critically review translations for readability and fidelity rather than translating mechanically.
+- Build the docs after translation work and review the rendered result to confirm the translation, navigation, and links behave as intended.
 
 ## Tutorials
 
@@ -72,7 +78,7 @@ As these provide commands for patching the environment, they are a special case.
 - Tutorial source files should be committed as real Jupyter notebooks (`.ipynb`), not generated artifacts and not Markdown stand-ins.
 - Notebook files should live under `docs/user/notebooks/`.
 - Sphinx should render these notebooks with `myst_nb`.
-- Notebook execution should remain disabled via the docs configuration so that builds are deterministic
+- Notebook execution should remain disabled via the docs configuration so that builds are deterministic.
 - Tutorial execution for documentation refreshes should use per-notebook shell shims that live beside the notebooks under `docs/user/notebooks/` (for example `tutorial_1.sh` and `tutorial_2.sh`).
 - Those shell shims should execute a temporary copy of the notebook under a cache-backed working directory, then copy the completed `.ipynb` back into `docs/user/notebooks/`.
 - Generated side files from tutorial execution should stay in the cache-backed staging area, not beside the tracked source notebooks.
