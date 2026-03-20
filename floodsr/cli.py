@@ -94,6 +94,25 @@ def _flag_present(argv: list[str], flag: str) -> bool:
     return any(token == flag or token.startswith(f"{flag}=") for token in argv)
 
 
+def _add_progress_arguments(parser: argparse.ArgumentParser, help_text: str) -> None:
+    """Add shared positive/negative progress flags with an explicit default."""
+    # Keep the positive flag as the canonical interface while offering a short negative alias.
+    progress_group = parser.add_mutually_exclusive_group()
+    progress_group.add_argument(
+        "--show-progress",
+        dest="show_progress",
+        action="store_true",
+        default=True,
+        help=help_text,
+    )
+    progress_group.add_argument(
+        "--no-progress",
+        dest="show_progress",
+        action="store_false",
+        help="Disable progress output. Default: progress is shown.",
+    )
+
+
 def _read_tohr_machine_json(machine_json_fp: Path) -> dict[str, object]:
     """Load a `tohr` machine-json payload from disk."""
     machine_json_path = machine_json_fp.expanduser().resolve()
@@ -153,7 +172,7 @@ def _build_tohr_machine_cli_tokens(payload: dict[str, object], argv: list[str]) 
             if not isinstance(value, bool):
                 raise ValueError(f"machine-json key '{raw_key}' must be boolean, got {type(value)!r}")
             if key == "show_progress":
-                cli_tokens.append(cli_flag if value else "--no-show-progress")
+                cli_tokens.append(cli_flag if value else "--no-progress")
             elif value:
                 cli_tokens.append(cli_flag)
             continue
@@ -380,11 +399,9 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Redownload even when a valid cached weight file already exists.",
     )
-    models_fetch_parser.add_argument(
-        "--show-progress",
-        action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Show model download progress output.",
+    _add_progress_arguments(
+        models_fetch_parser,
+        help_text="Show progress output during model download. Use `--no-progress` to disable it. Default: enabled.",
     )
 
     # Register ToHR command.
@@ -519,11 +536,12 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
         default="strict",
         help="Policy for CRS mismatches between the low-res depth raster and DEM.",
     )
-    tohr_parser.add_argument(
-        "--show-progress",
-        action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Show model download, DEM fetch, and tiled runtime progress output.",
+    _add_progress_arguments(
+        tohr_parser,
+        help_text=(
+            "Show progress output during model download, DEM fetch, and tiled runtime work. "
+            "Use `--no-progress` to disable it. Default: enabled."
+        ),
     )
 
     # Register diagnostic command.
