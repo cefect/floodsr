@@ -38,7 +38,7 @@ bash scripts/compile_fr_catalogs.sh
 python -m sphinx -E -b html -D language=fr_CA . "_build/fr_ca_html"
 
 # launch the fr_CA index.html in the default Windows browser (from WSL)
-"\\wsl.localhost\Ubuntu\home\cefect\LS\09_REPOS\04_TOOLS\floodsr\docs\user\_build\fr_ca_html\index.html"
+\\wsl.localhost\Ubuntu\home\cefect\LS\09_REPOS\04_TOOLS\floodsr\docs\user\_build\fr_ca_html\index.html
 ```
 
 
@@ -64,7 +64,11 @@ bash scripts/compile_fr_catalogs.sh
 ```
 ### Agent instructions
 
-refresh the full fr_CA docs translation per ADR-0018: update the existing French .po catalogs directly without gettext regeneration, compile the catalogs, rebuild the French HTML, review the rendered result for navigation/links/readability, and make any follow-up fixes needed to match policy. only touch/review .po files whose english source has changed since the last translation refresh.
+refresh the full fr_CA docs translation per ADR-0018: update the existing French .po catalogs directly without gettext regeneration, compile the catalogs.
+fix any simple/obvious english typos/errors.
+ only touch/review .po files whose english source has changed since the last translation refresh.
+ rebuild the French HTML. review the rendered result for navigation/links/readability, and make any follow-up fixes needed to match policy. ensure everything intended translates. (no typography artifacts).
+
 
 ## updating `docs/user/cli_reference.rst`
 
