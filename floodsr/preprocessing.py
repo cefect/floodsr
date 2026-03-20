@@ -375,7 +375,10 @@ def _resolve_alignment_context(
 
         if depth_crs != dem_crs and crs_policy != "strict":
             log.warning(
-                f"CRS mismatch; applying --crs-policy={crs_policy}\n    depth={depth_crs}\n    dem={dem_crs}\n    target={target_crs}"
+                f"CRS mismatch; applying --crs-policy={crs_policy} to resolve a canonical target grid\n"
+                f"    depth={depth_crs}\n"
+                f"    dem={dem_crs}\n"
+                f"    target={target_crs}"
             )
 
         depth_res = (abs(float(depth_ds.res[0])), abs(float(depth_ds.res[1])))
@@ -394,7 +397,12 @@ def _resolve_alignment_context(
             )
         dem_bounds = dem_ds.bounds
         if crs_policy == "strict" and not all(np.isclose(a, b, atol=1e-6, rtol=0.0) for a, b in zip(depth_bounds_target, dem_bounds)):
-            log.warning(f"input bounds differ; clipping DEM to depth raster bounds.\n    depth={depth_bounds_target}\n    dem={dem_bounds}")
+            log.warning(
+                "input bounds differ under --crs-policy strict; continuing with the depth-derived target bounds and "
+                "reading DEM coverage from the overlapping source window.\n"
+                f"    depth={depth_bounds_target}\n"
+                f"    dem={dem_bounds}"
+            )
 
         depth_shape = (int(depth_ds.height), int(depth_ds.width))
         depth_transform = (
