@@ -1,0 +1,149 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: floodsr\n"
+"PO-Revision-Date: 2026-03-20 00:00+0000\n"
+"Language: fr\n"
+"Language-Team: fr\n"
+"Last-Translator: Codex\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "Tutorial 2: Plotting and CLI options"
+msgstr "Tutoriel 2 : visualisation et options de la CLI"
+
+msgid "This tutorial expands on {doc}`Tutorial 1 <tutorial_1>` with visualization and demonstrating the behavior of some key CLI options."
+msgstr "Ce tutoriel prolonge {doc}`le tutoriel 1 <tutorial_1>` avec un peu de visualisation et une démonstration du comportement de quelques options importantes de la CLI."
+
+msgid "This tutorial assumes you have `floodsr` installed per {doc}`Tutorial 1 <tutorial_1>`."
+msgstr "Ce tutoriel suppose que `floodsr` est déjà installé comme indiqué dans {doc}`le tutoriel 1 <tutorial_1>`."
+
+msgid "There are three common ways to run this tutorial (i.e., *execution contexts*):"
+msgstr "Il existe trois façons courantes d'exécuter ce tutoriel (autrement dit, trois *contextes d'exécution*) :"
+
+msgid "**command line (CLI)**: proceed by copy/pasting the below commands from your web-browser into your terminal. NOTE for most terminals you'll need to remove the prefix `!` from each command."
+msgstr "**ligne de commande (CLI)** : copiez-collez les commandes ci-dessous depuis votre navigateur vers votre terminal. NOTE : dans la plupart des terminaux, il faudra retirer le préfixe `!` de chaque commande."
+
+msgid "**local notebook (Jupyter)**: Use the <i class=\"fas fa-download\"></i> button to save this notebook as an `.ipynb` file to your local machine (may need to click *save as*) and open it with your local Jupyter kernel. see {ref}`basic_install_local_notebook` for details."
+msgstr "**carnet local (Jupyter)** : utilisez le bouton <i class=\"fas fa-download\"></i> pour enregistrer ce carnet comme fichier `.ipynb` sur votre machine (il faut parfois cliquer sur *save as*), puis ouvrez-le avec votre noyau Jupyter local. Voir {ref}`basic_install_local_notebook` pour plus de détails."
+
+msgid "**hosted notebook (Colab)**: Use the <i class=\"fas fa-rocket\"></i> button to open this tutorial on Google Colab."
+msgstr "**carnet hébergé (Colab)** : utilisez le bouton <i class=\"fas fa-rocket\"></i> pour ouvrir ce tutoriel dans Google Colab."
+
+msgid "Install additional packages"
+msgstr "Installer des paquets supplémentaires"
+
+msgid "For this tutorial, we need the additional python packages `matplotlib` and `rasterio`. Like the install of `floodsr` shown in {doc}`Tutorial 1 <tutorial_1>`, obtaining and implementing these packages depends on your execution context:"
+msgstr "Pour ce tutoriel, nous avons besoin des paquets Python supplémentaires `matplotlib` et `rasterio`. Comme pour l'installation de `floodsr` montrée dans {doc}`le tutoriel 1 <tutorial_1>`, la façon d'obtenir et d'utiliser ces paquets dépend de votre contexte d'exécution :"
+
+msgid "The appropriate installation steps depend on your execution context, which is described in detail in :ref:`basic_install`. Here are the basic steps for each:"
+msgstr "Les étapes d'installation adaptées dépendent de votre contexte d'exécution, décrit en détail dans :ref:`basic_install`. Voici le minimum à faire dans chaque cas :"
+
+msgid "**command line (CLI)**: first, ensure pipx is installed and on PATH, then run `pipx install floodsr`. see {ref}`basic_install_cli` for more details."
+msgstr "**ligne de commande (CLI)** : commencez par vérifier que `pipx` est installé et disponible dans le PATH, puis exécutez `pipx install floodsr`. Voir {ref}`basic_install_cli` pour plus de détails."
+
+msgid "**local notebook (Jupyter)**: same as above. then either follow the additional steps in {ref}`basic_install_local_notebook` to properly set up your environment, or be lazy and uncomment the below Jupyter cell and run."
+msgstr "**carnet local (Jupyter)** : même chose. Ensuite, soit vous suivez les étapes supplémentaires de {ref}`basic_install_local_notebook` pour configurer proprement votre environnement, soit vous faites au plus simple et vous décommentez la cellule Jupyter ci-dessous avant de l'exécuter."
+
+msgid "**hosted notebook (Colab)**: uncomment the below colab cell and run. see {ref}`basic_install_google_colab` for details."
+msgstr "**carnet hébergé (Colab)** : décommentez la cellule Colab ci-dessous et exécutez-la. Voir {ref}`basic_install_google_colab` pour les détails."
+
+msgid "Let's check the versions now:"
+msgstr "Vérifions maintenant les versions :"
+
+msgid "Prove the install"
+msgstr "Vérifier l'installation"
+
+msgid "The previous cell imports the plotting dependencies and prints their versions so you can confirm the active notebook kernel has the required packages."
+msgstr "La cellule précédente importe les dépendances de visualisation et affiche leurs versions afin que vous puissiez confirmer que le noyau actif du carnet dispose bien des paquets requis."
+
+msgid "Imports"
+msgstr "Importations"
+
+msgid "Download the same test data as Tutorial 1"
+msgstr "Télécharger les mêmes données de test que dans le tutoriel 1"
+
+msgid "If you already downloaded these files while working through Tutorial 1, you can skip this."
+msgstr "Si vous avez déjà téléchargé ces fichiers en suivant le tutoriel 1, vous pouvez passer cette étape."
+
+msgid "Plot the tutorial inputs"
+msgstr "Tracer les entrées du tutoriel"
+
+msgid "We start by plotting the low-resolution flood-depth raster in blue and the DEM tile with a terrain colormap."
+msgstr "Nous commençons par afficher en bleu le raster de profondeur d'inondation à basse résolution (une carte grossière), puis la tuile DEM avec une palette de relief."
+
+msgid "this shows the not-so-great coarse pluvial flood raster at 32m"
+msgstr "On voit ici le raster pluvial grossier en 32 m, pas franchement idéal."
+
+msgid "Probe the CRS of both rasters"
+msgstr "Examiner le SCR des deux rasters"
+
+msgid "A coordinate reference system (CRS) tells raster software how pixel locations map onto real-world coordinates."
+msgstr "Un système de coordonnées de référence (SCR, ou CRS en anglais) indique au logiciel raster comment les pixels d'une carte se positionnent dans le monde réel."
+
+msgid "Before we trigger a CRS mismatch on purpose, let's inspect the CRS metadata on the original rasters."
+msgstr "Avant de provoquer volontairement un décalage de SCR, examinons les métadonnées de SCR des rasters d'origine."
+
+msgid "Here we see that the CRS of both rasters are identical."
+msgstr "On voit ici que les deux rasters partagent exactement le même SCR."
+
+msgid "Nice for simple test data, but not so interesting for demonstrating how `floodsr` handles CRS mismatch. Let's mix it up."
+msgstr "C'est pratique pour un jeu de données de test simple, mais moins intéressant pour montrer comment `floodsr` gère une incompatibilité de SCR. Ajoutons un peu de désordre."
+
+msgid "Create a CRS mismatch on purpose"
+msgstr "Créer volontairement un décalage de SCR"
+
+msgid "To demonstrate `--crs-policy`, we reproject the low-resolution raster to `3978` and save it as a new GeoTIFF."
+msgstr "Pour illustrer `--crs-policy`, nous reprojetons le raster basse résolution vers `3978` et l'enregistrons comme nouveau GeoTIFF (un format de fichier raster très courant)."
+
+msgid "Run `tohr` with the mismatched CRS"
+msgstr "Exécuter `tohr` avec un SCR incompatible"
+
+msgid "This command should fail because the low-resolution raster and the DEM no longer share the same CRS and we haven't told `floodsr` how to handle this mismatch yet, so it assumes `--crs-policy strict` by default."
+msgstr "Cette commande devrait échouer parce que le raster basse résolution et le DEM ne partagent plus le même SCR, et nous n'avons pas encore indiqué à `floodsr` comment gérer cette incompatibilité ; il suppose donc par défaut `--crs-policy strict`."
+
+msgid "What `--crs-policy` does"
+msgstr "À quoi sert `--crs-policy`"
+
+msgid "`--crs-policy` controls how `floodsr` handles CRS mismatches between the low-resolution depth raster and the DEM. This is necessary because `tohr` needs the rasters to line up on a common projected grid before preprocessing and inference can proceed, and there is not an obvious \"right answer\" for which CRS to use when they don't match."
+msgstr "`--crs-policy` contrôle la manière dont `floodsr` gère les incompatibilités de SCR entre le raster de profondeur basse résolution et le DEM. C'est nécessaire, car `tohr` a besoin que les rasters soient alignés sur une grille projetée commune avant que le prétraitement et l'inférence puissent démarrer, et il n'existe pas de \"bonne réponse\" évidente quant au SCR à utiliser lorsqu'ils ne correspondent pas."
+
+msgid "For this example we use `--crs-policy=use-dem`, which tells `floodsr` to treat the DEM CRS as the target CRS and reproject the low-resolution depth raster to match it. We could have chosen `--crs-policy=use-lores` which would treat the low-resolution raster CRS as the target and reproject the DEM to match it."
+msgstr "Dans cet exemple, nous utilisons `--crs-policy=use-dem`, ce qui indique à `floodsr` de prendre le SCR du DEM comme SCR cible et de reprojeter le raster de profondeur basse résolution pour s'y conformer. Nous aurions aussi pu choisir `--crs-policy=use-lores`, qui aurait pris le SCR du raster basse résolution comme cible et reprojeté le DEM pour s'y adapter."
+
+msgid "Plot the CRS-policy result"
+msgstr "Tracer le résultat avec la politique de SCR"
+
+msgid "let's visualize the result"
+msgstr "Visualisons le résultat."
+
+msgid "ooh... pretty"
+msgstr "oh... joli"
+
+msgid "`--min-depth-threshold`"
+msgstr "`--min-depth-threshold`"
+
+msgid "Now lets explore the argument `--min-depth-threshold`, which sets the minimum predicted depth retained in the output raster.  Values below the threshold are written as `0.0`."
+msgstr "Examinons maintenant l'argument `--min-depth-threshold`, qui définit la profondeur prédite minimale conservée dans le raster de sortie. Les valeurs inférieures au seuil sont écrites comme `0.0`."
+
+msgid "This is useful because very small positive predictions can be noisy or physically improbable, making it an important parameter for tuning the result."
+msgstr "C'est utile parce que de très petites prédictions positives peuvent être bruyantes ou physiquement peu plausibles, ce qui en fait un paramètre important pour ajuster le résultat."
+
+msgid "First, let's run `tohr` with the default `--min-depth-threshold` (which is 0.01) against the original CRS matching rasters as a comparison."
+msgstr "Pour commencer, exécutons `tohr` avec le `--min-depth-threshold` par défaut (soit 0.01) sur les rasters d'origine dont les SCR correspondent, afin d'avoir un point de comparaison."
+
+msgid "you'll noticed we used the `-q` or `--quiet` flag to suppress the usual CLI output here."
+msgstr "Vous remarquerez que nous avons utilisé l'option `-q` ou `--quiet` ici pour supprimer la sortie habituelle de la CLI."
+
+msgid "Now let's run `tohr` with a higher `--min-depth-threshold` of `0.1`."
+msgstr "Exécutons maintenant `tohr` avec un `--min-depth-threshold` plus élevé, à `0.1`."
+
+msgid "Plot"
+msgstr "Tracé"
+
+msgid "Next steps"
+msgstr "Suite"
+
+msgid "Continue with Tutorial 3 to see how `floodsr` can operate on large rasters"
+msgstr "Poursuivez avec le tutoriel 3 pour voir comment `floodsr` peut fonctionner sur des rasters de grande taille."

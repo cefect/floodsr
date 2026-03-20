@@ -58,7 +58,7 @@ git pull --ff-only origin master
 git tag --sort=-v:refname | grep '^v' | head -n4
 
 # 3) create and push an annotated pre-release tag
-tag="v0.1.1"
+tag="v0.0.9"
 git tag -a $tag -m "Release $tag"
 git push origin master
 git push origin $tag

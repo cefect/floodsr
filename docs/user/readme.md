@@ -6,6 +6,7 @@
 ## Read the Docs config
 
 - `.readthedocs.yaml`
+- French translations now live under `docs/user/locale/fr/LC_MESSAGES/` so RTD and local Sphinx builds use the same plain `fr` language slug.
 
 # LOCAL COMPILE with SPHINX
 
@@ -31,14 +32,14 @@ python -m sphinx -b html . "_build/manual"
 # 1) go to the docs source directory
 cd /workspace/docs/user
 
-# compile the fr_CA .po catalogs to .mo files
+# compile the fr .po catalogs to .mo files
 bash scripts/compile_fr_catalogs.sh
  
-# 3) build the fr_CA html docs into a separate build directory
-python -m sphinx -E -b html -D language=fr_CA . "_build/fr_ca_html"
+# 3) build the fr html docs into a separate build directory
+python -m sphinx -E -b html -D language=fr . "_build/fr_html"
 
-# launch the fr_CA index.html in the default Windows browser (from WSL)
-\\wsl.localhost\Ubuntu\home\cefect\LS\09_REPOS\04_TOOLS\floodsr\docs\user\_build\fr_ca_html\index.html
+# launch the fr index.html in the default Windows browser (from WSL)
+\\wsl.localhost\Ubuntu\home\cefect\LS\09_REPOS\04_TOOLS\floodsr\docs\user\_build\fr_html\index.html
 ```
 
 
@@ -54,7 +55,7 @@ Follow [ADR-0018: Docs and Tutorials Strategy](../dev/adr/0018-docs-and-tutorial
 # 1) go to the docs source directory
 cd /workspace/docs/user
 
-# 2) manually review/edit the existing fr_CA catalogs
+# 2) manually review/edit the existing fr catalogs
 
 
 # 3) compile the edited .po catalogs to .mo files
@@ -64,7 +65,7 @@ bash scripts/compile_fr_catalogs.sh
 ```
 ### Agent instructions
 
-refresh the full fr_CA docs translation per ADR-0018: update the existing French .po catalogs directly without gettext regeneration, compile the catalogs.
+refresh the full fr docs translation per ADR-0018: update the existing French .po catalogs directly without gettext regeneration, compile the catalogs.
 fix any simple/obvious english typos/errors.
  only touch/review .po files whose english source has changed since the last translation refresh.
  rebuild the French HTML. review the rendered result for navigation/links/readability, and make any follow-up fixes needed to match policy. ensure everything intended translates. (no typography artifacts).
