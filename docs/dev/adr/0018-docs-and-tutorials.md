@@ -23,10 +23,18 @@ The current docs stack uses Sphinx with `myst_nb` for notebook rendering and the
 ## Localization
 
 - The canonical authored docs remain the English files already stored under `docs/user`.
-- French content should be maintained as `.po` translation catalogs under `docs/user/locale/fr_CA/LC_MESSAGES/`.
- 
+- French content should be maintained as `.po` catalogs under `docs/user/locale/fr_CA/LC_MESSAGES/`.
+- Compiled `.mo` files are build artifacts, not source artifacts. They should be generated for local/CI/docs builds and should not be committed to the repository.
+- Translate top-level indexes, landing pages, and internal links along with page content so the French docs are navigable as a complete experience.
 
- 
+### translator instructions
+- target Canadian French (`fr_CA`)
+- Do not use `gettext` to generate translation files. Create the `.po` files directly, with a best-effort translation that preserves the tone and meaning of the English source.
+- After editing `.po` files, compile them to `.mo` files for the build/review step, but do not treat the compiled `.mo` files as tracked source files.
+- Keep commands, code, stdout, and project names unchanged, including `HRDEM` and `CostGrow`.
+- When a term should stay tied to the English wording, explain it in French rather than forcing a literal translation. For example, `to high resolution (tohr)` should note the English phrase in the French text.
+- Critically review translations for readability and fidelity rather than translating mechanically.
+- Build the docs after translation work and review the rendered result to confirm the translation, navigation, and links behave as intended.
 
 ## Tutorials
 
