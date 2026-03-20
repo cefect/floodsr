@@ -38,16 +38,12 @@ cat > "${run_dir}/floodsr" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
 export PYTHONPATH="${repo_root}\${PYTHONPATH:+:\${PYTHONPATH}}"
-argv=("\$@")
-printf '[tutorial_1 floodsr] argv='
-printf ' %q' python -m floodsr.cli "\${argv[@]}"
-printf '\n'
-python -m floodsr.cli "\${argv[@]}"
+python -m floodsr.cli "\$@"
 EOF
 chmod +x "${run_dir}/floodsr"
 cd "${run_dir}"
+echo "[tutorial_1] executing notebook"
 time python -m jupyter nbconvert \
-    --debug \
     --to notebook \
     --execute \
     --inplace \
@@ -55,6 +51,5 @@ time python -m jupyter nbconvert \
     "$(basename "${notebook_fp}")"
 
 cp "${run_dir}/$(basename "${notebook_fp}")" "${notebook_fp}"
-find "${run_dir}" -maxdepth 1 -type f ! -name "$(basename "${notebook_fp}")" -print | sed 's#^#[tutorial_1] staged output: #'
 rm -rf "${run_dir}" "${tmp_dir}"
 echo "[tutorial_1] refreshed source notebook without leaving side files in ${script_dir}"

@@ -231,11 +231,14 @@ def test_write_platform_prepared_rasters_honors_crs_policy(
     )
 
     expected = rasterio.crs.CRS.from_string(expected_crs)
-    with rasterio.open(prepared["depth_lr_prepared_fp"]) as ds:
-        depth_prepared = ds.read(1)
-        prepared_crs = ds.crs
-    assert prepared_crs == expected
-    assert depth_prepared.size > 0
+    with rasterio.open(prepared["depth_lr_prepared_fp"]) as ds_depth, rasterio.open(prepared["dem_hr_prepared_fp"]) as ds_dem:
+        depth_prepared = ds_depth.read(1)
+        depth_bounds = tuple(float(v) for v in ds_depth.bounds)
+        dem_bounds = tuple(float(v) for v in ds_dem.bounds)
+        prepared_crs = ds_depth.crs
+        dem_prepared_crs = ds_dem.crs
+    assert prepared_crs == expected and dem_prepared_crs == expected
+    assert depth_prepared.size > 0 and np.allclose(depth_bounds, dem_bounds, atol=1e-9, rtol=0.0)
 
 
 def test_write_dem_from_asset_hrefs_outputs_float32_non_empty(
