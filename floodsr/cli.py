@@ -322,8 +322,8 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
 
-def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
-    """Parse CLI arguments after optional `tohr --machine-json` expansion."""
+def build_parser() -> argparse.ArgumentParser:
+    """Build the FloodSR CLI parser."""
     parser = argparse.ArgumentParser(
         prog="floodsr",
         description="Run FloodSR model, cache, and runtime utility commands.",
@@ -555,7 +555,12 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Emit machine-readable JSON instead of line-oriented text.",
     )
-    return parser.parse_args(_inject_tohr_machine_json_args(argv))
+    return parser
+
+
+def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
+    """Parse CLI arguments after optional `tohr --machine-json` expansion."""
+    return build_parser().parse_args(_inject_tohr_machine_json_args(argv))
 
 
 if __name__ == "__main__":
