@@ -1,6 +1,7 @@
 """Sphinx configuration for floodsr documentation."""
 
 import os
+from pathlib import Path
 from datetime import datetime
 from setuptools_scm import get_version
 
@@ -42,6 +43,7 @@ nb_execution_mode = "off"
 
 # Normalize RTD language slugs so Sphinx can find locale catalogs.
 language = os.environ.get("READTHEDOCS_LANGUAGE") or "en"
+assert language != "fr" or (Path(__file__).resolve().parent / "locale" / "fr" / "LC_MESSAGES" / "index.po").is_file(), "French docs require docs/user/locale/fr/LC_MESSAGES/index.po; RTD would otherwise fall back to English."
 locale_dirs = ["locale/"]
 gettext_compact = False
 gettext_uuid = True
