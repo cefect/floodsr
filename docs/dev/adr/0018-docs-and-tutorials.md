@@ -75,6 +75,7 @@ As these provide commands for patching the environment, they are a special case.
 - Tutorial execution for documentation refreshes should use per-notebook shell shims that live beside the notebooks under `docs/user/notebooks/` (for example `tutorial_1.sh` and `tutorial_2.sh`).
 - Those shell shims should execute a temporary copy of the notebook under a cache-backed working directory, then copy the completed `.ipynb` back into `docs/user/notebooks/`.
 - Generated side files from tutorial execution should stay in the cache-backed staging area, not beside the tracked source notebooks.
+- Per-notebook shell shims should assume the caller has already activated the correct notebook runtime. In this repo, proofing should be launched from the outside with `conda run -n dev ...` (or an already-active `dev` shell) rather than hard-coding a conda interpreter path inside the shim.
 - Notebook source cells should default to the same cache behavior as the application code. For `floodsr`, that means leaving cache selection to the CLI/runtime unless the user explicitly edits the notebook cell to override it.
 - When a tutorial benefits from cache reuse during docs proofing (for example, repeated HRDEM fetches in Tutorial 3), the per-notebook shell shim may inject a local shared-cache override via environment variables. That override should live in the shim, not as a hard-coded path in the committed notebook source.
 - Tutorials that expose cache overrides should tell users to edit the relevant notebook cell if they want custom cache behavior.
