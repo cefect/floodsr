@@ -49,6 +49,7 @@ not implemented yet
 - `local notebook (Jupyter)` means a notebook kernel launched from a user-managed local environment and assumes the user already has Jupyter working there.
 - `local notebook (Jupyter)` should recommend `pip` into the environment that backs the selected kernel, not `pipx`.
 - `hosted notebook (Colab)` means installs occur inside a managed Colab runtime and should use `pip` inside the notebook session.
+- Sphinx-rendered Colab launch links in the docs target the repository `main` branch notebook paths; they do not follow feature branches or uncommitted local changes.
 
 ### colab + gdal
 there are some hacky ways to get gdal to work with colab, that will probably break at some point when the colab backends are updated.

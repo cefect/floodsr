@@ -4,8 +4,10 @@
 [![Documentation Status](https://readthedocs.org/projects/floodsr/badge/?version=latest)](https://floodsr.readthedocs.io/en/latest/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Super-Resolution for flood hazard rasters.
-Ingests lores water grid and hires DEM and infers a hires water grid using the specified model.
+AI-powered super-resolution for flood hazard rasters that turns coarse water grids into sharp, decision-ready inundation maps.
+Fuse low-res flood grids with high-res DEMs to infer fine-scale flood patterns. 
+Built on PyTorch and GDAL, floodsr is designed for geospatial practitioners who need to enhance flood hazard data for better risk assessment and planning.
+
 
 ![floodsr header](docs/user/img/header.png)
 

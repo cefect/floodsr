@@ -16,8 +16,11 @@ msgstr "Guide d'utilisation"
 msgid "Introduction"
 msgstr "Introduction"
 
+msgid "``floodsr`` is a flood-depth **resolution enhancement** tool. Or a super-resolution (SR) tool in machine-speak. It takes a low-resolution depth raster as input and reconstructs higher-resolution output, using terrain (DEM) context."
+msgstr "``floodsr`` est un outil qui **améliore la résolution** des rasters de profondeur d'inondation. Autrement dit, un outil de super-résolution (SR), pour parler le langage des modèles. Il prend en entrée un raster de profondeur à basse résolution et reconstruit une sortie à plus haute résolution en utilisant le contexte du terrain (DEM)."
+
 msgid "``floodsr`` is a flood-depth **resolution enhancement** tool."
-msgstr "``floodsr`` est un outil d'**amélioration de résolution** pour les rasters de profondeur d'inondation."
+msgstr "``floodsr`` est un outil qui **améliore la résolution** des rasters de profondeur d'inondation."
 
 msgid "Or a super-resolution (SR) tool in machine-speak."
 msgstr "Autrement dit, un outil de super-résolution (SR), pour parler le langage des modèles."
@@ -33,6 +36,9 @@ msgstr "Exemple de super-résolution"
 
 msgid "Digital Elevation Models (DEMs)"
 msgstr "Modèles numériques d'élévation (DEM)"
+
+msgid "Unlike some other super-resolution tools, ``floodsr`` leverages terrain information to provide more physically based flood reconstructions. This information is supplied as a high-resolution DEM. ``floodsr tohr`` will propagate water across whatever DEM grid is provided, so a user must take care to ensure the DEM reflects the intended propagation surface. For example, removing buildings or burning flow paths through roads."
+msgstr "Contrairement à certains autres outils de super-résolution, ``floodsr`` exploite l'information topographique pour produire des reconstructions d'inondation plus plausibles sur le plan physique. Cette information est fournie sous la forme d'un DEM à haute résolution. ``floodsr tohr`` propage l'eau sur la grille du DEM fournie ; il faut donc veiller à ce que le DEM représente bien la surface de propagation visée. Par exemple, en retirant les bâtiments ou en ouvrant des chemins d'écoulement à travers les routes."
 
 msgid "Unlike some other super-resolution tools, ``floodsr`` leverages terrain information to provide more physically based flood reconstructions."
 msgstr "Contrairement à certains autres outils de super-résolution, ``floodsr`` exploite l'information topographique pour produire des reconstructions d'inondation plus plausibles sur le plan physique."
@@ -58,6 +64,9 @@ msgstr "Le DEM haute résolution peut être fourni avec l'option ``--dem``."
 msgid "HRDEM Mosaic"
 msgstr "HRDEM Mosaic"
 
+msgid "For Canadian work, Natural Resources Canada develops and hosts the `High Resolution Digital Elevation Model Mosaic <https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b>`_, which provides a unique and continuous representation of the high resolution elevation data available across Canada. In Southern Canada, this is built mainly from fixed wing LiDAR, providing an awesome resource for fetchable terrain data via their Web Coverage Services (WCS). Coverage circa Feb 2026 is shown below:"
+msgstr "Pour les travaux au Canada, Ressources naturelles Canada développe et héberge le `High Resolution Digital Elevation Model Mosaic <https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b>`_, qui fournit une représentation continue et cohérente des données altimétriques haute résolution disponibles au pays. Dans le sud du Canada, cet ensemble est principalement construit à partir de LiDAR aéroporté, ce qui en fait une excellente ressource de données de terrain accessibles via leurs services WCS. La couverture vers février 2026 est montrée ci-dessous :"
+
 msgid "For Canadian work, Natural Resources Canada develops and hosts the `High Resolution Digital Elevation Model Mosaic <https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b>`_, which provides a unique and continuous representation of the high resolution elevation data available across Canada."
 msgstr "Pour les travaux au Canada, Ressources naturelles Canada développe et héberge le `High Resolution Digital Elevation Model Mosaic <https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b>`_, qui fournit une représentation continue et cohérente des données altimétriques haute résolution disponibles au pays."
 
@@ -73,6 +82,9 @@ msgstr "Pour automatiser l'utilisation des données HRDEM lors de l'amélioratio
 msgid "Models"
 msgstr "Modèles"
 
+msgid "To support a wide range of use cases and adaptability, ``floodsr`` employs *models* to perform resolution enhancement. To see the supported models, use the ``floodsr models list`` command."
+msgstr "Pour couvrir un large éventail de cas d'usage et rester adaptable, ``floodsr`` s'appuie sur des *modèles* pour réaliser l'amélioration de résolution. Pour voir les modèles pris en charge, utilisez la commande ``floodsr models list``."
+
 msgid "To support a wide range of use cases and adaptability, ``floodsr`` employs *models* to perform resolution enhancement."
 msgstr "Pour couvrir un large éventail de cas d'usage et rester adaptable, ``floodsr`` s'appuie sur des *modèles* pour réaliser l'amélioration de résolution."
 
@@ -81,6 +93,9 @@ msgstr "Pour voir les modèles pris en charge, utilisez la commande ``floodsr mo
 
 msgid "This is the original machine-learning-based model implemented in `floodsr`."
 msgstr "C'est le modèle d'origine, basé sur l'apprentissage automatique, implémenté dans `floodsr`."
+
+msgid "This is the original machine-learning-based model implemented in `floodsr`. It uses a DEM-aware ResUNet that fuses low-resolution depth with high-resolution terrain context, reconstructs features on the low-resolution grid, and upsamples them by 16x to predict high-resolution depth."
+msgstr "C'est le modèle d'origine, basé sur l'apprentissage automatique, implémenté dans `floodsr`. Il utilise un ResUNet sensible au DEM qui fusionne la profondeur basse résolution avec le contexte topographique haute résolution, reconstruit les structures sur la grille basse résolution, puis les suréchantillonne par un facteur 16 pour prédire la profondeur haute résolution."
 
 msgid "It uses a DEM-aware ResUNet that fuses low-resolution depth with high-resolution terrain context, reconstructs features on the low-resolution grid, and upsamples them by 16x to predict high-resolution depth."
 msgstr "Il utilise un ResUNet sensible au DEM qui fusionne la profondeur basse résolution avec le contexte topographique haute résolution, reconstruit les structures sur la grille basse résolution, puis les suréchantillonne par un facteur 16 pour prédire la profondeur haute résolution."
