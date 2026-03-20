@@ -2,6 +2,7 @@
 [![CI](https://github.com/cefect/floodsr/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/cefect/floodsr/actions/workflows/ci.yml)
 [![Release](https://github.com/cefect/floodsr/actions/workflows/release.yml/badge.svg?branch=master)](https://github.com/cefect/floodsr/actions/workflows/release.yml)
 [![Documentation Status](https://readthedocs.org/projects/floodsr/badge/?version=latest)](https://floodsr.readthedocs.io/en/latest/)
+[![Documentation Status (FR)](https://readthedocs.org/projects/floodsr-fr/badge/?version=latest)](https://floodsr-fr.readthedocs.io/fr/latest/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 AI-powered super-resolution for flood hazard rasters that turns coarse water grids into sharp, decision-ready inundation maps.
