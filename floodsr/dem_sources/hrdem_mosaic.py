@@ -60,6 +60,10 @@ TILE_CACHE_DIR_NAME = "floodsr_hrdem_tile_cache"
 TEMP_OUTPUT_PREFIX = "floodsr_hrdem_output"
 
 
+class ProjectExtentServiceError(RuntimeError):
+    """Raised when the HRDEM project-extent service does not return a usable payload."""
+
+
 @contextmanager
 def _quiet_rasterio_session_info_logs():
     """Temporarily suppress rasterio.session info chatter during HRDEM fetches.
@@ -587,8 +591,25 @@ def _download_hrdem_project_extent_features(
         "geometry": json.dumps(geometry_d, separators=(",", ":")),
     }
     request_url = f"{query_url}?{urlencode(params_d)}"
-    with urlopen(request_url, timeout=float(timeout_s)) as response:
-        payload = json.loads(response.read().decode("utf-8"))
+    # Read the remote payload once so we can diagnose malformed service responses.
+    try:
+        with urlopen(request_url, timeout=float(timeout_s)) as response:
+            payload_text = response.read().decode("utf-8", errors="replace")
+    except Exception as err:
+        raise ProjectExtentServiceError(f"project extent request failed for {request_url}: {err}") from err
+    try:
+        payload = json.loads(payload_text)
+    except json.JSONDecodeError as err:
+        payload_preview = " ".join(payload_text.split())
+        if len(payload_preview) > 160:
+            payload_preview = f"{payload_preview[:160]}..."
+        raise ProjectExtentServiceError(
+            f"project extent query returned non-JSON response for {request_url}: {payload_preview!r}"
+        ) from err
+    if not isinstance(payload, dict):
+        raise ProjectExtentServiceError(
+            f"project extent query returned invalid payload type {type(payload)!r} for {request_url}"
+        )
     if "error" in payload:
         raise RuntimeError(f"project extent query failed: {payload['error']}")
     feature_l = payload.get("features", [])
@@ -749,29 +770,34 @@ def _03_read_dem_windowed_tiles_to_vrt(
             if str(first_crs) == "EPSG:3979"
             else transform_bounds(first_crs, "EPSG:3979", *clip_bounds, densify_pts=DEFAULT_BOUNDS_DENSIFY_PTS)
         )
-        project_extent_gdf = _build_project_extent_gdf(
-            clip_bounds_3979,
-            raster_shape=(source_height, source_width),
-            project_extent_url=project_extent_url,
-            timeout_s=project_extent_timeout_s,
-            logger=log,
-        )
-        project_extent_for_tiles_gdf = (
-            project_extent_gdf
-            if str(first_crs) == "EPSG:3979"
-            else project_extent_gdf.to_crs(first_crs)
-        )
-        tile_grid_gdf["intersects_project"] = _resolve_fetch_tile_selection_mask(
-            tile_grid_gdf,
-            project_extent_for_tiles_gdf,
-        )
-        if not bool(tile_grid_gdf["intersects_project"].any()):
-            raise RuntimeError(f"no fetch tiles intersect HRDEM project extent polygons for bounds={clip_bounds_3979}")
-        skipped_tile_count = int(tile_count - int(tile_grid_gdf["intersects_project"].sum()))
-        if skipped_tile_count > 0:
-            log.warning(
-                f"project extent polygon prefilter will skip {skipped_tile_count:,}/{tile_count:,} fetch tile(s)"
+        # Fall back to the exact asset-bound filtering path when the extent service is unavailable.
+        try:
+            project_extent_gdf = _build_project_extent_gdf(
+                clip_bounds_3979,
+                raster_shape=(source_height, source_width),
+                project_extent_url=project_extent_url,
+                timeout_s=project_extent_timeout_s,
+                logger=log,
             )
+        except ProjectExtentServiceError as err:
+            log.warning(f"project extent prefilter unavailable; continuing without it: {err}")
+        else:
+            project_extent_for_tiles_gdf = (
+                project_extent_gdf
+                if str(first_crs) == "EPSG:3979"
+                else project_extent_gdf.to_crs(first_crs)
+            )
+            tile_grid_gdf["intersects_project"] = _resolve_fetch_tile_selection_mask(
+                tile_grid_gdf,
+                project_extent_for_tiles_gdf,
+            )
+            if not bool(tile_grid_gdf["intersects_project"].any()):
+                raise RuntimeError(f"no fetch tiles intersect HRDEM project extent polygons for bounds={clip_bounds_3979}")
+            skipped_tile_count = int(tile_count - int(tile_grid_gdf["intersects_project"].sum()))
+            if skipped_tile_count > 0:
+                log.warning(
+                    f"project extent polygon prefilter will skip {skipped_tile_count:,}/{tile_count:,} fetch tile(s)"
+                )
     tile_grid_iter_gdf = tile_grid_gdf[tile_grid_gdf["intersects_project"]].copy()
     iter_tile_count = int(len(tile_grid_iter_gdf))
     assert iter_tile_count > 0, "project extent filtering removed all fetch tiles"
