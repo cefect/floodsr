@@ -128,6 +128,8 @@ def test_main_doctor_reports_runtime_diagnostics(capsys: pytest.CaptureFixture[s
     assert "onnxruntime_installed=" in stdout
     assert "gdal_python_installed=" in stdout
     assert "gdal_vrt_enabled=" in stdout
+    assert "pcraster_installed=" in stdout
+    assert "pcraster_spreadzone_available=" in stdout
 
 
 def test_main_doctor_reports_runtime_diagnostics_json(capsys: pytest.CaptureFixture[str]):
@@ -137,3 +139,5 @@ def test_main_doctor_reports_runtime_diagnostics_json(capsys: pytest.CaptureFixt
     assert exit_code == 0
     assert isinstance(payload["gdal"]["vrt_enabled"], bool)
     assert payload["onnxruntime"]["installed"] is True
+    assert isinstance(payload["pcraster"]["installed"], bool)
+    assert isinstance(payload["pcraster"]["spreadzone_available"], bool)

@@ -206,15 +206,17 @@ def _resolve_default_output_path(in_fp: Path) -> Path:
 
 def _build_doctor_payload() -> dict[str, object]:
     """Collect runtime dependency diagnostics for the `doctor` command."""
-    from floodsr.engine import get_gdal_info, get_onnxruntime_info, get_rasterio_info
+    from floodsr.engine import get_gdal_info, get_onnxruntime_info, get_pcraster_info, get_rasterio_info
 
     ort_info = get_onnxruntime_info()
     rasterio_info = get_rasterio_info()
     gdal_info = get_gdal_info()
+    pcraster_info = get_pcraster_info()
     return {
         "onnxruntime": ort_info,
         "rasterio": rasterio_info,
         "gdal": gdal_info,
+        "pcraster": pcraster_info,
     }
 
 
@@ -295,6 +297,7 @@ def main_cli(args: argparse.Namespace) -> int:
         ort_info = payload["onnxruntime"]
         rasterio_info = payload["rasterio"]
         gdal_info = payload["gdal"]
+        pcraster_info = payload["pcraster"]
         print(f"onnxruntime_installed={ort_info['installed']}")
         print(f"onnxruntime_version={ort_info['version']}")
         print(f"onnxruntime_available_providers={','.join(ort_info['available_providers'])}")
@@ -305,6 +308,9 @@ def main_cli(args: argparse.Namespace) -> int:
         print(f"gdal_config_installed={gdal_info['gdal_config_installed']}")
         print(f"gdal_config_version={gdal_info['gdal_config_version']}")
         print(f"gdal_vrt_enabled={gdal_info['vrt_enabled']}")
+        print(f"pcraster_installed={pcraster_info['installed']}")
+        print(f"pcraster_version={pcraster_info['version']}")
+        print(f"pcraster_spreadzone_available={pcraster_info['spreadzone_available']}")
         return 0
 
     raise ValueError(f"unsupported command path: {args.command}/{getattr(args, 'models_command', None)}")

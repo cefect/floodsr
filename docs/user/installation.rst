@@ -145,7 +145,8 @@ Finally, confirm the CLI is available from the notebook:
 Extended Install
 ----------------
 For handling rasters too large for memory, floodsr uses GDAL backends.
-To enable these features, install `floodsr` into an environment with `GDAL <https://gdal.org/en/stable/>`_.
+The CostGrow terrain-penalty path also requires `PCRaster <https://pcraster.geo.uu.nl/>`_.
+To enable these extended features, install `floodsr` into an environment with GDAL and PCRaster available.
 
 
 .. _extended_install_cli:
@@ -154,28 +155,28 @@ Command line (CLI) - Extended
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The popular `conda <https://docs.conda.io/en/latest/>`_ package manager is the easiest way to build an isolated environment with GDAL.
 The best way to install conda is via the open-source `Miniforge <https://github.com/conda-forge/miniforge>`_ project, NOT the `proprietary Anaconda distribution <https://www.theregister.com/2024/08/08/anaconda_puts_the_squeeze_on/>`_.
-Once you have conda installed, use it to create a dedicated environment with GDAL, activate it, then install ``floodsr`` with ``pip`` into that same environment:
+Once you have conda installed, use it to create a dedicated environment with GDAL and PCRaster, activate it, then install ``floodsr`` with ``pip`` into that same environment:
 
 .. code-block:: bash
 
-   conda create -n floodsr-gdal -c conda-forge python=3.12 gdal -y
+   conda create -n floodsr-gdal -c conda-forge python=3.12 gdal pcraster -y
    conda activate floodsr-gdal
    python -m pip install floodsr
 
-Then confirm the GDAL-backed environment is active:
+Then confirm the extended environment is active:
 
 .. code-block:: bash
 
    floodsr doctor
 
 
-You should see something like *gdal_config_installed=True*. 
+You should see something like *gdal_config_installed=True* and *pcraster_installed=True*.
 
 .. _extended_install_notebook:
 
 Local notebook (Jupyter) - Extended
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Follow the same :ref:`extended_install_cli` instructions to set up your GDAL-backed ``floodsr`` environment, then install Jupyter into that same environment and register a dedicated kernel:
+Follow the same :ref:`extended_install_cli` instructions to set up your GDAL/PCRaster-backed ``floodsr`` environment, then install Jupyter into that same environment and register a dedicated kernel:
 
 .. code-block:: bash
 

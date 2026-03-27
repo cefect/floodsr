@@ -76,6 +76,8 @@ jobs:
             expect_python_bindings_installed: "false"
             expect_gdal_config_installed: "false"
             expect_vrt_enabled: "false"
+            expect_pcraster_installed: "false"
+            expect_pcraster_spreadzone_available: "false"
             expected_gdal_config_version: "__none__"
           - case_id: basic_local_notebook
             case_name: basic local notebook / jupyter
@@ -84,6 +86,8 @@ jobs:
             expect_python_bindings_installed: "false"
             expect_gdal_config_installed: "false"
             expect_vrt_enabled: "false"
+            expect_pcraster_installed: "false"
+            expect_pcraster_spreadzone_available: "false"
             expected_gdal_config_version: "__none__"
           - case_id: basic_hosted_notebook
             case_name: basic hosted notebook / colab
@@ -92,6 +96,8 @@ jobs:
             expect_python_bindings_installed: "true"
             expect_gdal_config_installed: "true"
             expect_vrt_enabled: "true"
+            expect_pcraster_installed: "false"
+            expect_pcraster_spreadzone_available: "false"
             expected_gdal_config_version: "__skip__"
           - case_id: extended_cli
             case_name: extended CLI / conda
@@ -100,6 +106,8 @@ jobs:
             expect_python_bindings_installed: "true"
             expect_gdal_config_installed: "true"
             expect_vrt_enabled: "true"
+            expect_pcraster_installed: "true"
+            expect_pcraster_spreadzone_available: "true"
             expected_gdal_config_version: "__skip__"
           - case_id: extended_local_notebook
             case_name: extended local notebook / jupyter
@@ -108,6 +116,8 @@ jobs:
             expect_python_bindings_installed: "true"
             expect_gdal_config_installed: "true"
             expect_vrt_enabled: "true"
+            expect_pcraster_installed: "true"
+            expect_pcraster_spreadzone_available: "true"
             expected_gdal_config_version: "__skip__"
           - case_id: extended_hosted_notebook
             case_name: extended hosted notebook / colab
@@ -116,6 +126,8 @@ jobs:
             expect_python_bindings_installed: "true"
             expect_gdal_config_installed: "true"
             expect_vrt_enabled: "true"
+            expect_pcraster_installed: "false"
+            expect_pcraster_spreadzone_available: "false"
             expected_gdal_config_version: "__skip__"
 
     steps:
@@ -190,9 +202,10 @@ jobs:
         shell: bash
         run: |
           eval "$(conda shell.bash hook)"
-          conda create -n floodsr-gdal -c conda-forge python=3.12 gdal -y
+          conda create -n floodsr-gdal -c conda-forge python=3.12 gdal pcraster -y
           conda activate floodsr-gdal
           python -m pip install floodsr
+          python -c "from pcraster import spreadzone; print('pcraster_ok')"
 
       # Run the documented extended local notebook install commands in one activated conda env.
       - name: Run documented extended local notebook install
@@ -200,9 +213,10 @@ jobs:
         shell: bash
         run: |
           eval "$(conda shell.bash hook)"
-          conda create -n floodsr-gdal -c conda-forge python=3.12 gdal -y
+          conda create -n floodsr-gdal -c conda-forge python=3.12 gdal pcraster -y
           conda activate floodsr-gdal
           python -m pip install floodsr
+          python -c "from pcraster import spreadzone; print('pcraster_ok')"
           python -m pip install jupyterlab ipykernel
           python -m ipykernel install --user --name floodsr-gdal --display-name "Python (floodsr-gdal)"
 
@@ -246,6 +260,8 @@ jobs:
           EXPECT_PYTHON_BINDINGS_INSTALLED: ${{ matrix.expect_python_bindings_installed }}
           EXPECT_GDAL_CONFIG_INSTALLED: ${{ matrix.expect_gdal_config_installed }}
           EXPECT_VRT_ENABLED: ${{ matrix.expect_vrt_enabled }}
+          EXPECT_PCRASTER_INSTALLED: ${{ matrix.expect_pcraster_installed }}
+          EXPECT_PCRASTER_SPREADZONE_AVAILABLE: ${{ matrix.expect_pcraster_spreadzone_available }}
           EXPECT_GDAL_CONFIG_VERSION: ${{ matrix.expected_gdal_config_version }}
         run: |
           python - <<'PY'
@@ -265,6 +281,10 @@ jobs:
           assert payload["gdal"]["python_bindings_installed"] is parse_bool(os.environ["EXPECT_PYTHON_BINDINGS_INSTALLED"])
           assert payload["gdal"]["gdal_config_installed"] is parse_bool(os.environ["EXPECT_GDAL_CONFIG_INSTALLED"])
           assert payload["gdal"]["vrt_enabled"] is parse_bool(os.environ["EXPECT_VRT_ENABLED"])
+          assert payload["pcraster"]["installed"] is parse_bool(os.environ["EXPECT_PCRASTER_INSTALLED"])
+          assert payload["pcraster"]["spreadzone_available"] is parse_bool(
+              os.environ["EXPECT_PCRASTER_SPREADZONE_AVAILABLE"]
+          )
 
           expected_version = os.environ["EXPECT_GDAL_CONFIG_VERSION"]
           if expected_version == "__none__":

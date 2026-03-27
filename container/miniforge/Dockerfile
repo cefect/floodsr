@@ -81,9 +81,8 @@ FROM onnx AS pcraster
 
 ARG CONDA_NAME=deploy
 
-# install pcraster into deploy env while freezing existing deps
+# verify pcraster is present in the deploy env
 RUN --mount=type=cache,target=/opt/conda/pkgs,sharing=locked \
-    conda install -yv --name "${CONDA_NAME}" --strict-channel-priority --freeze-installed -c conda-forge pcraster && \
     conda run -n "${CONDA_NAME}" python -c "from pcraster import spreadzone"
 
 
