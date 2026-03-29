@@ -26,7 +26,7 @@ msgid "**command line (CLI)**: proceed by copy/pasting the below commands from y
 msgstr "**ligne de commande (CLI)** : copiez-collez les commandes ci-dessous depuis votre navigateur vers votre terminal. NOTE : dans la plupart des terminaux, il faudra retirer le préfixe `!` de chaque commande."
 
 msgid "**local notebook (Jupyter)**: Use the <i class=\"fas fa-download\"></i> button to save this notebook as an `.ipynb` file to your local machine (may need to click *save as*) and open it with your local Jupyter kernel. see {ref}`basic_install_local_notebook` for details."
-msgstr "**carnet local (Jupyter)** : utilisez le bouton <i class=\"fas fa-download\"></i> pour enregistrer ce carnet comme fichier `.ipynb` sur votre machine (il faut parfois cliquer sur *save as*), puis ouvrez-le avec votre noyau Jupyter local. Voir {ref}`basic_install_local_notebook` pour plus de détails."
+msgstr "**carnet local (Jupyter)** : utilisez le bouton <i class=\"fas fa-download\"></i> pour enregistrer ce carnet comme fichier `.ipynb` sur votre machine (il faut parfois cliquer sur *enregistrer sous*), puis ouvrez-le avec votre noyau Jupyter local. Voir {ref}`basic_install_local_notebook` pour plus de détails."
 
 msgid "**hosted notebook (Colab)**: Use the <i class=\"fas fa-rocket\"></i> button to open this tutorial on Google Colab."
 msgstr "**carnet hébergé (Colab)** : utilisez le bouton <i class=\"fas fa-rocket\"></i> pour ouvrir ce tutoriel dans Google Colab."
@@ -37,8 +37,8 @@ msgstr "Installer des paquets supplémentaires"
 msgid "For this tutorial, we need the additional python packages `matplotlib` and `rasterio`. Like the install of `floodsr` shown in {doc}`Tutorial 1 <tutorial_1>`, obtaining and implementing these packages depends on your execution context:"
 msgstr "Pour ce tutoriel, nous avons besoin des paquets Python supplémentaires `matplotlib` et `rasterio`. Comme pour l'installation de `floodsr` montrée dans {doc}`le tutoriel 1 <tutorial_1>`, la façon d'obtenir et d'utiliser ces paquets dépend de votre contexte d'exécution :"
 
-msgid "The appropriate installation steps depend on your execution context, which is described in detail in :ref:`basic_install`. Here are the basic steps for each:"
-msgstr "Les étapes d'installation adaptées dépendent de votre contexte d'exécution, décrit en détail dans :ref:`basic_install`. Voici le minimum à faire dans chaque cas :"
+msgid "The appropriate installation steps depend on your execution context, which is described in detail in {ref}`basic_install`. Here are the basic steps for each:"
+msgstr "Les étapes d'installation adaptées dépendent de votre contexte d'exécution, décrit en détail dans {ref}`basic_install`. Voici le minimum à faire dans chaque cas :"
 
 msgid "**command line (CLI)**: first, ensure pipx is installed and on PATH, then run `pipx install floodsr`. see {ref}`basic_install_cli` for more details."
 msgstr "**ligne de commande (CLI)** : commencez par vérifier que `pipx` est installé et disponible dans le PATH, puis exécutez `pipx install floodsr`. Voir {ref}`basic_install_cli` pour plus de détails."
