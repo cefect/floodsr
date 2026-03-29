@@ -49,16 +49,18 @@ def test_docs_linkcheck_builds(tmp_path: Path) -> None:
     ("raw_language", "expected"),
     [
         pytest.param("en", "en", id="explicit_en"),
-        pytest.param("fr-ca", "fr_CA", id="fr_ca_rtd"),
+        pytest.param("fr", "fr", id="explicit_fr"),
     ],
 )
-def test_resolve_docs_language(raw_language, expected):
-    """Normalize RTD docs language values for Sphinx locale discovery."""
+def test_docs_conf_resolves_language(monkeypatch: pytest.MonkeyPatch, raw_language, expected):
+    """Docs config should clamp language selection to the supported docs locales."""
     pytest.importorskip("setuptools_scm", reason="Docs config dependency missing.")
 
-    # Load the live docs config so the test exercises the shipped resolver.
+    monkeypatch.setenv("READTHEDOCS_LANGUAGE", raw_language)
+
+    # Load the live docs config so the test exercises the shipped config value.
     conf_globals = runpy.run_path(str(DOCS_CONF_PATH))
-    result = conf_globals["_resolve_docs_language"](raw_language)
+    result = conf_globals["language"]
 
     assert isinstance(result, str)
     assert result == expected
