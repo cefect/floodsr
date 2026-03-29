@@ -42,7 +42,7 @@ nb_execution_mode = "off"
 
 
 # Normalize RTD language slugs so Sphinx can find locale catalogs.
-language = os.environ.get("READTHEDOCS_LANGUAGE") or "en"
+language = "fr" if (os.environ.get("READTHEDOCS_LANGUAGE") or "en") == "fr" else "en"
 assert language != "fr" or (Path(__file__).resolve().parent / "locale" / "fr" / "LC_MESSAGES" / "index.po").is_file(), "French docs require docs/user/locale/fr/LC_MESSAGES/index.po; RTD would otherwise fall back to English."
 locale_dirs = ["locale/"]
 gettext_compact = False

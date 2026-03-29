@@ -3,8 +3,11 @@
 import hashlib, json, os
 from pathlib import Path
 
-import numpy as np
 import pytest
+
+# Do not restore `import numpy as np` at module scope here.
+# Use `pytest.importorskip(...)` instead so docs-environment discovery stays collection-safe; see docs/dev/adr/0006-tests.md.
+np = pytest.importorskip("numpy", reason="ToHR CLI tests require numpy.")
 
 from conftest import default_model_version, tile_case_d, tohr_model_fp
 from floodsr.cli import _parse_arguments, _resolve_default_output_path, _resolve_tohr_model_spec, main

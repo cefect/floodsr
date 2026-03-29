@@ -2,8 +2,11 @@
 
 from pathlib import Path
 
-import numpy as np
 import pytest
+
+# Do not restore `import numpy as np` at module scope here.
+# Use `pytest.importorskip(...)` instead so docs-environment discovery stays collection-safe; see docs/dev/adr/0006-tests.md.
+np = pytest.importorskip("numpy", reason="Engine contract tests require numpy.")
 
 from conftest import logger, ort_tile_inputs, tohr_model_fp
 from floodsr.engine import EngineORT

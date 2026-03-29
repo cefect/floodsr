@@ -33,6 +33,7 @@ See `ADR-0017` for CI/CD workflow policy.
 - `local`: local-only tests that depend on local fixture data.
 - Do not use a `dev` mark; classify those tests as `local`.
 - Register these marks in `pytest.ini`.
+- Keep test module imports collection-safe across supported environments. If a module needs optional runtime dependencies that are absent from the docs environment, guard them with `pytest.importorskip(...)` or move the imports inside the tests/fixtures that need them so discovery can skip cleanly instead of erroring during collection.
 
 ### data-driven tests
 - Keep compatibility or applicability switches under `flags` in `case_spec.json`, including `flags.in_hrdem` when a case depends on HRDEM-specific behavior.
