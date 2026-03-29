@@ -2,8 +2,11 @@
 
 from pathlib import Path
 
-import numpy as np
 import pytest
+
+# Do not restore `import numpy as np` at module scope here.
+# Use `pytest.importorskip(...)` instead so docs-environment discovery stays collection-safe; see docs/dev/adr/0006-tests.md.
+np = pytest.importorskip("numpy", reason="Preprocessing tests require numpy.")
 
 from conftest import logger, synthetic_tohr_tiles
 from floodsr.dem_sources.hrdem_mosaic import write_dem_from_asset_hrefs
