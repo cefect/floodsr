@@ -39,7 +39,7 @@ Command line (CLI)
 
 ``floodsr`` was designed as a CLI-first Python package, so we recommend installing with `pipx <https://pipx.pypa.io/stable/>`__ for simple environment isolation.
 For this, you need a working `Python 3.12+ <https://realpython.com/installing-python/>`_ and pip (which usually comes already shipped with Python).
-After this, installing `pipx <https://pipx.pypa.io/stable/installation/>`__ is easy:
+After this, installing `pipx <https://pipx.pypa.io/stable/>`__ is easy:
 
 .. code-block:: bash
 
