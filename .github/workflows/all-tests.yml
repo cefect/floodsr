@@ -31,20 +31,13 @@ jobs:
         shell: bash
         run: |
           apt-get update
-          apt-get install -y git git-lfs
-          git lfs install --system
+          apt-get install -y git
 
       # Fetch repository contents for test execution.
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-
-      # Allow setuptools-scm to read Git metadata inside the containerized self-hosted checkout.
-      - name: Configure Git safe directory
-        shell: bash
-        run: |
-          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
 
       # Recreate the repo's deploy environment for test parity with local dev.
       - name: Create deploy environment
@@ -69,7 +62,7 @@ jobs:
           set -o pipefail
           mkdir -p artifacts
           conda run -n deploy-ci python -m pytest \
-            -m "not sphinx and not notebook and not local" \
+            -m "not sphinx and not notebook" \
             --junitxml=artifacts/pytest-junit.xml \
             2>&1 | tee artifacts/pytest.log
           status=${PIPESTATUS[0]}
@@ -84,7 +77,6 @@ jobs:
           import pathlib, re
 
           artifact_dir = pathlib.Path("artifacts")
-          artifact_dir.mkdir(parents=True, exist_ok=True)
           log_fp = artifact_dir / "pytest.log"
           lines = log_fp.read_text(encoding="utf-8", errors="replace").splitlines() if log_fp.exists() else []
 
@@ -121,7 +113,7 @@ jobs:
         run: |
           {
             echo "## All Tests Summary"
-            test -f artifacts/summary.txt && cat artifacts/summary.txt || echo "summary.txt missing"
+            cat artifacts/summary.txt
           } >> "${GITHUB_STEP_SUMMARY}"
 
       # Fail only after logs and summaries have been captured.
@@ -129,7 +121,7 @@ jobs:
         if: always()
         shell: bash
         run: |
-          status=$(cat artifacts/pytest.exitcode 2>/dev/null || echo 1)
+          status=$(cat artifacts/pytest.exitcode)
           if [ "${status}" -ne 0 ]; then
             exit "${status}"
           fi
@@ -151,20 +143,13 @@ jobs:
         shell: bash
         run: |
           apt-get update
-          apt-get install -y git git-lfs
-          git lfs install --system
+          apt-get install -y git
 
       # Fetch repository contents for test execution.
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-
-      # Allow setuptools-scm to read Git metadata inside the containerized self-hosted checkout.
-      - name: Configure Git safe directory
-        shell: bash
-        run: |
-          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
 
       # Recreate the locked deploy environment, then layer notebook runtime packages on top.
       - name: Create notebook-capable environment
@@ -196,7 +181,7 @@ jobs:
           conda run -n notebook-ci python -m pytest \
             -m "notebook" \
             --junitxml=artifacts-notebook/pytest-junit.xml \
-            tests/test_tutorials.py \
+            tests/test_notebooks.py \
             2>&1 | tee artifacts-notebook/pytest.log
           status=${PIPESTATUS[0]}
           printf "%s\n" "${status}" > artifacts-notebook/pytest.exitcode
@@ -210,7 +195,6 @@ jobs:
           import pathlib, re
 
           artifact_dir = pathlib.Path("artifacts-notebook")
-          artifact_dir.mkdir(parents=True, exist_ok=True)
           log_fp = artifact_dir / "pytest.log"
           lines = log_fp.read_text(encoding="utf-8", errors="replace").splitlines() if log_fp.exists() else []
 
@@ -247,7 +231,7 @@ jobs:
         run: |
           {
             echo "## Notebook Tests Summary"
-            test -f artifacts-notebook/summary.txt && cat artifacts-notebook/summary.txt || echo "summary.txt missing"
+            cat artifacts-notebook/summary.txt
           } >> "${GITHUB_STEP_SUMMARY}"
 
       # Fail only after logs and summaries have been captured.
@@ -255,7 +239,7 @@ jobs:
         if: always()
         shell: bash
         run: |
-          status=$(cat artifacts-notebook/pytest.exitcode 2>/dev/null || echo 1)
+          status=$(cat artifacts-notebook/pytest.exitcode)
           if [ "${status}" -ne 0 ]; then
             exit "${status}"
           fi
