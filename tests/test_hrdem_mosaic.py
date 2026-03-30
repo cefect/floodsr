@@ -7,9 +7,12 @@ from pathlib import Path
 import subprocess
 import sys
 
-import numpy as np
 import pytest
-import rasterio
+
+# Do not restore `import numpy as np` or `import rasterio` at module scope here.
+# Use `pytest.importorskip(...)` instead so docs-environment discovery stays collection-safe; see docs/dev/adr/0006-tests.md.
+np = pytest.importorskip("numpy", reason="HRDEM mosaic tests require numpy.")
+rasterio = pytest.importorskip("rasterio", reason="HRDEM mosaic tests require rasterio.")
 
 import floodsr.dem_sources.hrdem_mosaic
 from conftest import _write_single_band_geotiff, logger, tile_case_d
