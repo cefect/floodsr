@@ -11,31 +11,22 @@ This directory contains the active GitHub Actions workflows for this repository.
 Push the branch first, then run a workflow from the GitHub UI or CLI.
 
 ```bash
+# launch teh local runner (needed for AllTests and Instal Edge?) [wsl only?]
+/home/cefect/LS/09_REPOS/04_TOOLS/gh_runner/actions-runner/run.sh
+
+# push changes (MUST BE PUSHED!)
+git push
+
 gh workflow run --ref "$(git branch --show-current)"
  
 ```
 
-## `ci.yml`
+## Workflow Summary
 
-- Purpose: branch CI for pull requests and pushes to `master`.
-- Scope: runs the `fast` pytest tier, runs one constrained minimum-core test slice, builds `dist/*`, runs `twine check`, and smoke-tests the core wheel on Ubuntu and Windows.
-- Trigger: `pull_request`, `push` to `master`, `workflow_dispatch`.
-
-## `install-edge.yml`
-
-- Purpose: manual install-matrix validation without slowing normal CI.
-- Scope: builds `dist/*` on the self-hosted Linux runner fleet, then proves each documented Unix install path from `docs/user/installation.rst` in a fresh context-specific Docker container; notebook cases use sparse checkout shims from `.github/workflows/artifacts`, and the matrix now collapses to `cefect/floodsr:install-edge-main-v0.2` for non-Colab paths plus `cefect/floodsr:install-edge-colab-v0.2` for Colab paths.
-- Trigger: None (i.e., `workflow_dispatch`).
-
-## `all-tests.yml`
-
-- Purpose: manual full-suite validation on the self-hosted Linux runner fleet without changing branch CI scope.
-- Scope: runs two self-hosted jobs: one recreates the locked `deploy` conda environment and runs `pytest -m "not sphinx and not notebook"`; the second starts from the same locked deploy environment, layers on the notebook runtime packages, and runs `pytest -m "notebook" tests/test_notebooks.py`, preserving logs and JUnit XML for both jobs.
-- Trigger: None (i.e., `workflow_dispatch`).
-
-## `release.yml`
-
-- Purpose: tagged release validation and publish workflow.
-- Scope: verifies tag ancestry, runs the fast suite, runs one constrained minimum-core test slice, builds and validates `dist/*`, smoke-tests the core install on Ubuntu, smoke-tests the extended conda install on Ubuntu and Windows, then publishes to TestPyPI or PyPI and updates the GitHub Release.
-- Trigger: `push` tags matching `v*`.
+|  | `ci.yml` | `install-edge.yml` | `all-tests.yml` | `release.yml` |
+|---|---|---|---|---|
+| Purpose | Branch CI | Manual install validation | Manual full-suite validation | Tagged release validation + publish |
+| Triggers | `pull_request`, `push` to `master`, `workflow_dispatch` | `workflow_dispatch` | `workflow_dispatch` | `push` tags matching `v*` |
+| Runs-on | GitHub-hosted Ubuntu + Windows | Self-hosted Linux runner fleet | Self-hosted Linux runner fleet | GitHub-hosted Ubuntu + Windows |
+| Summary | - run `fast` pytest tier<br>- run constrained minimum-core slice<br>- build `dist/*`, run `twine check`<br>- smoke-test core wheel on Ubuntu and Windows | - build `dist/*` on self-hosted Linux<br>- validate documented Unix install paths in fresh Docker contexts<br>- use sparse-checkout notebook shims from `.github/workflows/artifacts`<br>- use dedicated main vs Colab install-edge images | - recreate locked `deploy` env and run `pytest -m "not sphinx and not notebook"`<br>- layer notebook runtime packages and run notebook tests<br>- preserve logs and JUnit XML for both jobs | - verify tag ancestry<br>- run `fast` pytest tier and constrained minimum-core slice<br>- build and validate `dist/*`<br>- smoke-test core and extended installs, then publish and update release |
  

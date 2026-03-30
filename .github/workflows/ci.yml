@@ -5,6 +5,8 @@ on:
   pull_request:
     branches:
       - master
+      - dev
+      - dev_cg
 
   # Allow manual reruns from the Actions UI.
   workflow_dispatch:
