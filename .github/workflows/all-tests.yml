@@ -67,13 +67,15 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
+          set +e
           set -o pipefail
           mkdir -p artifacts
           conda run -n deploy-ci python -m pytest \
-            -m "not sphinx and not notebook" \
+            -m "not sphinx and not notebook and not local" \
             --junitxml=artifacts/pytest-junit.xml \
             2>&1 | tee artifacts/pytest.log
           status=${PIPESTATUS[0]}
+          set -e
           printf "%s\n" "${status}" > artifacts/pytest.exitcode
 
       # Extract the warning and error lines into separate artifacts for quick review.
@@ -193,6 +195,7 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
+          set +e
           set -o pipefail
           mkdir -p artifacts-notebook
           conda run -n notebook-ci python -m pytest \
@@ -201,6 +204,7 @@ jobs:
             tests/test_tutorials.py \
             2>&1 | tee artifacts-notebook/pytest.log
           status=${PIPESTATUS[0]}
+          set -e
           printf "%s\n" "${status}" > artifacts-notebook/pytest.exitcode
 
       # Extract the warning and error lines into separate artifacts for quick review.
