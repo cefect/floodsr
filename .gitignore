@@ -64,3 +64,6 @@ tests/data/fathom_1024/lores.tif
 #profiling
 misc/profiling/output
 .DS_Store
+
+
+report

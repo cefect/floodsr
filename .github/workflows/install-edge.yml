@@ -39,6 +39,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Allow setuptools-scm to read Git metadata inside the containerized self-hosted checkout.
+      - name: Configure Git safe directory
+        shell: bash
+        run: |
+          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+
       # Build artifacts once and reuse them across downstream install-proof jobs.
       - name: Build artifacts
         shell: bash
@@ -76,6 +82,8 @@ jobs:
             expect_python_bindings_installed: "false"
             expect_gdal_config_installed: "false"
             expect_vrt_enabled: "false"
+            expect_pcraster_installed: "false"
+            expect_pcraster_spreadzone_available: "false"
             expected_gdal_config_version: "__none__"
           - case_id: basic_local_notebook
             case_name: basic local notebook / jupyter
@@ -84,6 +92,8 @@ jobs:
             expect_python_bindings_installed: "false"
             expect_gdal_config_installed: "false"
             expect_vrt_enabled: "false"
+            expect_pcraster_installed: "false"
+            expect_pcraster_spreadzone_available: "false"
             expected_gdal_config_version: "__none__"
           - case_id: basic_hosted_notebook
             case_name: basic hosted notebook / colab
@@ -92,6 +102,8 @@ jobs:
             expect_python_bindings_installed: "true"
             expect_gdal_config_installed: "true"
             expect_vrt_enabled: "true"
+            expect_pcraster_installed: "false"
+            expect_pcraster_spreadzone_available: "false"
             expected_gdal_config_version: "__skip__"
           - case_id: extended_cli
             case_name: extended CLI / conda
@@ -100,6 +112,8 @@ jobs:
             expect_python_bindings_installed: "true"
             expect_gdal_config_installed: "true"
             expect_vrt_enabled: "true"
+            expect_pcraster_installed: "true"
+            expect_pcraster_spreadzone_available: "true"
             expected_gdal_config_version: "__skip__"
           - case_id: extended_local_notebook
             case_name: extended local notebook / jupyter
@@ -108,6 +122,8 @@ jobs:
             expect_python_bindings_installed: "true"
             expect_gdal_config_installed: "true"
             expect_vrt_enabled: "true"
+            expect_pcraster_installed: "true"
+            expect_pcraster_spreadzone_available: "true"
             expected_gdal_config_version: "__skip__"
           - case_id: extended_hosted_notebook
             case_name: extended hosted notebook / colab
@@ -116,6 +132,8 @@ jobs:
             expect_python_bindings_installed: "true"
             expect_gdal_config_installed: "true"
             expect_vrt_enabled: "true"
+            expect_pcraster_installed: "false"
+            expect_pcraster_spreadzone_available: "false"
             expected_gdal_config_version: "__skip__"
 
     steps:
@@ -156,6 +174,7 @@ jobs:
           simple_dir.joinpath("index.html").write_text("\n".join(links) + "\n", encoding="utf-8")
           PY
           {
+            echo "FLOODSR_WHEEL=$(echo "${GITHUB_WORKSPACE}"/dist/*.whl)"
             echo "PIP_INDEX_URL=file://${GITHUB_WORKSPACE}/simple"
             echo "PIP_EXTRA_INDEX_URL=https://pypi.org/simple"
             echo "PIP_DISABLE_PIP_VERSION_CHECK=1"
@@ -172,7 +191,7 @@ jobs:
           export PATH="$HOME/.local/bin:$PATH"
           python -m pipx ensurepath
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          pipx install floodsr
+          pipx install --force "${FLOODSR_WHEEL}"
 
       # Run the documented local Jupyter preflight and basic install commands.
       - name: Run documented basic local notebook install
@@ -181,7 +200,7 @@ jobs:
         run: |
           python --version
           python -m jupyter --version
-          python -m pip install floodsr ipykernel
+          python -m pip install "${FLOODSR_WHEEL}" ipykernel
           python -m ipykernel install --user --name floodsr --display-name "Python (floodsr)"
 
       # Run the documented extended CLI install commands in one activated conda env.
@@ -190,9 +209,10 @@ jobs:
         shell: bash
         run: |
           eval "$(conda shell.bash hook)"
-          conda create -n floodsr-gdal -c conda-forge python=3.12 gdal -y
+          conda create -n floodsr-gdal -c conda-forge python=3.12 gdal pcraster -y
           conda activate floodsr-gdal
-          python -m pip install floodsr
+          python -m pip install "${FLOODSR_WHEEL}"
+          python -c "from pcraster import spreadzone; print('pcraster_ok')"
 
       # Run the documented extended local notebook install commands in one activated conda env.
       - name: Run documented extended local notebook install
@@ -200,11 +220,36 @@ jobs:
         shell: bash
         run: |
           eval "$(conda shell.bash hook)"
-          conda create -n floodsr-gdal -c conda-forge python=3.12 gdal -y
+          conda create -n floodsr-gdal -c conda-forge python=3.12 gdal pcraster -y
           conda activate floodsr-gdal
-          python -m pip install floodsr
+          python -m pip install "${FLOODSR_WHEEL}"
+          python -c "from pcraster import spreadzone; print('pcraster_ok')"
           python -m pip install jupyterlab ipykernel
           python -m ipykernel install --user --name floodsr-gdal --display-name "Python (floodsr-gdal)"
+
+      # Rewrite the hosted notebook install cells to use the wheel built in this run.
+      - name: Patch hosted notebook shim install target
+        if: matrix.case_id == 'basic_hosted_notebook' || matrix.case_id == 'extended_hosted_notebook'
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+
+          notebook_fp = Path(os.environ["NOTEBOOK_FP"])
+          wheel_fp = os.environ["FLOODSR_WHEEL"]
+          payload = json.loads(notebook_fp.read_text(encoding="utf-8"))
+          for cell in payload.get("cells", []):
+              if cell.get("cell_type") != "code":
+                  continue
+              source = "".join(cell.get("source", []))
+              source = source.replace("!python -m pip install -q floodsr", f"!python -m pip install -q {wheel_fp}")
+              source = source.replace("!pip install -q floodsr", f"!pip install -q {wheel_fp}")
+              cell["source"] = [source]
+          notebook_fp.write_text(json.dumps(payload, indent=1) + "\n", encoding="utf-8")
+          PY
+        env:
+          NOTEBOOK_FP: ${{ matrix.notebook_fp }}
 
       # Execute each notebook shim from the sparse checkout copy.
       - name: Execute notebook shim
@@ -246,6 +291,8 @@ jobs:
           EXPECT_PYTHON_BINDINGS_INSTALLED: ${{ matrix.expect_python_bindings_installed }}
           EXPECT_GDAL_CONFIG_INSTALLED: ${{ matrix.expect_gdal_config_installed }}
           EXPECT_VRT_ENABLED: ${{ matrix.expect_vrt_enabled }}
+          EXPECT_PCRASTER_INSTALLED: ${{ matrix.expect_pcraster_installed }}
+          EXPECT_PCRASTER_SPREADZONE_AVAILABLE: ${{ matrix.expect_pcraster_spreadzone_available }}
           EXPECT_GDAL_CONFIG_VERSION: ${{ matrix.expected_gdal_config_version }}
         run: |
           python - <<'PY'
@@ -265,6 +312,10 @@ jobs:
           assert payload["gdal"]["python_bindings_installed"] is parse_bool(os.environ["EXPECT_PYTHON_BINDINGS_INSTALLED"])
           assert payload["gdal"]["gdal_config_installed"] is parse_bool(os.environ["EXPECT_GDAL_CONFIG_INSTALLED"])
           assert payload["gdal"]["vrt_enabled"] is parse_bool(os.environ["EXPECT_VRT_ENABLED"])
+          assert payload["pcraster"]["installed"] is parse_bool(os.environ["EXPECT_PCRASTER_INSTALLED"])
+          assert payload["pcraster"]["spreadzone_available"] is parse_bool(
+              os.environ["EXPECT_PCRASTER_SPREADZONE_AVAILABLE"]
+          )
 
           expected_version = os.environ["EXPECT_GDAL_CONFIG_VERSION"]
           if expected_version == "__none__":
