@@ -26,6 +26,8 @@ pytest -q -m "fast and not sphinx"
 # CI test run
 pytest -q -m "fast and not local and not sphinx"
 
+# specific module
+pytest -q tests/test_cli_models.py
 
  
  
