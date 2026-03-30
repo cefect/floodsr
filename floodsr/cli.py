@@ -204,14 +204,26 @@ def _resolve_default_output_path(in_fp: Path) -> Path:
     return (Path.cwd() / f"{in_path.stem}_sr{suffix}").resolve()
 
 
+def _build_floodsr_package_info() -> dict[str, str]:
+    """Collect installed FloodSR package metadata for CLI diagnostics."""
+    import floodsr
+
+    return {
+        "version": floodsr.__version__,
+        "module_path": str(Path(floodsr.__file__).resolve()),
+    }
+
+
 def _build_doctor_payload() -> dict[str, object]:
     """Collect runtime dependency diagnostics for the `doctor` command."""
     from floodsr.engine import get_gdal_info, get_onnxruntime_info, get_rasterio_info
 
+    floodsr_info = _build_floodsr_package_info()
     ort_info = get_onnxruntime_info()
     rasterio_info = get_rasterio_info()
     gdal_info = get_gdal_info()
     return {
+        "floodsr": floodsr_info,
         "onnxruntime": ort_info,
         "rasterio": rasterio_info,
         "gdal": gdal_info,
@@ -292,9 +304,12 @@ def main_cli(args: argparse.Namespace) -> int:
         if args.json:
             print(json.dumps(payload, indent=2, sort_keys=True))
             return 0
+        floodsr_info = payload["floodsr"]
         ort_info = payload["onnxruntime"]
         rasterio_info = payload["rasterio"]
         gdal_info = payload["gdal"]
+        print(f"floodsr_version={floodsr_info['version']}")
+        print(f"floodsr_module_path={floodsr_info['module_path']}")
         print(f"onnxruntime_installed={ort_info['installed']}")
         print(f"onnxruntime_version={ort_info['version']}")
         print(f"onnxruntime_available_providers={','.join(ort_info['available_providers'])}")
@@ -312,10 +327,12 @@ def main_cli(args: argparse.Namespace) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     """Run the FloodSR CLI and return a process exit code."""
-    args = _parse_arguments(argv)
-    _configure_logging(args)
     try:
+        args = _parse_arguments(argv)
+        _configure_logging(args)
         return main_cli(args)
+    except SystemExit as err:
+        return 0 if err.code in (None, 0) else int(err.code)
     except Exception as err:
         log.error(f"{err}")
         log.debug("unhandled CLI exception", exc_info=True)
@@ -324,9 +341,16 @@ def main(argv: list[str] | None = None) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     """Build the FloodSR CLI parser."""
+    floodsr_info = _build_floodsr_package_info()
     parser = argparse.ArgumentParser(
         prog="floodsr",
         description="Run FloodSR model, cache, and runtime utility commands.",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {floodsr_info['version']}",
+        help="Print the installed FloodSR package version and exit.",
     )
     parser.add_argument(
         "-v",
