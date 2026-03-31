@@ -37,6 +37,13 @@ run_dir="${stage_dir}/run"
 tmp_dir="${stage_dir}/tmp"
 timeout_s="${FLOODSR_NOTEBOOK_TIMEOUT:-3600}"
 
+# Fail early if the notebook runtime is unavailable in the active environment.
+if ! command -v jupyter >/dev/null 2>&1; then
+    echo "[tutorial_3] error: 'jupyter' was not found on PATH" >&2
+    echo "[tutorial_3] hint: run this from the notebook-capable environment, e.g. 'conda run -n dev bash docs/user/notebooks/tutorial_3.sh'" >&2
+    exit 1
+fi
+
 # Keep notebook side files inside the temp-backed stage directory, but let the
 # notebook point heavy HRDEM/model reuse at the shared project cache.
 trap 'if [ "${cleanup_stage}" -eq 1 ]; then rm -rf "${stage_dir}"; else rm -rf "${run_dir}" "${tmp_dir}"; fi' EXIT
