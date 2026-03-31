@@ -5,6 +5,8 @@ on:
   pull_request:
     branches:
       - master
+      - dev
+      - dev_cg
 
   # Re-run branch CI after merges to master.
   push:
