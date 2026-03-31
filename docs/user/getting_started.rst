@@ -46,6 +46,11 @@ Install
    pipx install floodsr
 
 For more detailed installation instructions, see :doc:`installation`.
+After install, a quick sanity check is:
+
+.. code-block:: bash
+
+   floodsr doctor
 
 
 

@@ -25,6 +25,8 @@ Key constraints:
 
    * Release tags remain the source of truth for published versions.
    * This keeps GitHub Release tags and published package versions synchronized.
+   * For trusted release/version semantics, only versions derived from commits reachable from `master` should be treated as authoritative release identifiers.
+   * Versions observed on `dev`, feature branches, or stale editable installs are useful diagnostics, but they should not be treated as the trusted project release version.
 
 3. Use PyPI Trusted Publishing (OIDC) for both TestPyPI and PyPI.
 
@@ -38,7 +40,13 @@ Key constraints:
    * Stable releases are not duplicated to TestPyPI.
    * The GitHub Release is created or updated from the same tag used for package publishing.
 
-5. See `ADR-0017` for CI/CD workflow policy.
+5. Runtime diagnostics and CLI version reporting:
+
+   * `floodsr --version` should report the installed package version available in the active Python environment.
+   * `floodsr doctor` should report the same installed package version and may also report the loaded package/module path to help debug stale editable installs.
+   * When interpreting a reported version for release trust, only a version tied to `master` release ancestry is authoritative; diagnostic output from other branches remains informational only.
+
+6. See `ADR-0017` for CI/CD workflow policy.
 
 ## CI/CD summary
 
