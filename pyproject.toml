@@ -5,11 +5,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "floodsr"
 dynamic = ["version"]
-description = "Flood super-resolution CLI and library using ONNX Runtime."
+description = "Flood grid super-resolution CLI"
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
-authors = [{ name = "CEFlood" }]
+authors = [{ name = "CEFlood", email = "bryant.seth@ceflood.com" }]
 dependencies = [
     "geopandas>=1.1,<2",
     "numpy>=2,<3",
@@ -26,6 +26,10 @@ dev = [
     "pytest>=9,<10",
     "pytest-cov>=4.0",
 ]
+
+[project.urls]
+Homepage = "https://floodsr.readthedocs.io/en/latest/"
+Repository = "https://github.com/cefect/floodsr"
 
 [project.scripts]
 floodsr = "floodsr.cli:main"
