@@ -17,14 +17,14 @@ conda activate deploy
 cd /workspace
 
 # all tests (probably skips sphinx tests. this is the VS Code UI default)
-pytest -q
+pytest -q -m "not sphinx" 2>&1 | tee "tests/log/pytest_$(date -u +%Y%m%d_%H%M%S)_all.log"
 
 
 # fast local suite 
-pytest -q -m "fast and not sphinx"
+pytest -q -m "fast and not sphinx" 2>&1 | tee "tests/log/pytest_$(date -u +%Y%m%d_%H%M%S)_fast.log"
 
 # CI test run
-pytest -q -m "fast and not local and not sphinx"
+pytest -q -m "fast and not local and not sphinx" 2>&1 | tee "tests/log/pytest_$(date -u +%Y%m%d_%H%M%S)_ci.log"
 
 
  
