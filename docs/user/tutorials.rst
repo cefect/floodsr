@@ -14,6 +14,7 @@ To best use the tutorials, we recommend running them in a notebook environment:
 - :raw-html:`<i class="fas fa-rocket"></i>` Launch the same notebook directly in Google Colab for a browser-based interactive session. See :ref:`basic_install_google_colab`.
 
 Alternatively, you can copy/paste the commands from the tutorials into your terminal. See :ref:`basic_install_cli`.
+If you are sanity-checking an environment before starting a tutorial, run ``floodsr --version`` first and ``floodsr doctor`` when you need backend diagnostics.
 
 Select Tutorial 1 from the list below to get started.
 

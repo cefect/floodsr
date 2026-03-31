@@ -54,10 +54,17 @@ main CLI commands/positional arguments:
 - `floodsr doctor` 
 - `floodsr cache`. see `0012-cache-policy-and-lifecycle.md`
 
+main CLI global options:
+- `floodsr --version`: prints the installed package version and exits before subcommand routing.
+
 each of these should have their own help sub-menu. 
 with some global kwargs (mostly logging?)
 
 - User-facing docs and tutorial notebooks should demonstrate CLI usage as direct shell commands (`floodsr ...` in terminals and `!floodsr ...` in notebooks) rather than hiding CLI calls behind Python `subprocess` wrappers.
+- `doctor` is the diagnostic surface for runtime metadata. In addition to dependency/provider diagnostics, it should report the installed `floodsr` package version and may report the loaded module path when needed to debug stale editable installs.
+- The CLI version surface should report installed package metadata, not branch names or ad hoc Git descriptions.
+- Explicit user output paths are authoritative and must not be silently rewritten to a different suffix or format.
+- When an execution mode produces a mode-specific artifact type (for example, a tiled/windowed VRT assembly), the CLI/API should validate the explicit output path early and fail with a clear error rather than mutating the user path.
 
 
 ## CLI: tohr

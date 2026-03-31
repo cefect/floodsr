@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: floodsr\n"
 "POT-Creation-Date: 2026-03-19 00:00+0000\n"
-"PO-Revision-Date: 2026-03-19 00:00+0000\n"
+"PO-Revision-Date: 2026-03-31 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
 "MIME-Version: 1.0\n"
@@ -35,10 +35,10 @@ msgid "``floodsr`` comes in two flavours:"
 msgstr "``floodsr`` existe en deux variantes :"
 
 msgid "**basic install**: for rasters less than ~2 billion pixels or ~25 sq. km. (assuming a 1m target resolution)"
-msgstr "**installation de base** : pour des rasters de moins d'environ 2 milliards de pixels ou ~25 km² (en supposant une résolution cible de 1 m)"
+msgstr "**installation de base** : pour des rasters de moins ~2 milliards de pixels ou ~25 km² (en supposant une résolution cible de 1 m)"
 
 msgid "**extended install**: for rasters too large for memory. If you think you need this (and are feeling brave), skip ahead to :ref:`extended_install`."
-msgstr "**installation étendue** : pour des rasters trop volumineux pour tenir en mémoire. Si vous pensez en avoir besoin, passez directement à :ref:`extended_install`."
+msgstr "**installation étendue** : pour des rasters trop volumineux pour la mémoire vive. Si vous pensez en avoir besoin, passez directement à :ref:`extended_install`."
 
 msgid "As ``floodsr`` is a simple `pypi distributed python package <https://pypi.org/project/floodsr/>`_, it can be installed in a variety of contexts."
 msgstr "Comme ``floodsr`` est un simple `paquet Python distribué sur PyPI <https://pypi.org/project/floodsr/>`_, il peut être installé dans plusieurs contextes."
@@ -46,41 +46,44 @@ msgstr "Comme ``floodsr`` est un simple `paquet Python distribué sur PyPI <http
 msgid "Here we provide instructions for the three most common:"
 msgstr "Nous donnons ici des instructions pour les trois contextes les plus courants :"
 
-msgid ":ref:`basic_install_cli`: best for operations and those comfortable with CLI."
-msgstr ":ref:`basic_install_cli` : le meilleur choix pour les usages opérationnels et pour les personnes à l'aise avec la ligne de commande (CLI)."
+msgid ":ref:`basic_install_cli`: best for operations and those comfortable with a command-line interface (CLI)."
+msgstr ":ref:`basic_install_cli` : recommandé pour l'exploitation et pour les utilisateurs à l'aise avec une interface de ligne de commande (CLI)."
 
 msgid ":ref:`basic_install_local_notebook`:  interactive use and visualization."
 msgstr ":ref:`basic_install_local_notebook` : pour un usage interactif et la visualisation."
 
 msgid ":ref:`basic_install_google_colab`: simplest setup, but subject to cloud limits."
-msgstr ":ref:`basic_install_google_colab` : la configuration la plus simple, mais soumise aux limites du cloud."
+msgstr ":ref:`basic_install_google_colab` : configuration la plus simple, mais assujettie aux limites de l'infonuagique."
 
 msgid "Command line (CLI)"
 msgstr "Ligne de commande (CLI)"
+
+msgid "A command-line interface (CLI) means running commands in a terminal instead of clicking through a graphical app."
+msgstr "Une interface de ligne de commande (CLI) consiste à exécuter des commandes dans un terminal plutôt qu'à cliquer dans une application graphique."
 
 msgid "``floodsr`` was designed as a CLI-first Python package, so we recommend installing with `pipx <https://pipx.pypa.io/stable/>`__ for simple environment isolation."
 msgstr "``floodsr`` a été conçu comme un paquet Python orienté CLI (ligne de commande) ; nous recommandons donc une installation avec `pipx <https://pipx.pypa.io/stable/>`__ pour obtenir une isolation simple de l'environnement."
 
 msgid "For this, you need a working `Python 3.12+ <https://realpython.com/installing-python/>`_ and pip (which usually comes already shipped with Python)."
-msgstr "Pour cela, il vous faut un `Python 3.12+ <https://realpython.com/installing-python/>`_ fonctionnel ainsi que ``pip`` (généralement déjà fourni avec Python)."
+msgstr "Pour cela, il vous faut un `Python 3.12+ <https://realpython.com/installing-python/>`_ fonctionnel ainsi que pip (généralement déjà fourni avec Python)."
 
 msgid "After this, installing `pipx <https://pipx.pypa.io/stable/installation/>`__ is easy:"
 msgstr "Ensuite, l'installation de `pipx <https://pipx.pypa.io/stable/installation/>`__ est simple :"
 
 msgid "If you see a warning about needing to do something for *PATH changes to take effect*, follow the instructions from the warning."
-msgstr "Si un avertissement indique qu'il faut faire quelque chose pour que les *modifications du PATH prennent effet*, suivez les instructions affichées."
+msgstr "Si un avertissement indique qu'il faut faire quelque chose pour que les modifications du chemin d'accès entrent en vigueur : *PATH changes to take effect*, suivez les instructions. "
 
 msgid "Then install ``floodsr`` with pipx:"
-msgstr "Installez ensuite ``floodsr`` avec ``pipx`` :"
+msgstr "Installez ensuite ``floodsr`` avec pipx:"
 
 msgid "If you see a message like *installed package floodsr*, you're g2g and should have access to the ``floodsr`` command line (CLI), which you can use to validate the install."
-msgstr "Si vous voyez un message du type *installed package floodsr*, c'est bon : vous devriez avoir accès à la ligne de commande ``floodsr``, que vous pouvez utiliser pour valider l'installation."
+msgstr "Si vous voyez un message du type *installed package floodsr*, tout est en ordre, et vous devriez avoir accès à la ligne de commande (CLI) ``floodsr`` que vous pouvez utiliser pour valider l'installation."
 
 msgid "Start with the help command to confirm the command line (CLI) is working:"
 msgstr "Commencez par la commande d'aide afin de confirmer que la ligne de commande (CLI) fonctionne :"
 
 msgid "You can also try the ``doctor`` command to echo the current environment and ``floodsr`` configuration:"
-msgstr "Vous pouvez aussi essayer la commande ``doctor`` pour afficher l'environnement courant et la configuration de ``floodsr`` :"
+msgstr "Vous pouvez aussi essayer la commande ``doctor`` pour afficher l'environnement actuel et la configuration de ``floodsr`` :"
 
 msgid "This should show the version and status of the backends used by ``floodsr``."
 msgstr "Cela devrait montrer la version et l'état des moteurs utilisés par ``floodsr``."
@@ -89,34 +92,34 @@ msgid "Local notebook (Jupyter)"
 msgstr "Carnet local (Jupyter)"
 
 msgid "Running ``floodsr`` in a local notebook environment is a nice way to process individual rasters interactively and visualize the results."
-msgstr "Exécuter ``floodsr`` dans un environnement Jupyter local est une bonne manière de traiter des rasters individuellement et de visualiser les résultats."
+msgstr "Exécuter ``floodsr`` dans un environnement de carnet local est une excellente solution pour traiter des rasters individuels de manière interactive et visualiser les résultats."
 
 msgid "To do this, you need to have `Jupyter <https://jupyter.org/install>`_ installed in a `Python 3.12+ <https://realpython.com/installing-python/>`_ environment."
-msgstr "Pour cela, vous devez disposer de `Jupyter <https://jupyter.org/install>`_ dans un environnement `Python 3.12+ <https://realpython.com/installing-python/>`_."
+msgstr "Pour cela, vous devez disposer de `Jupyter <https://jupyter.org/install>`_ installé dans un environnement `Python 3.12+ <https://realpython.com/installing-python/>`_."
 
 msgid "Check your Python and Jupyter setup by running the following in a terminal:"
 msgstr "Vérifiez votre installation Python et Jupyter en exécutant ce qui suit dans un terminal :"
 
 msgid "Then, you can install ``floodsr`` with ``pip`` and register a dedicated Jupyter kernel for it:"
-msgstr "Vous pouvez ensuite installer ``floodsr`` avec ``pip`` et enregistrer un noyau Jupyter dédié (c'est l'environnement Python utilisé par le carnet) :"
+msgstr "Vous pouvez ensuite installer ``floodsr`` avec ``pip`` et lui associer un noyau Jupyter dédié :"
 
 msgid "Then launch Jupyter from that environment:"
 msgstr "Lancez ensuite Jupyter depuis cet environnement :"
 
 msgid "Alternatively, for a quick and lazy one-time use install (nice for tutorials), you can run the following from **inside** a running kernel (i.e., notebook cell):"
-msgstr "Sinon, pour une installation rapide et un peu paresseuse à usage ponctuel (pratique pour les tutoriels), vous pouvez exécuter ce qui suit **depuis** un noyau déjà lancé (c.-à-d. dans une cellule de carnet) :"
+msgstr "Sinon, pour une installation rapide et simplifiée dans le cadre d'un usage ponctuel (pratique pour les tutoriels), vous pouvez exécuter ce qui suit **depuis** un noyau actif (c.-à-d. dans une cellule de carnet) :"
 
 msgid "But this can lead to messy environments and is not recommended for regular use."
-msgstr "Mais cela peut produire des environnements désordonnés et n'est pas recommandé pour un usage régulier."
+msgstr "Mais cela peut produire des environnements incohérents et ce n'est pas recommandé pour un usage régulier."
 
 msgid "Finally, confirm the CLI is available from the notebook:"
-msgstr "Enfin, confirmez que la CLI (ligne de commande) est disponible depuis le carnet :"
+msgstr "Enfin, confirmez que la CLI est accessible depuis le carnet :"
 
 msgid "Hosted notebook (Colab)"
 msgstr "Carnet hébergé (Colab)"
 
 msgid "`Google Colab <https://colab.research.google.com/>`__  is a popular hosted notebook environment that provides a nice web-based interface with common libraries pre-installed, which makes it great for quick experiments or interactive tutorials."
-msgstr "`Google Colab <https://colab.research.google.com/>`__ est un environnement de carnet hébergé populaire qui fournit une interface web agréable avec plusieurs bibliothèques déjà installées, ce qui le rend pratique pour des essais rapides ou des tutoriels interactifs."
+msgstr "`Google Colab <https://colab.research.google.com/>`__ est un environnement de carnets hébergés populaire qui fournit une interface web agréable avec plusieurs bibliothèques déjà installées, ce qui le rend pratique pour des essais rapides ou des tutoriels interactifs."
 
 msgid "However, patching in new packages (like ``floodsr``) can be a bit tricky, so we don't recommend this for regular use."
 msgstr "En revanche, l'ajout de nouveaux paquets (comme ``floodsr``) peut être un peu délicat ; nous ne le recommandons donc pas pour un usage régulier."
@@ -131,7 +134,7 @@ msgid "Extended Install"
 msgstr "Installation étendue"
 
 msgid "For handling rasters too large for memory, floodsr uses GDAL backends."
-msgstr "Pour traiter des rasters trop volumineux pour la mémoire, ``floodsr`` utilise des moteurs GDAL."
+msgstr "Pour traiter des rasters dont la taille excède la mémoire disponible, ``floodsr`` utilise des moteurs GDAL."
 
 msgid "To enable these features, install `floodsr` into an environment with `GDAL <https://gdal.org/en/stable/>`_."
 msgstr "Pour activer ces fonctionnalités, installez `floodsr` dans un environnement avec `GDAL <https://gdal.org/en/stable/>`_."
@@ -173,4 +176,4 @@ msgid "While Colab is nice for standard environments, GDAL is not standard... so
 msgstr "Colab est pratique pour les environnements standards, mais GDAL ne l'est pas ; l'installation étendue de ``floodsr`` avec GDAL reste donc capricieuse et risque de ne pas fonctionner."
 
 msgid "For the foolhardy, the below seems to be working as of March 2026, but this will probably break when Colab updates their base images so maybe don't waste your time:"
-msgstr "Pour les plus téméraires, ce qui suit semble fonctionner en mars 2026, mais cela cassera probablement quand Colab mettra à jour ses images de base, donc à vos risques et périls :"
+msgstr "Pour les plus téméraires, ce qui suit semble fonctionner en date de mars 2026, mais cessera probablement quand Colab mettra à jour ses images de base, donc à vos risques et périls :"

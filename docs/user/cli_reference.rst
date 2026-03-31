@@ -12,7 +12,7 @@ Run FloodSR model, cache, and runtime utility commands.
 
 ::
 
-   usage: floodsr [-h] [-v] [-q] [--log-level {DEBUG,INFO,WARNING,ERROR}]
+   usage: floodsr [-h] [--version] [-v] [-q] [--log-level {DEBUG,INFO,WARNING,ERROR}]
                   {models,tohr,doctor} ...
 
 .. rubric:: Commands
@@ -30,6 +30,9 @@ Run FloodSR model, cache, and runtime utility commands.
 
 ``-h, --help``
    show this help message and exit
+
+``--version``
+   Print the installed FloodSR package version and exit.
 
 ``-v, --verbose``
    Increase logging verbosity (repeatable).
@@ -92,9 +95,8 @@ Fetch one manifest model into the local cache.
 
 ::
 
-   usage: floodsr models fetch [-h] [--manifest MANIFEST] [--cache-dir CACHE_DIR]
-                               [--backend {http,file}] [--force]
-                               [--show-progress | --no-progress]
+   usage: floodsr models fetch [-h] [--manifest MANIFEST] [--cache-dir CACHE_DIR] [--backend {http,file}]
+                               [--force] [--show-progress | --no-progress]
                                version
 
 .. rubric:: Positional Arguments
@@ -134,18 +136,13 @@ Run one super-resolution pass for a low-res depth raster.
 
 ::
 
-   usage: floodsr tohr [-h] [--machine-json MACHINE_JSON] --in IN_FP
-                       (--dem DEM | -f) [--fetch-out FETCH_OUT]
-                       [--fetch-force-tiling] [--out OUT]
-                       [--model-version MODEL_VERSION] [--model-path MODEL_PATH]
-                       [--manifest MANIFEST] [--cache-dir CACHE_DIR]
+   usage: floodsr tohr [-h] [--machine-json MACHINE_JSON] --in IN_FP (--dem DEM | -f) [--fetch-out FETCH_OUT]
+                       [--fetch-force-tiling] [--out OUT] [--model-version MODEL_VERSION]
+                       [--model-path MODEL_PATH] [--manifest MANIFEST] [--cache-dir CACHE_DIR]
                        [--backend {http,file}] [--force] [--max-depth MAX_DEPTH]
-                       [--min-depth-threshold MIN_DEPTH_THRESHOLD]
-                       [--dem-pct-clip DEM_PCT_CLIP]
-                       [--window-method {hard,feather}]
-                       [--tile-overlap TILE_OVERLAP] [--tile-size TILE_SIZE]
-                       [--crs-policy {strict,use-dem,use-lores}]
-                       [--show-progress | --no-progress]
+                       [--min-depth-threshold MIN_DEPTH_THRESHOLD] [--dem-pct-clip DEM_PCT_CLIP]
+                       [--window-method {hard,feather}] [--tile-overlap TILE_OVERLAP] [--tile-size TILE_SIZE]
+                       [--crs-policy {strict,use-dem,use-lores}] [--show-progress | --no-progress]
 
 .. rubric:: Options
 

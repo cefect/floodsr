@@ -3,6 +3,8 @@
 import json
 import shutil
 import subprocess
+import tomllib
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -60,6 +62,34 @@ def test_conda_lock_alignment():
         print(f"Key packages imported successfully")
     except Exception as e:
         print(f"Warning: Could not verify key packages: {e}")
+
+
+def test_package_metadata_fields(tmp_path: Path):
+    """Built wheel metadata exposes the expected package fields."""
+    # Load the expected package metadata from pyproject.toml.
+    pyproject = tomllib.loads((Path(__file__).parent.parent / "pyproject.toml").read_text(encoding="utf-8"))
+    project_d = pyproject["project"]
+
+    # Build one wheel from the local checkout so the test reads current pyproject metadata.
+    result = subprocess.run(
+        ["python", "-m", "pip", "wheel", ".", "--no-deps", "--no-build-isolation", "--wheel-dir", str(tmp_path)],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).parent.parent,
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stderr
+
+    wheel_fp = next(tmp_path.glob("floodsr-*.whl"))
+    with zipfile.ZipFile(wheel_fp) as zip_f:
+        meta_name = next(name for name in zip_f.namelist() if name.endswith("METADATA"))
+        metadata_text = zip_f.read(meta_name).decode()
+
+    assert f"Summary: {project_d['description']}" in metadata_text
+    assert (
+        f"Author-email: {project_d['authors'][0]['name']} <{project_d['authors'][0]['email']}>"
+    ) in metadata_text
+    assert f"Project-URL: Homepage, {project_d['urls']['Homepage']}" in metadata_text
 
 
  

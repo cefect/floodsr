@@ -114,6 +114,23 @@ def _resolve_default_output_path(request_token: str, suffix: str) -> Path:
     return (Path(tempfile.gettempdir()) / f"{TEMP_OUTPUT_PREFIX}_{request_token}{suffix}").resolve()
 
 
+def _validate_explicit_output_path(output_fp: str | Path, expects_vrt: bool) -> Path:
+    """Validate one explicit fetch output path against the resolved artifact type."""
+    out_path = Path(output_fp).expanduser().resolve()
+    if expects_vrt:
+        if out_path.suffix.lower() != ".vrt":
+            raise ValueError(
+                f"tiled/windowed fetch outputs are VRT artifacts; got output_fp={out_path}. "
+                "Use a .vrt path or omit output_fp."
+            )
+    elif out_path.suffix.lower() == ".vrt":
+        raise ValueError(
+            f"non-windowed fetch outputs are GeoTIFF artifacts; got output_fp={out_path}. "
+            "Use a raster path like .tif or omit output_fp."
+        )
+    return out_path
+
+
 def _build_tile_cache_key(
     request_token: str,
     tile_bounds: tuple[float, float, float, float],
@@ -807,7 +824,7 @@ def _03_read_dem_windowed_tiles_to_vrt(
     diag_d = {"any_valid": False, "missing_window_count": 0, "tiles_with_assets_count": 0, "tiles_with_valid_count": 0}
     tile_meta_l = []
     # Recreate tile output directory to avoid stale files from previous runs.
-    tile_dir = out_path.parent / f"{out_path.stem}__fetch_tiles"
+    tile_dir = out_path.parent / f"{out_path.stem}_fetch_tiles"
     if tile_dir.exists():
         shutil.rmtree(tile_dir)
     tile_dir.mkdir(parents=True, exist_ok=True)
@@ -1013,9 +1030,8 @@ def write_dem_from_asset_hrefs(
         f"gdal_available={_gdal_is_available()}"
     )
 
-    out_path = Path(output_fp).expanduser().resolve()
-    if fetch_window_size is None and out_path.suffix.lower() == ".vrt":
-        out_path = out_path.with_suffix(".tif")
+    # Validate the explicit output path against the resolved artifact type up front.
+    out_path = _validate_explicit_output_path(output_fp, expects_vrt=bool(fetch_window_size is not None))
     out_path.parent.mkdir(parents=True, exist_ok=True)
     cache_root = _resolve_tile_cache_root(cache_dir) if bool(use_cache) else None
     cache_file_count = len(list(cache_root.glob("*.tif"))) if cache_root is not None else 0
@@ -1224,9 +1240,8 @@ def main_fetch_hrdem_for_lowres_tile(
             suffix = ".vrt" if tiling_enabled else ".tif"
             out_path = _resolve_default_output_path(request_token, suffix=suffix)
         else:
-            out_path = Path(output_fp).expanduser().resolve()
-            if tiling_enabled and out_path.suffix.lower() != ".vrt":
-                out_path = out_path.with_suffix(".vrt")
+            # Validate the caller path once the fetch mode has been resolved.
+            out_path = _validate_explicit_output_path(output_fp, expects_vrt=tiling_enabled)
         # Cache lives at the GeoTIFF tile level only; VRT is an assembly artifact rebuilt per request.
         out_path.parent.mkdir(parents=True, exist_ok=True)
 

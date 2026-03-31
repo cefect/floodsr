@@ -9,9 +9,9 @@ permissions:
   contents: read
 
 concurrency:
-  # Keep one manual edge run per ref active at a time.
-  group: install-edge-${{ github.ref }}
-  cancel-in-progress: true
+  # Keep one heavy self-hosted container workflow active at a time.
+  group: selfhosted-container-heavy
+  cancel-in-progress: false
 
 jobs:
   build-artifacts:
@@ -23,6 +23,12 @@ jobs:
       - X64
     container:
       image: condaforge/miniforge3:25.3.1-0
+      options: >-
+        --cpus=4
+        --memory=12g
+        --memory-swap=12g
+        --pids-limit=2048
+        --shm-size=2g
     timeout-minutes: 20
 
     steps:
@@ -33,11 +39,23 @@ jobs:
           apt-get update
           apt-get install -y git
 
+      # Reset the persistent self-hosted workspace so checkout does not reuse stale promisor state.
+      - name: Reset runner workspace
+        shell: bash
+        run: |
+          find "${GITHUB_WORKSPACE}" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+
       # Fetch repository contents for packaging.
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+
+      # Allow setuptools-scm to read Git metadata inside the containerized self-hosted checkout.
+      - name: Configure Git safe directory
+        shell: bash
+        run: |
+          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
 
       # Build artifacts once and reuse them across downstream install-proof jobs.
       - name: Build artifacts
@@ -49,7 +67,7 @@ jobs:
 
       # Upload the wheel and sdist for downstream install-path proofs.
       - name: Upload dist artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: python-dist
           path: dist/*
@@ -63,10 +81,17 @@ jobs:
       - X64
     container:
       image: ${{ matrix.container_image }}
+      options: >-
+        --cpus=4
+        --memory=12g
+        --memory-swap=12g
+        --pids-limit=2048
+        --shm-size=2g
     timeout-minutes: 45
     needs: build-artifacts
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         include:
           - case_id: basic_cli
@@ -119,6 +144,12 @@ jobs:
             expected_gdal_config_version: "__skip__"
 
     steps:
+      # Reset the persistent self-hosted workspace so checkout does not reuse stale promisor state.
+      - name: Reset runner workspace
+        shell: bash
+        run: |
+          find "${GITHUB_WORKSPACE}" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+
       # Fetch only the notebook shim artifacts needed by notebook cases.
       - name: Checkout notebook proof artifacts
         if: matrix.notebook_fp != '__none__'
@@ -130,7 +161,7 @@ jobs:
 
       # Fetch the previously built artifacts instead of rebuilding from source.
       - name: Download dist artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: python-dist
           path: dist

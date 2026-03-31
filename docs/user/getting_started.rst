@@ -39,13 +39,18 @@ Here we give a quick intro on setting up a model and using it to enhance a flood
 Install
 ^^^^^^^^^^^
 
-``floodsr`` was designed as a CLI-first Python package, so we recommend installing with `pipx <https://pipx.pypa.io/stable/>`_ to ensure environment isolation:
+``floodsr`` was designed as a command-line interface (CLI)-first Python package, so we recommend installing with `pipx <https://pipx.pypa.io/stable/>`_ to ensure environment isolation:
 
 .. code-block:: bash
 
    pipx install floodsr
 
 For more detailed installation instructions, see :doc:`installation`.
+After install, a quick sanity check is:
+
+.. code-block:: bash
+
+   floodsr doctor
 
 
 

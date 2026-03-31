@@ -3,15 +3,18 @@
 import logging
 from pathlib import Path
 
-import numpy as np
 import pytest
+
+# Do not restore `import numpy as np` or `import rasterio` at module scope here.
+# Use `pytest.importorskip(...)` instead so docs-environment discovery stays collection-safe; see docs/dev/adr/0006-tests.md.
+np = pytest.importorskip("numpy", reason="ToHR regression tests require numpy.")
+rasterio = pytest.importorskip("rasterio", reason="ToHR regression tests require rasterio.")
 
 import floodsr.dem_sources.catalog
 import floodsr.models.ResUNet_16x_DEM as resunet_module
 import floodsr.tohr
 import misc.eval
 from conftest import default_model_version, logger, synthetic_tohr_tiles, synthetic_tohr_windowed_tiles, tile_case_d, tohr_model_fp
-import rasterio
 
 pytestmark = pytest.mark.network
 

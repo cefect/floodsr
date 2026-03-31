@@ -44,31 +44,75 @@ Configure GitHub Actions Trusted Publishing in both TestPyPI and PyPI for the `f
 
 `setuptools-scm` is the version source. Do not edit a static package version in `pyproject.toml`.
 
-### release to PyPi or TestPyPI
-`.github/workflows/release.yml` will push to the correct repo based on the tag format. 
+### branch and tag wiring
+`.github/workflows/release.yml` only runs on pushed tags matching `v*`, and it first verifies that the tagged commit is reachable from `origin/master`.
+
+This means:
+- do your release prep on any branch you want
+- merge the release commit to `master`
+- push `master` to `origin`
+- create the release tag on that pushed `master` commit
+- push the tag
+
+If the tag points to a commit that is not already on `origin/master`, the release workflow will fail before publishing.
+
+### pre-release to TestPyPI
+Use a pre-release tag when you want to test packaging or installation behavior on TestPyPI without publishing a stable release to PyPI.
+
+Accepted pre-release tag forms:
+- `v0.1.3rc1`
+- `v0.1.3a1`
+- `v0.1.3b1`
+
+These route to the `publish-testpypi` job in `.github/workflows/release.yml`.
 
 ```bash
 # 1) start from an up-to-date master branch
 git checkout master
 git pull --ff-only origin master
 
- 
-
-# check existing tags and decide on yours. tags must look like v0.1.3, v0.1.3rc1, v0.1.3a1, v0.1.3b1
+# 2) check existing tags and pick the next pre-release tag
 git tag --sort=-v:refname | grep '^v' | head -n4
 
-# 3) create and push an annotated pre-release tag
-tag="v0.1.2"
-git tag -a $tag -m "Release $tag"
+# 3) create the annotated pre-release tag on the current master commit
+tag="v0.1.3rc1"
+git tag -a "$tag" -m "Release $tag"
+
+# 4) push the branch first, then the tag
 git push origin master
-git push origin $tag
+git push origin "$tag"
 ```
 
 This triggers `.github/workflows/release.yml`, which:
 - verifies the tagged commit is reachable from `master`
 - builds artifacts once
 - runs unit and install-smoke validation
-- publishes to TestPyPI or PyPI based on the tag format
+- publishes the pre-release to TestPyPI only
+- creates or updates the GitHub Release as a pre-release
+
+### stable release to PyPI
+Use a stable tag only after the release commit is already pushed to `origin/master`.
+
+```bash
+# 1) start from an up-to-date master branch
+git checkout master
+git pull --ff-only origin master
+
+# 2) check existing tags and decide on yours. stable tags look like v0.1.3
+git tag --sort=-v:refname | grep '^v' | head -n4
+
+# 3) create and push an annotated pre-release tag
+tag="v0.0.9"
+git tag -a $tag -m "Release $tag"
+git push origin master
+git push origin "$tag"
+```
+
+This triggers `.github/workflows/release.yml`, which:
+- verifies the tagged commit is reachable from `master`
+- builds artifacts once
+- runs unit and install-smoke validation
+- publishes the stable release to PyPI only
 - creates or updates the GitHub Release from the same tag
 
  

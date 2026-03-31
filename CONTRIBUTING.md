@@ -2,64 +2,67 @@
 
 [project plan](https://docs.google.com/document/d/1_QnUurhdNyuawVcDFsKNLw6biA8Yw130GBm-3e6ij9o/edit?usp=sharing)
 
+## patch dev environment
+```bash
+# patch floodsr cli
+floodsr() { python -m floodsr.cli "$@"; }
+export -f floodsr
+
+# check the version of floodsr
+floodsr --version
+```
+
+
 ## .devcontainer setup
-needs to:
+use `.devcontainer/main` for code development. this profile needs to:
 - have the `FLOODSR_GITHUB_TOKEN` environment variable set or the `gh` CLI authenticated to access private repo assets (see "Auth model" below).
 
 
-.devcontainer/devcontainer.json example:
+`.devcontainer/main/devcontainer.json` example:
 ```json
 {
-   
   "dockerComposeFile": "./docker-compose.yml",
-  
   "service": "dev",
   "workspaceFolder": "/workspace",
   "shutdownAction": "stopCompose",
-  
+  "updateRemoteUserUID": true,
+  "containerUser": "cefect",
+  "remoteUser": "cefect",
   "containerEnv": {
- 
+    "CODEX_HOME": "/home/cefect/.codex",
     "FLOODSR_GITHUB_TOKEN": "${localEnv:FLOODSR_GITHUB_TOKEN}",
     "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}",
     "GH_TOKEN": "${localEnv:GH_TOKEN}"
-
   },
-   
+  "customizations": {
+    "vscode": {
       "settings": {
         "python.defaultInterpreterPath": "/opt/conda/envs/deploy/bin/python",
         "python.terminal.activateEnvironment": false, //already set on the container
-        "python.testing.pytestEnabled": true,
- 
+        "python.useEnvironmentsExtension": false
       }
     }
   }
 }
 ```
 
-.devcontainer/docker-compose.yml example:
+`.devcontainer/main/docker-compose.yml` example:
 ```yaml
 name: floodsr_compose
 services:
   dev:
-    build:
-      context: ../..
-      dockerfile: container/Dockerfile
-      target: dev
-    image: cefect/floodsr:dev-v0.8
+    image: cefect/floodsr:miniforge-dev-v0.9
     environment:
       TMPDIR: /home/cefect/LS/10_IO/2407_FHIMP/tmp
       XDG_CONFIG_HOME: /home/cefect/.config
       PYTHONPATH: /workspace
     volumes:
-      - ../..:/workspace:delegated
+      - /home/cefect/LS/09_REPOS/04_TOOLS/floodsr:/workspace:delegated
       - /home/cefect/LS/10_IO/2407_FHIMP:/home/cefect/LS/10_IO/2407_FHIMP:delegated
-      - /home/cefect/LS/10_IO/2407_FHIMP/tmp:/home/cefect/LS/10_IO/2407_FHIMP/tmp:rw
-      # Mount host user config so `gh auth` state is visible inside container.
-      - ${HOME}/.config:/home/cefect/.config:rw
-      # Mount host SSH keys/agent sockets for git@github.com workflows.
-      - ${HOME}/.ssh:/home/cefect/.ssh:rw
-      # Mount codex home from the active host user.
-      - ${HOME}/.codex:/home/cefect/.codex:rw
+      - /home/cefect/.config:/home/cefect/.config:rw
+      - /home/cefect/.ssh:/home/cefect/.ssh:ro
+      - /home/cefect/.codex:/home/cefect/.codex:rw
+      - /home/cefect/.pypirc:/home/cefect/.pypirc:ro
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     working_dir: /workspace
@@ -73,6 +76,8 @@ services:
       - sleep infinity
 
 ```
+
+The repo also includes a separate docs profile under `.devcontainer/docs`, but all code and tests should run from the `main` profile with the `deploy` conda environment.
 
 
 ## Development Environment Setup
