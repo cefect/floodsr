@@ -31,7 +31,7 @@ autosectionlabel_prefix_document = True
 
 # Keep templates and static assets local to docs/.
 templates_path = ["_templates"]
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "readme.md"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "readme.md", "notebooks/readme.md"]
 source_suffix = {
     ".rst": "restructuredtext",
     ".md": "markdown",

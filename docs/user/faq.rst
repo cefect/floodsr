@@ -16,7 +16,7 @@ However, in standard flood hazard contexts, resolutions finer than 1m are rarely
 
 
 What `crs-policy` should I use?
------------------------------
+-------------------------------
 CRS stands for *coordinate reference system*.
 A CRS tells raster software how pixel locations map onto real-world coordinates, including what the coordinate units mean and where the raster sits on the earth.
 This matters for raster work because overlays, clipping, reprojection, resampling, and pixel alignment all depend on both rasters meaningfully sharing one spatial reference.

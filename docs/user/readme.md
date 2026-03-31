@@ -22,7 +22,7 @@ python -m sphinx --version
 # 3) build html docs from this directory into BUILD_DIR/html
 python -m sphinx -b html . "_build/manual"
 
-# launch index.html in the default Windows browser (from WSL)
+# launch index.html in the default Windows browser (from WSL). if not on work-tree:
 "\\wsl.localhost\Ubuntu\home\cefect\LS\09_REPOS\04_TOOLS\floodsr\docs\user\_build\manual\index.html"
 ```
 
