@@ -2,7 +2,7 @@
 
 [project plan](https://docs.google.com/document/d/1_QnUurhdNyuawVcDFsKNLw6biA8Yw130GBm-3e6ij9o/edit?usp=sharing)
 
-## patch deve environment
+## patch dev environment
 ```bash
 # patch floodsr cli
 floodsr() { python -m floodsr.cli "$@"; }
@@ -10,9 +10,9 @@ export -f floodsr
 
 # check the version of floodsr
 floodsr --version
-
-
 ```
+
+
 ## .devcontainer setup
 use `.devcontainer/main` for code development. this profile needs to:
 - have the `FLOODSR_GITHUB_TOKEN` environment variable set or the `gh` CLI authenticated to access private repo assets (see "Auth model" below).

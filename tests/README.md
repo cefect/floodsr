@@ -7,6 +7,18 @@
 - [`CONTRIBUTING.md`](../CONTRIBUTING.md): developer setup notes, `pytest` examples, and fixture-data prerequisites such as Git LFS assets.
 - [`docs/dev/adr/0001-architecture-and-cli.md`](../docs/dev/adr/0001-architecture-and-cli.md): repo structure reference that reserves `tests/` as the package-aligned test location.
 
+
+
+## patch dev environment
+```bash
+# patch floodsr cli
+floodsr() { python -m floodsr.cli "$@"; }
+export -f floodsr
+
+# check the version of floodsr
+floodsr --version
+```
+
 ## Running The Suite In The Dev Environment
 
 ### core tests
@@ -65,8 +77,11 @@ conda run -n dev pytest -q -m "notebook"
 | `test_cli_models.py::test_main_models_list_outputs_model_version` | X |  |  |  |  |
 | `test_cli_models.py::test_resolve_log_level_from_cli_arguments` | X |  |  |  |  |
 | `test_cli_models.py::test_main_models_fetch_prints_existing_path` | X |  |  |  |  |
+| `test_cli_models.py::test_parse_models_fetch_progress_flags` | X |  |  |  |  |
 | `test_cli_models.py::test_main_models_fetch_routes_errors_to_stderr` | X |  |  |  |  |
+| `test_cli_models.py::test_main_version_reports_installed_package_version` | X |  |  |  |  |
 | `test_cli_models.py::test_main_doctor_reports_runtime_diagnostics` | X |  |  |  |  |
+| `test_cli_models.py::test_main_doctor_reports_runtime_diagnostics_json` | X |  |  |  |  |
 | `test_cli_tohr.py::test_main_tohr_runs_data_driven_baseline_case` |  | X | X |  | X |
 | `test_cli_tohr.py::test_main_tohr_runs_in_hrdem_flagged_case` |  | X | X |  | X |
 | `test_cli_tohr.py::test_default_output_path_uses_cwd_and_input_stem` | X |  |  |  | X |
