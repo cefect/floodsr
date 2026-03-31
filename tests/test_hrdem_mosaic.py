@@ -248,7 +248,7 @@ def test_fetch_hrdem_synthetic_cases(
     )
 
     # Use real STAC/HRDEM path with forced small windows to keep runtime fast.
-    output_fp = tmp_path / "fetched_dem_synth.tif"
+    output_fp = tmp_path / "fetched_dem_synth.vrt"
     result = floodsr.dem_sources.hrdem_mosaic.main_fetch_hrdem_for_lowres_tile(
         depth_lr_fp=depth_lr_fp,
         output_fp=output_fp,
@@ -304,7 +304,7 @@ def test_public_hrdem_asset_without_boto3_is_suppressed_during_hrdem_fetch(
         assert session_cls is rasterio.session.DummySession
         assert "boto3 not available, falling back to a DummySession." in caplog.text
         caplog.clear()
-        output_fp = tmp_path / "fetched_dem_session_probe.tif"
+        output_fp = tmp_path / "fetched_dem_session_probe.vrt"
         with caplog.at_level("INFO", logger="rasterio.session"):
             result = floodsr.dem_sources.hrdem_mosaic.main_fetch_hrdem_for_lowres_tile(
                 depth_lr_fp=depth_lr_fp,
@@ -467,6 +467,79 @@ def test_write_dem_from_asset_hrefs_non_windowed_outputs_float32_non_empty(
 
 
 @pytest.mark.fast
+@pytest.mark.parametrize(
+    "output_name, fetch_window_size, expect_error",
+    [
+        pytest.param("fetched_dem_windowed_valid.vrt", 32, None, id="windowed_explicit_vrt"),
+        pytest.param("fetched_dem_windowed_invalid.tif", 32, ValueError, id="windowed_explicit_tif_rejected"),
+        pytest.param("fetched_dem_non_windowed_valid.tif", None, None, id="non_windowed_explicit_tif"),
+        pytest.param("fetched_dem_non_windowed_invalid.vrt", None, ValueError, id="non_windowed_explicit_vrt_rejected"),
+    ],
+)
+def test_write_dem_from_asset_hrefs_explicit_output_path_contract(
+    tmp_path: Path,
+    logger,
+    synthetic_lowres_builder,
+    output_name: str,
+    fetch_window_size: int | None,
+    expect_error,
+):
+    """Direct asset writes should validate explicit output paths by resolved artifact mode."""
+    depth_lr_fp, depth_arr, depth_transform = synthetic_lowres_builder(
+        "depth_lr_contract",
+        SYNTHETIC_LOCAL_WRITE_BASE_D["depth_shape"],
+        SYNTHETIC_LOCAL_WRITE_BASE_D["depth_res"],
+        SYNTHETIC_LOCAL_WRITE_BASE_D["depth_crs"],
+    )
+    depth_bounds = array_bounds(*depth_arr.shape, depth_transform)
+    asset_fp = tmp_path / "asset_dem_contract.tif"
+    asset_arr = np.linspace(
+        100.0,
+        140.0,
+        SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"][0] * SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"][1],
+        dtype=np.float32,
+    ).reshape(SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"])
+    asset_transform = from_bounds(
+        *depth_bounds,
+        SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"][1],
+        SYNTHETIC_LOCAL_WRITE_BASE_D["asset_shape"][0],
+    )
+    _write_single_band_geotiff(
+        asset_fp,
+        asset_arr,
+        asset_transform,
+        SYNTHETIC_LOCAL_WRITE_BASE_D["asset_crs"],
+        nodata=-9999.0,
+    )
+
+    output_fp = tmp_path / output_name
+    if expect_error is not None:
+        with pytest.raises(expect_error, match="(VRT artifacts|GeoTIFF artifacts)"):
+            floodsr.dem_sources.hrdem_mosaic.write_dem_from_asset_hrefs(
+                depth_lr_fp=depth_lr_fp,
+                asset_hrefs=[str(asset_fp)],
+                output_fp=output_fp,
+                logger=logger,
+                fetch_window_size=fetch_window_size,
+                use_project_extent_filter=False,
+                show_progress=False,
+            )
+        return
+
+    dem_fp = floodsr.dem_sources.hrdem_mosaic.write_dem_from_asset_hrefs(
+        depth_lr_fp=depth_lr_fp,
+        asset_hrefs=[str(asset_fp)],
+        output_fp=output_fp,
+        logger=logger,
+        fetch_window_size=fetch_window_size,
+        use_project_extent_filter=False,
+        show_progress=False,
+    )
+    assert Path(dem_fp) == output_fp.resolve()
+    assert Path(dem_fp).exists() is True
+
+
+@pytest.mark.fast
 def test_write_dem_from_asset_hrefs_honors_explicit_cache_dir(
     tmp_path: Path,
     logger,
@@ -571,7 +644,7 @@ def test_fetch_hrdem_data_case(
     fetch_test_d = case_spec.get("fetch_test", {})
     depth_lr_fp = _write_fetch_test_subset_depth_fp(tmp_path, tile_case_d)
     assert depth_lr_fp.exists(), f"missing non-synthetic fixture: {depth_lr_fp}"
-    output_fp = tmp_path / f"{depth_lr_fp.stem}_fetch_use_cache_{int(use_cache)}.tif"
+    output_fp = tmp_path / f"{depth_lr_fp.stem}_fetch_use_cache_{int(use_cache)}.vrt"
     fetch_kwargs = {
         **fetch_kwargs,
         "fetch_window_size": int(fetch_test_d.get("fetch_window_size", fetch_kwargs["fetch_window_size"])),
@@ -593,3 +666,31 @@ def test_fetch_hrdem_data_case(
     tile_fp_l = list(tile_dir.glob("*.tif"))
     assert len(tile_fp_l) > 0
     assert len(tile_fp_l) <= int(fetch_test_d.get("expected_max_tiles", 4))
+
+
+@pytest.mark.fast
+@pytest.mark.network
+def test_main_fetch_hrdem_for_lowres_tile_rejects_explicit_tif_in_tiled_mode(
+    tmp_path: Path,
+    logger,
+    synthetic_lowres_builder,
+):
+    """Tiled HRDEM fetch should reject explicit non-VRT output paths instead of rewriting them."""
+    depth_lr_fp, _, _ = synthetic_lowres_builder(
+        "depth_lr_invalid_tiled_output",
+        (2, 2),
+        SYNTHETIC_REAL_FETCH_BASE_D["depth_res"],
+        SYNTHETIC_REAL_FETCH_BASE_D["depth_crs"],
+    )
+
+    with pytest.raises(ValueError, match="VRT artifacts"):
+        floodsr.dem_sources.hrdem_mosaic.main_fetch_hrdem_for_lowres_tile(
+            depth_lr_fp=depth_lr_fp,
+            output_fp=tmp_path / "fetched_dem_invalid.tif",
+            logger=logger,
+            use_cache=False,
+            force_tiling=True,
+            fetch_window_size=80,
+            memory_limit_gib=16.0,
+            show_progress=False,
+        )
