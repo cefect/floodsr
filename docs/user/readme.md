@@ -79,7 +79,8 @@ python docs/user/scripts/build_cli_reference.py
 ## update tutorial notebooks
 NOTE: needs to be done from main .devcontainer (not docs)
 
-Each tutorial runner stages execution in a temp-backed sandbox, keeps notebook side files there, and then copies the completed `.ipynb` back into `docs/user/notebooks`. Tutorial 3 is the exception for heavy reuse: it still points HRDEM/model caching at the project cache while keeping the notebook run directory in temp.
+Each tutorial runner stages execution in a temp-backed sandbox, keeps notebook side files there, and then copies the completed `.ipynb` back into `docs/user/notebooks`. 
+Tutorial 3 is the exception for heavy reuse: it still points HRDEM/model caching at the project cache while keeping the notebook run directory in temp.
 
 using pruned/curated plot-only outputs now
 
