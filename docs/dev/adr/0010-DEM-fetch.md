@@ -19,6 +19,10 @@ DEFAULT_ASSET = "dtm"
 - add optional `--fetch-hrdem` (or just `-f`) flag to trigger HRDEM fetch instead. 
 - either `--dem` or `--fetch-hrdem` must be provided, but not both.
 - add optional `--fetch-out`   flag to specify output path for fetched HRDEM tile. If not provided, the fetched tile will live in the temp directory (e.g. using `tempfile` module) NOT the cache. should provide some lazy caching so if the same tile is requested in the same fetch session, it doesn't re-fetch from the source. 
+  - per `0001-architecture-and-cli.md`, do not silently rewrite an explicit user path.
+  - if the fetch resolves to the tiled/VRT path and the user provides an explicit `--fetch-out`, the path must already end with `.vrt`.
+  - if tiled fetch is selected and the user passes a non-`.vrt` explicit path, fail early with a clear error.
+  - if `--fetch-out` is omitted, the implementation may still choose the default suffix based on fetch mode (`.tif` for rapid/non-windowed, `.vrt` for tiled/windowed).
 
 ### implementation strategy (agnostic internals, explicit CLI)
 - keep CLI explicit and hard-coded to HRDEM for now (`--fetch-hrdem`). maybe we add alternate sources later. 
@@ -86,6 +90,13 @@ BIGTIFF=IF_SAFER
 - keep HRDEM fetch at native source resolution in this phase (no fetch-resolution parameter).
 - build and use a VRT to stitch fetched chunks/tiles into one virtual mosaic.
 - add early diagnostics/guards for oversized fetches so failures are explicit (not silent OOM kills).
+
+### decision update (explicit output path contract)
+- explicit user output paths are authoritative and must not be silently rewritten. this is a general CLI/API rule; see `0001-architecture-and-cli.md`.
+- tiled/windowed fetches produce a VRT assembly artifact, so explicit tiled outputs must use a `.vrt` suffix.
+- non-windowed fetches produce a GeoTIFF artifact, so explicit non-windowed outputs must use a raster filepath appropriate for that mode.
+- we do NOT want to "honor explicit tiled `.tif` outputs by materializing the VRT to a GeoTIFF".
+- this keeps the tiled fetch implementation simple and transparent about its actual output artifact, rather than adding an implicit format-conversion step.
  
 
 
