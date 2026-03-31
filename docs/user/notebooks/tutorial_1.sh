@@ -1,6 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Run tutorial 1 from cache and copy the executed notebook back into the docs tree.
+#
+# Usage:
+# - `conda run -n dev bash docs/user/notebooks/tutorial_1.sh`
+#
+# The runner stages a temporary CLI shim plus writable cache directories so the
+# notebook's `!floodsr ...` cells execute against the repo source tree without
+# requiring a package install or leaving side files in the source directory.
+#
+# Environment overrides:
+# - `FLOODSR_NOTEBOOK_CACHE_DIR` controls the per-notebook staging/cache root.
+# - `FLOODSR_NOTEBOOK_TIMEOUT` sets the nbconvert execution timeout in seconds.
+#
+# Outputs:
+# - Overwrites `tutorial_1.ipynb` with the freshly executed notebook.
+# - Removes the temporary run and tmp directories before exiting.
+#
 # Resolve notebook, staging, and cache paths up front so execution is reproducible.
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/../../.." && pwd)"
@@ -10,7 +27,8 @@ run_dir="${cache_dir}/run"
 tmp_dir="${cache_dir}/tmp"
 timeout_s="${FLOODSR_NOTEBOOK_TIMEOUT:-600}"
 
-# Reuse the same local package and cache paths as the notebook pytest workflow.
+# Reuse the same local package and cache paths as the notebook pytest workflow
+# so docs runs and tests exercise the same import and cache layout.
 rm -rf "${run_dir}" "${tmp_dir}"
 mkdir -p "${cache_dir}" "${run_dir}" "${tmp_dir}"
 export PYTHONPATH="${repo_root}${PYTHONPATH:+:${PYTHONPATH}}"
@@ -32,8 +50,8 @@ echo "[tutorial_1] staging notebook execution in ${run_dir}"
 cp "${notebook_fp}" "${run_dir}/"
 
 # Provide a local `floodsr` command inside the staged run directory so the
-# user-facing notebook cells can keep the simple `!floodsr ...` form while the
-# runner still executes against the repo source tree without requiring install steps.
+# notebook can keep the simple `!floodsr ...` examples shown to users while the
+# runner still dispatches to `python -m floodsr.cli` from the repo checkout.
 cat > "${run_dir}/floodsr" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
