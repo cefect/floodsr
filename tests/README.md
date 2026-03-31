@@ -123,11 +123,28 @@ conda run -n dev pytest -q -m "notebook"
 
 # simple container tests
 
-## miniforge3
+## miniforge3 [CLI]
 ```bash
 # launch one-time use interactive shell
 docker run --rm --init -it -v "$(mktemp -d):/tmp/work" -w /tmp/work -p 8888:8888 condaforge/miniforge3:25.3.1-0 bash
 
+#isntall pipx
+python -m pip install --user pipx
+python -m pipx ensurepath
+source ~/.bashrc
+
+# install floodsr
+pipx install floodsr
+
+
+
+```
+
+## miniforge3 [jupyter]
+```bash
+# launch one-time use interactive shell
+docker run --rm --init -it -v "$(mktemp -d):/tmp/work" -w /tmp/work -p 8888:8888 condaforge/miniforge3:25.3.1-0 bash
+ 
 
 # install jupyter
 python -m pip install jupyterlab
@@ -145,14 +162,6 @@ python -m jupyter lab \
 # open in windows browser
 
 # to run a tutorial notebook, probably open the docs website, right click "save as", then back on jupyter, "upload file"
-
-# OR cli install floodsr in the container
-python -m pip install --user pipx
-python -m pipx ensurepath
-
-source ~/.bashrc
-
-pipx install floodsr
 
 ```
 

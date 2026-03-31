@@ -101,11 +101,9 @@ git pull --ff-only origin master
 # 2) check existing tags and decide on yours. stable tags look like v0.1.3
 git tag --sort=-v:refname | grep '^v' | head -n4
 
-# 3) create the annotated stable tag on the current master commit
-tag="v0.1.3"
-git tag -a "$tag" -m "Release $tag"
-
-# 4) push the branch first, then the tag
+# 3) create and push an annotated pre-release tag
+tag="v0.0.9"
+git tag -a $tag -m "Release $tag"
 git push origin master
 git push origin "$tag"
 ```
