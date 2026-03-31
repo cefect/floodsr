@@ -35,7 +35,7 @@ done
 ## `all-tests.yml`
 
 - Purpose: manual full-suite validation on the self-hosted Linux runner fleet without changing branch CI scope.
-- Scope: runs two self-hosted jobs: one recreates the locked `deploy` conda environment and runs `pytest -m "not sphinx and not notebook"`; the second starts from the same locked deploy environment, layers on the notebook runtime packages, and runs `pytest -m "notebook" tests/test_tutorials.py`, preserving logs and JUnit XML for both jobs.
+- Scope: runs two self-hosted jobs: one recreates the locked `deploy` conda environment and runs `pytest -m "not sphinx and not notebook and not local"`; the second starts from the same locked deploy environment, layers on the notebook runtime packages, and runs `pytest -m "notebook" tests/test_tutorials.py`, preserving logs and JUnit XML for both jobs.
 - Trigger: None (i.e., `workflow_dispatch`).
 
 ## `release.yml`

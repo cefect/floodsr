@@ -26,20 +26,18 @@ jobs:
     timeout-minutes: 90
 
     steps:
-      # Install git and Git LFS inside the fresh container before checkout.
+      # Install git inside the fresh container before checkout.
       - name: Install checkout dependency
         shell: bash
         run: |
           apt-get update
-          apt-get install -y git git-lfs
-          git lfs install --system
+          apt-get install -y git
 
       # Fetch repository contents for test execution.
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
 
       # Allow setuptools-scm to read Git metadata inside the containerized self-hosted checkout.
       - name: Configure Git safe directory
@@ -61,7 +59,7 @@ jobs:
           conda run -n deploy-ci python -m pip install --upgrade pip
           conda run -n deploy-ci python -m pip install -e ".[dev]"
 
-      # Run the full deploy-environment suite once, excluding docs-only notebook proofing.
+      # Run the non-local deploy-environment suite once, excluding docs-only notebook proofing.
       - name: Run pytest
         id: pytest
         continue-on-error: true
@@ -149,20 +147,18 @@ jobs:
     timeout-minutes: 90
 
     steps:
-      # Install git and Git LFS inside the fresh container before checkout.
+      # Install git inside the fresh container before checkout.
       - name: Install checkout dependency
         shell: bash
         run: |
           apt-get update
-          apt-get install -y git git-lfs
-          git lfs install --system
+          apt-get install -y git
 
       # Fetch repository contents for test execution.
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
 
       # Allow setuptools-scm to read Git metadata inside the containerized self-hosted checkout.
       - name: Configure Git safe directory
