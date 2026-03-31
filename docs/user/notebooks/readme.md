@@ -47,5 +47,10 @@ conda run -n dev bash docs/user/notebooks/tutorial_2.sh
 # large-raster tutorial; runs from temp, but keeps heavy HRDEM/model cache reuse
 conda run -n dev bash docs/user/notebooks/tutorial_3.sh
 
+# or do them all at once
+conda run -n dev bash docs/user/notebooks/tutorial_1.sh && \
+conda run -n dev bash docs/user/notebooks/tutorial_2.sh && \
+conda run -n dev bash docs/user/notebooks/tutorial_3.sh
+
  
 ```
