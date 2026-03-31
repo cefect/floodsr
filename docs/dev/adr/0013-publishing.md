@@ -20,6 +20,9 @@ Key constraints:
    * Tags matching `vX.Y.ZrcN`, `vX.Y.ZaN`, or `vX.Y.ZbN` are treated as pre-releases.
    * Tags matching `vX.Y.Z` are treated as stable releases.
    * Tags are evaluated by release workflows after verifying the tagged commit is reachable from `master`.
+   * The release promotion path is `dev` into `master` via a normal merge commit, ideally `--no-ff`.
+   * Release tags are created on the resulting commit on `master`.
+   * Do not squash-merge `dev` into `master`.
 
 2. Use `setuptools-scm` so package versions are derived from Git tags rather than a static `[project].version`.
 
