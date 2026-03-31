@@ -28,6 +28,8 @@ done
  
 ```
 
+see the [tests readme](../../tests/README.md) also
+
 ## `ci.yml`
 
 - Purpose: branch CI for pull requests and pushes to `master`.
