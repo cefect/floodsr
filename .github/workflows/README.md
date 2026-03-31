@@ -18,6 +18,7 @@ Push the branch first, then run a workflow from the GitHub UI or CLI.
 git push
 
 # select the workflow to run:
+# WARNING! make sure you dont have too many containers running
 gh workflow run --ref "$(git branch --show-current)"
 
 # OR... dispatch all manually runnable workflows except release
