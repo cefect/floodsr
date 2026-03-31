@@ -807,7 +807,7 @@ def _03_read_dem_windowed_tiles_to_vrt(
     diag_d = {"any_valid": False, "missing_window_count": 0, "tiles_with_assets_count": 0, "tiles_with_valid_count": 0}
     tile_meta_l = []
     # Recreate tile output directory to avoid stale files from previous runs.
-    tile_dir = out_path.parent / f"{out_path.stem}__fetch_tiles"
+    tile_dir = out_path.parent / f"{out_path.stem}_fetch_tiles"
     if tile_dir.exists():
         shutil.rmtree(tile_dir)
     tile_dir.mkdir(parents=True, exist_ok=True)
