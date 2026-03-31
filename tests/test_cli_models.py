@@ -66,7 +66,7 @@ def test_main_models_fetch_prints_existing_path(
     models_manifest_fp: Path,
     backend_name: str | None,
 ):
-    """Ensure models fetch prints a valid path for cached weights."""
+    """Ensure models fetch prints one-line cache metadata for fetched weights."""
     args = [
         "models",
         "fetch",
@@ -80,9 +80,37 @@ def test_main_models_fetch_prints_existing_path(
         args.extend(["--backend", backend_name])
 
     completed = _run_cli_command(args)
-    output_fp = Path(completed.stdout.strip())
     assert completed.returncode == 0
+    stdout = completed.stdout.strip()
+    assert "\n" not in stdout
+    assert "version=v-cli " in stdout
+    assert " stored=" in stdout
+    assert " retrieved_from=fetch:file" in stdout
+    output_fp = Path(stdout.split(" stored=", 1)[1].split(" retrieved_from=", 1)[0])
     assert output_fp.exists()
+
+
+def test_main_models_fetch_prints_cache_hit_summary(
+    tmp_path: Path,
+    models_manifest_fp: Path,
+):
+    """Ensure models fetch still prints a readable one-line summary on cache hits."""
+    args = [
+        "models",
+        "fetch",
+        "v-cli",
+        "--manifest",
+        str(models_manifest_fp),
+        "--cache-dir",
+        str(tmp_path / "cache"),
+        "--no-progress",
+    ]
+    first = _run_cli_command(args)
+    second = _run_cli_command(args)
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert " retrieved_from=fetch:file" in first.stdout
+    assert " retrieved_from=cache" in second.stdout
 
 
 @pytest.mark.parametrize(
