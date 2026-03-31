@@ -3,7 +3,7 @@
 import argparse, json, logging, sys
 from pathlib import Path
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("floodsr.cli")
 
 
 def _resolve_log_level(args: argparse.Namespace) -> int:
