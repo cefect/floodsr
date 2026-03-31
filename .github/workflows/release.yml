@@ -144,7 +144,7 @@ jobs:
 
       # Reuse the same artifacts across release validation and publish jobs.
       - name: Upload dist artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: python-dist
           path: dist/*
@@ -164,7 +164,7 @@ jobs:
 
       # Fetch the previously built artifacts instead of rebuilding from source.
       - name: Download dist artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: python-dist
           path: dist
@@ -229,7 +229,7 @@ jobs:
     steps:
       # Fetch the previously built artifacts instead of rebuilding from source.
       - name: Download dist artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: python-dist
           path: dist
@@ -273,7 +273,7 @@ jobs:
     steps:
       # Download the already validated release artifacts.
       - name: Download dist artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: python-dist
           path: dist
@@ -298,7 +298,7 @@ jobs:
     steps:
       # Download the already validated release artifacts.
       - name: Download dist artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: python-dist
           path: dist

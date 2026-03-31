@@ -12,13 +12,18 @@ Push the branch first, then run a workflow from the GitHub UI or CLI.
 
 ```bash
 gh workflow run --ref "$(git branch --show-current)"
+
+# dispatch all manually runnable workflows except release
+for workflow in ci.yml install-edge.yml all-tests.yml; do
+    gh workflow run "$workflow" --ref "$(git branch --show-current)"
+done
  
 ```
 
 ## `ci.yml`
 
 - Purpose: branch CI for pull requests and pushes to `master`.
-- Scope: runs the `fast` pytest tier, runs one constrained minimum-core test slice, builds `dist/*`, runs `twine check`, and smoke-tests the core wheel on Ubuntu and Windows.
+- Scope: runs the `fast` pytest tier, runs one constrained minimum-core test slice, builds `dist/*`, runs `twine check`, and smoke-tests the built core wheel on Ubuntu and Windows.
 - Trigger: `pull_request`, `push` to `master`, `workflow_dispatch`.
 
 ## `install-edge.yml`
@@ -30,7 +35,7 @@ gh workflow run --ref "$(git branch --show-current)"
 ## `all-tests.yml`
 
 - Purpose: manual full-suite validation on the self-hosted Linux runner fleet without changing branch CI scope.
-- Scope: runs two self-hosted jobs: one recreates the locked `deploy` conda environment and runs `pytest -m "not sphinx and not notebook"`; the second starts from the same locked deploy environment, layers on the notebook runtime packages, and runs `pytest -m "notebook" tests/test_notebooks.py`, preserving logs and JUnit XML for both jobs.
+- Scope: runs two self-hosted jobs: one recreates the locked `deploy` conda environment and runs `pytest -m "not sphinx and not notebook and not local"`; the second starts from the same locked deploy environment, layers on the notebook runtime packages, and runs `pytest -m "notebook" tests/test_tutorials.py`, preserving logs and JUnit XML for both jobs.
 - Trigger: None (i.e., `workflow_dispatch`).
 
 ## `release.yml`
