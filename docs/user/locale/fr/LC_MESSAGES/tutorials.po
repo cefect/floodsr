@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: floodsr\n"
 "POT-Creation-Date: 2026-03-19 00:00+0000\n"
-"PO-Revision-Date: 2026-03-20 00:00+0000\n"
+"PO-Revision-Date: 2026-03-31 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
 "MIME-Version: 1.0\n"
@@ -30,6 +30,9 @@ msgstr ":raw-html:`<i class=\"fas fa-rocket\"></i>` Ouvrez ce même carnet direc
 
 msgid "Alternatively, you can copy/paste the commands from the tutorials into your terminal. See :ref:`basic_install_cli`."
 msgstr "Sinon, vous pouvez copier-coller les commandes des tutoriels directement dans votre terminal. Voir :ref:`basic_install_cli`."
+
+msgid "If you are sanity-checking an environment before starting a tutorial, run ``floodsr --version`` first and ``floodsr doctor`` when you need backend diagnostics."
+msgstr "Si vous vérifiez rapidement un environnement avant de commencer un tutoriel, exécutez d'abord ``floodsr --version``, puis ``floodsr doctor`` lorsque vous avez besoin d'un diagnostic sur les moteurs."
 
 msgid "Select Tutorial 1 from the list below to get started."
 msgstr "Sélectionnez le tutoriel 1 dans la liste ci-dessous pour commencer."
