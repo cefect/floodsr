@@ -6,6 +6,11 @@ on:
     branches:
       - master
 
+  # Re-run branch CI after merges to master.
+  push:
+    branches:
+      - master
+
   # Allow manual reruns from the Actions UI.
   workflow_dispatch:
 
@@ -82,10 +87,39 @@ jobs:
 
       # Reuse the same artifacts across downstream smoke jobs.
       - name: Upload dist artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: python-dist
           path: dist/*
+
+  minimum-core-tests:
+    name: minimum core tests (ubuntu-latest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # Fetch repository contents for constrained minimum-version validation.
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      # Install a consistent Python runtime for the minimum core stack.
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      # Install the explicitly supported minimum core stack and run a small CLI-focused test slice.
+      - name: Install minimum core dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -c constraints/core-min-py312.txt -e ".[dev]"
+
+      # Prove the pinned minimum core stack supports the basic CLI surface.
+      - name: Run minimum core tests
+        run: |
+          pytest tests/test_cli_models.py -k "models_list or doctor"
 
   core-install-smoke:
     name: core wheel smoke (${{ matrix.os }})
@@ -107,7 +141,7 @@ jobs:
 
       # Fetch the previously built artifacts instead of rebuilding from source.
       - name: Download dist artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: python-dist
           path: dist
