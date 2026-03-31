@@ -1,7 +1,7 @@
 """Notebook execution tests for `docs/user/notebooks`.
 
 Run these from the `dev` conda environment with:
-`conda run -n dev pytest -q -m "notebook" tests/test_notebooks.py`
+`conda run -n dev pytest -q -m "notebook" tests/test_tutorials.py`
 """
 
 import json, os, pathlib, shutil, subprocess
@@ -42,7 +42,7 @@ def test_tutorial_notebook_executes(notebook_fp, tmp_path):
     env = os.environ.copy()
     env["PATH"] = f"{tmp_path}{os.pathsep}{env['PATH']}"
     env["PYTHONPATH"] = f"{pathlib.Path.cwd()}{os.pathsep}{env.get('PYTHONPATH', '')}".rstrip(os.pathsep)
-    notebook_tmp_dir = pathlib.Path.cwd() / "_cache" / "notebook_tmp" / notebook_fp.stem
+    notebook_tmp_dir = tmp_path / "tmp"
     notebook_tmp_dir.mkdir(parents=True, exist_ok=True)
     env["TMPDIR"] = str(notebook_tmp_dir)
     env["TEMP"] = str(notebook_tmp_dir)

@@ -79,7 +79,7 @@ python docs/user/scripts/build_cli_reference.py
 ## update tutorial notebooks
 NOTE: needs to be done from main .devcontainer (not docs)
 
-Each tutorial runner stages execution under `/workspace/_cache/notebook_tmp/<tutorial_name>/run`, keeps downloaded and derived side files in that cache area, and then copies the completed `.ipynb` back into `docs/user/notebooks`.
+Each tutorial runner stages execution in a temp-backed sandbox, keeps notebook side files there, and then copies the completed `.ipynb` back into `docs/user/notebooks`. Tutorial 3 is the exception for heavy reuse: it still points HRDEM/model caching at the project cache while keeping the notebook run directory in temp.
 
 using pruned/curated plot-only outputs now
 
@@ -87,13 +87,13 @@ using pruned/curated plot-only outputs now
 # run from the repository root in the notebook-capable dev environment
 cd /workspace
 
-# quick-start tutorial; runs from cache and copies the executed notebook back
+# quick-start tutorial; runs from temp and copies the executed notebook back
 conda run -n dev bash docs/user/notebooks/tutorial_1.sh
 
-# plotting and CLI-options tutorial; runs from cache and copies the executed notebook back
+# plotting and CLI-options tutorial; runs from temp and copies the executed notebook back
 conda run -n dev bash docs/user/notebooks/tutorial_2.sh
 
-# large-raster tutorial; also runs from cache and copies the executed notebook back
+# large-raster tutorial; runs from temp, but keeps heavy HRDEM/model cache reuse
 conda run -n dev bash docs/user/notebooks/tutorial_3.sh
 
  

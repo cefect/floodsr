@@ -1,19 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Run tutorial 3 from cache and copy the executed notebook back into the docs tree.
+# Run tutorial 3 from a temp sandbox and copy the executed notebook back into the docs tree.
 #
 # Usage:
 # - `conda run -n dev bash docs/user/notebooks/tutorial_3.sh`
 #
-# This tutorial can reuse a shared cache for larger intermediate products while
-# still staging notebook execution in a disposable per-run directory. Like the
+# This tutorial can reuse a shared project cache for larger intermediate
+# products while still staging notebook execution in a disposable per-run
+# temp directory. Like the
 # other runners, it injects a local `floodsr` shim so the documented CLI cells
 # run directly against the repo source tree without install steps.
 #
 # Environment overrides:
-# - `FLOODSR_SHARED_CACHE_DIR` controls the shared long-lived cache location.
-# - `FLOODSR_NOTEBOOK_CACHE_DIR` controls the disposable staging/cache root.
+# - `FLOODSR_SHARED_CACHE_DIR` controls the shared project cache location.
+# - `FLOODSR_NOTEBOOK_STAGE_DIR` controls the disposable staging root.
+# - `FLOODSR_NOTEBOOK_CACHE_DIR` remains as a backward-compatible alias.
 # - `FLOODSR_NOTEBOOK_TIMEOUT` sets the nbconvert execution timeout in seconds.
 #
 # Outputs:
@@ -25,18 +27,24 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/../../.." && pwd)"
 notebook_fp="${script_dir}/tutorial_3.ipynb"
 shared_cache_dir="${FLOODSR_SHARED_CACHE_DIR:-/home/cefect/LS/09_REPOS/04_TOOLS/floodsr/_cache}"
-stage_dir="${FLOODSR_NOTEBOOK_CACHE_DIR:-${repo_root}/_cache/notebook_tmp/tutorial_3}"
+stage_dir="${FLOODSR_NOTEBOOK_STAGE_DIR:-${FLOODSR_NOTEBOOK_CACHE_DIR:-}}"
+cleanup_stage=0
+if [ -z "${stage_dir}" ]; then
+    stage_dir="$(mktemp -d -t floodsr-tutorial_3-XXXXXX)"
+    cleanup_stage=1
+fi
 run_dir="${stage_dir}/run"
 tmp_dir="${stage_dir}/tmp"
 timeout_s="${FLOODSR_NOTEBOOK_TIMEOUT:-3600}"
 
-# Reuse the same local package and cache paths as the notebook pytest workflow
-# while allowing tutorial 3 to keep a separate shared cache for heavier assets.
-rm -rf "${run_dir}" "${tmp_dir}"
+# Keep notebook side files inside the temp-backed stage directory, but let the
+# notebook point heavy HRDEM/model reuse at the shared project cache.
+trap 'if [ "${cleanup_stage}" -eq 1 ]; then rm -rf "${stage_dir}"; else rm -rf "${run_dir}" "${tmp_dir}"; fi' EXIT
 mkdir -p "${shared_cache_dir}" "${stage_dir}" "${run_dir}" "${tmp_dir}"
 export PYTHONPATH="${repo_root}${PYTHONPATH:+:${PYTHONPATH}}"
 export PATH="${run_dir}:${PATH}"
 export FLOODSR_SHARED_CACHE_DIR="${shared_cache_dir}"
+export FLOODSR_NOTEBOOK_STAGE_DIR="${stage_dir}"
 export FLOODSR_NOTEBOOK_CACHE_DIR="${stage_dir}"
 export TMPDIR="${tmp_dir}"
 export TEMP="${tmp_dir}"
@@ -75,5 +83,4 @@ time python -m jupyter nbconvert \
     "$(basename "${notebook_fp}")"
 
 cp "${run_dir}/$(basename "${notebook_fp}")" "${notebook_fp}"
-rm -rf "${run_dir}" "${tmp_dir}"
 echo "[tutorial_3] refreshed source notebook without leaving side files in ${script_dir}"
