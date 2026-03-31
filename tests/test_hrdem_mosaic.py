@@ -397,6 +397,9 @@ def test_write_dem_from_asset_hrefs_synthetic_cases(
     )
 
     arr, nodata = _read_output_dem_with_basic_assertions(dem_fp)
+    tile_dir = Path(dem_fp).parent / f"{Path(dem_fp).stem}_fetch_tiles"
+    tile_fp_l = list(tile_dir.glob("*.tif"))
+    assert len(tile_fp_l) > 0
     if bool(domain_d["expect_any_nodata"]):
         assert np.any(np.isclose(arr, np.float32(nodata)))
     else:
@@ -586,7 +589,7 @@ def test_fetch_hrdem_data_case(
     assert result.source_id == "hrdem"
     assert Path(result.dem_fp).exists() is True
     _read_output_dem_with_basic_assertions(result.dem_fp)
-    tile_dir = Path(result.dem_fp).parent / f"{Path(result.dem_fp).stem}__fetch_tiles"
+    tile_dir = Path(result.dem_fp).parent / f"{Path(result.dem_fp).stem}_fetch_tiles"
     tile_fp_l = list(tile_dir.glob("*.tif"))
     assert len(tile_fp_l) > 0
     assert len(tile_fp_l) <= int(fetch_test_d.get("expected_max_tiles", 4))
