@@ -1,13 +1,13 @@
 """Notebook execution tests for `docs/user/notebooks`.
 
 Run these from the `dev` conda environment with:
-`conda run -n dev pytest -q -m "notebook" tests/test_notebooks.py`
+
+conda run -n dev pytest -q -m "notebook" tests/test_tutorials.py
 """
 
 import json, os, pathlib, shutil, subprocess
 
 import pytest
-
 
 @pytest.mark.parametrize(
     "notebook_fp",
@@ -19,7 +19,7 @@ import pytest
 )
 @pytest.mark.network
 @pytest.mark.notebook
-def test_tutorial_notebook_executes(notebook_fp, tmp_path):
+def test_tutorial_notebook_executes(notebook_fp, tmp_path, capsys):
     """Execute each tutorial notebook from a temporary copy and confirm it produced outputs."""
     nbformat = pytest.importorskip("nbformat", reason="notebook tests require the dev conda environment")
     assert notebook_fp.exists(), f"missing tutorial notebook:\n    {notebook_fp}"
@@ -42,28 +42,61 @@ def test_tutorial_notebook_executes(notebook_fp, tmp_path):
     env = os.environ.copy()
     env["PATH"] = f"{tmp_path}{os.pathsep}{env['PATH']}"
     env["PYTHONPATH"] = f"{pathlib.Path.cwd()}{os.pathsep}{env.get('PYTHONPATH', '')}".rstrip(os.pathsep)
-    notebook_tmp_dir = pathlib.Path.cwd() / "_cache" / "notebook_tmp" / notebook_fp.stem
+    notebook_tmp_dir = tmp_path / "tmp"
     notebook_tmp_dir.mkdir(parents=True, exist_ok=True)
     env["TMPDIR"] = str(notebook_tmp_dir)
     env["TEMP"] = str(notebook_tmp_dir)
     env["TMP"] = str(notebook_tmp_dir)
 
+    cmd = [
+        "jupyter",
+        "nbconvert",
+        "--to",
+        "notebook",
+        "--execute",
+        "--inplace",
+        "--ExecutePreprocessor.timeout=600",
+        str(run_fp),
+    ]
+    with capsys.disabled():
+        print(
+            f"notebook test inputs:\n"
+            f"    source={notebook_fp}\n"
+            f"    run_fp={run_fp}\n"
+            f"    tmp_path={tmp_path}\n"
+            f"    tmpdir={notebook_tmp_dir}\n"
+            f"    cmd={' '.join(cmd)}",
+            flush=True,
+        )
+
     # Execute the temporary copy in place so relative notebook outputs stay isolated in tmp_path.
-    subprocess.run(
-        [
-            "jupyter",
-            "nbconvert",
-            "--to",
-            "notebook",
-            "--execute",
-            "--inplace",
-            "--ExecutePreprocessor.timeout=600",
-            str(run_fp),
-        ],
+    proc = subprocess.Popen(
+        cmd,
         cwd=tmp_path,
         env=env,
-        check=True,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
     )
+    stdout_l = []
+    assert proc.stdout is not None
+    for line in proc.stdout:
+        stdout_l.append(line)
+        with capsys.disabled():
+            print(line, end="", flush=True)
+    proc.wait()
+    stdout = "".join(stdout_l)
+    if proc.returncode != 0:
+        pytest.fail(
+            f"notebook execution failed with code={proc.returncode}\n"
+            f"    source={notebook_fp}\n"
+            f"    run_fp={run_fp}\n"
+            f"    tmp_path={tmp_path}\n"
+            f"    tmpdir={notebook_tmp_dir}\n"
+            f"    cmd={' '.join(cmd)}\n"
+            f"stdout:\n{stdout}"
+        )
 
     # Re-read the executed copy and confirm the notebook structure and outputs are non-empty.
     executed_nb = nbformat.read(run_fp, as_version=4)

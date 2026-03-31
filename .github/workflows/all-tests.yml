@@ -9,9 +9,9 @@ permissions:
   contents: read
 
 concurrency:
-  # Keep one manual full-suite run per ref active at a time.
-  group: all-tests-${{ github.ref }}
-  cancel-in-progress: true
+  # Keep one heavy self-hosted container workflow active at a time.
+  group: selfhosted-container-heavy
+  cancel-in-progress: false
 
 jobs:
   all-tests:
@@ -23,7 +23,13 @@ jobs:
       - X64
     container:
       image: condaforge/miniforge3:25.3.1-0
-    timeout-minutes: 90
+      options: >-
+        --cpus=4
+        --memory=12g
+        --memory-swap=12g
+        --pids-limit=2048
+        --shm-size=2g
+
 
     steps:
       # Install git and Git LFS inside the fresh container before checkout.
@@ -33,6 +39,12 @@ jobs:
           apt-get update
           apt-get install -y git git-lfs
           git lfs install --system
+
+      # Reset the persistent self-hosted workspace so checkout does not reuse a stale promisor/LFS state.
+      - name: Reset runner workspace
+        shell: bash
+        run: |
+          find "${GITHUB_WORKSPACE}" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
 
       # Fetch repository contents for test execution.
       - name: Checkout
@@ -140,12 +152,19 @@ jobs:
   notebook-tests:
     name: notebook tests (self-hosted container)
     # Target the current self-hosted Linux runner fleet.
+    needs: all-tests
     runs-on:
       - self-hosted
       - Linux
       - X64
     container:
       image: condaforge/miniforge3:25.3.1-0
+      options: >-
+        --cpus=4
+        --memory=12g
+        --memory-swap=12g
+        --pids-limit=2048
+        --shm-size=2g
     timeout-minutes: 90
 
     steps:
@@ -156,6 +175,12 @@ jobs:
           apt-get update
           apt-get install -y git git-lfs
           git lfs install --system
+
+      # Reset the persistent self-hosted workspace so checkout does not reuse a stale promisor/LFS state.
+      - name: Reset runner workspace
+        shell: bash
+        run: |
+          find "${GITHUB_WORKSPACE}" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
 
       # Fetch repository contents for test execution.
       - name: Checkout

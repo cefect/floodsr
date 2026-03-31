@@ -3,7 +3,7 @@
 import argparse, json, logging, sys
 from pathlib import Path
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("floodsr.cli")
 
 
 def _resolve_log_level(args: argparse.Namespace) -> int:
@@ -242,9 +242,9 @@ def main_cli(args: argparse.Namespace) -> int:
 
     # Route model fetch command.
     if args.command == "models" and args.models_command == "fetch":
-        from floodsr.model_registry import fetch_model
+        from floodsr.model_registry import fetch_model_result
 
-        model_fp = fetch_model(
+        fetch_result = fetch_model_result(
             args.version,
             cache_dir=args.cache_dir,
             manifest_fp=args.manifest,
@@ -252,7 +252,11 @@ def main_cli(args: argparse.Namespace) -> int:
             force=args.force,
             show_progress=args.show_progress,
         )
-        print(model_fp)
+        print(
+            f"version={fetch_result.version} "
+            f"stored={fetch_result.model_fp} "
+            f"retrieved_from={fetch_result.retrieved_from}"
+        )
         return 0
 
     # Route main ToHR command.

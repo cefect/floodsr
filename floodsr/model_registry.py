@@ -106,6 +106,15 @@ class ModelRecord:
     description: str = ""
 
 
+@dataclass(frozen=True)
+class ModelFetchResult:
+    """Resolved result for one model fetch request."""
+
+    version: str
+    model_fp: Path
+    retrieved_from: str
+
+
 class WeightsRetrievalBackend:
     """Abstract retrieval backend for fetching model bytes."""
 
@@ -322,6 +331,25 @@ def fetch_model(
     show_progress: bool = True,
 ) -> Path:
     """Fetch one model to cache and verify its checksum."""
+    return fetch_model_result(
+        model_version,
+        cache_dir=cache_dir,
+        manifest_fp=manifest_fp,
+        backend_name=backend_name,
+        force=force,
+        show_progress=show_progress,
+    ).model_fp
+
+
+def fetch_model_result(
+    model_version: str,
+    cache_dir: str | Path | None = None,
+    manifest_fp: str | Path | None = None,
+    backend_name: str | None = None,
+    force: bool = False,
+    show_progress: bool = True,
+) -> ModelFetchResult:
+    """Fetch one model to cache and report whether it came from cache or retrieval."""
     assert isinstance(show_progress, bool), f"show_progress must be bool, got {type(show_progress)!r}"
     model = resolve_model(model_version, manifest_fp=manifest_fp)
     model_fp = get_model_cache_path(model.version, model.file_name, cache_dir=cache_dir)
@@ -329,7 +357,7 @@ def fetch_model(
 
     # Reuse an existing cached model only when checksum validation passes.
     if model_fp.exists() and not force and verify_sha256(model_fp, model.sha256):
-        return model_fp
+        return ModelFetchResult(version=model.version, model_fp=model_fp, retrieved_from="cache")
 
     # Download to a temporary file first and atomically replace on success.
     if part_fp.exists():
@@ -342,7 +370,7 @@ def fetch_model(
     finally:
         if part_fp.exists():
             part_fp.unlink()
-    return model_fp
+    return ModelFetchResult(version=model.version, model_fp=model_fp, retrieved_from=f"fetch:{backend.name}")
 
 
 def _model_version_to_worker_stem(model_version: str) -> str:
