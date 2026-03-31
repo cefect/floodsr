@@ -25,7 +25,7 @@ Basic Install
 As ``floodsr`` is a simple `pypi distributed python package <https://pypi.org/project/floodsr/>`_, it can be installed in a variety of contexts.
 Here we provide instructions for the three most common:
 
-- :ref:`basic_install_cli`: best for operations and those comfortable with CLI. 
+- :ref:`basic_install_cli`: best for operations and those comfortable with a command-line interface (CLI). 
 - :ref:`basic_install_local_notebook`:  interactive use and visualization. 
 - :ref:`basic_install_google_colab`: simplest setup, but subject to cloud limits.
  
@@ -37,6 +37,7 @@ Here we provide instructions for the three most common:
 Command line (CLI)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+A command-line interface (CLI) means running commands in a terminal instead of clicking through a graphical app.
 ``floodsr`` was designed as a CLI-first Python package, so we recommend installing with `pipx <https://pipx.pypa.io/stable/>`__ for simple environment isolation.
 For this, you need a working `Python 3.12+ <https://realpython.com/installing-python/>`_ and pip (which usually comes already shipped with Python).
 After this, installing `pipx <https://pipx.pypa.io/stable/>`__ is easy:
