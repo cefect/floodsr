@@ -40,6 +40,12 @@ jobs:
           apt-get install -y git git-lfs
           git lfs install --system
 
+      # Reset the persistent self-hosted workspace so checkout does not reuse a stale promisor/LFS state.
+      - name: Reset runner workspace
+        shell: bash
+        run: |
+          find "${GITHUB_WORKSPACE}" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+
       # Fetch repository contents for test execution.
       - name: Checkout
         uses: actions/checkout@v5
@@ -169,6 +175,12 @@ jobs:
           apt-get update
           apt-get install -y git git-lfs
           git lfs install --system
+
+      # Reset the persistent self-hosted workspace so checkout does not reuse a stale promisor/LFS state.
+      - name: Reset runner workspace
+        shell: bash
+        run: |
+          find "${GITHUB_WORKSPACE}" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
 
       # Fetch repository contents for test execution.
       - name: Checkout
