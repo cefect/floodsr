@@ -9,9 +9,9 @@ permissions:
   contents: read
 
 concurrency:
-  # Keep one manual full-suite run per ref active at a time.
-  group: all-tests-${{ github.ref }}
-  cancel-in-progress: true
+  # Keep one heavy self-hosted container workflow active at a time.
+  group: selfhosted-container-heavy
+  cancel-in-progress: false
 
 jobs:
   all-tests:
@@ -140,6 +140,7 @@ jobs:
   notebook-tests:
     name: notebook tests (self-hosted container)
     # Target the current self-hosted Linux runner fleet.
+    needs: all-tests
     runs-on:
       - self-hosted
       - Linux

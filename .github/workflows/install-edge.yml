@@ -9,9 +9,9 @@ permissions:
   contents: read
 
 concurrency:
-  # Keep one manual edge run per ref active at a time.
-  group: install-edge-${{ github.ref }}
-  cancel-in-progress: true
+  # Keep one heavy self-hosted container workflow active at a time.
+  group: selfhosted-container-heavy
+  cancel-in-progress: false
 
 jobs:
   build-artifacts:
@@ -73,6 +73,7 @@ jobs:
     needs: build-artifacts
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         include:
           - case_id: basic_cli
