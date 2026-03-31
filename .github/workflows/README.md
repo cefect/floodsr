@@ -11,9 +11,16 @@ This directory contains the active GitHub Actions workflows for this repository.
 Push the branch first, then run a workflow from the GitHub UI or CLI.
 
 ```bash
+# launch teh local runner (needed for AllTests and Instal Edge?) [wsl only?]
+/home/cefect/LS/09_REPOS/04_TOOLS/gh_runner/actions-runner/run.sh
+
+# push changes (MUST BE PUSHED!)
+git push
+
+# select the workflow to run:
 gh workflow run --ref "$(git branch --show-current)"
 
-# dispatch all manually runnable workflows except release
+# OR... dispatch all manually runnable workflows except release
 for workflow in ci.yml install-edge.yml all-tests.yml; do
     gh workflow run "$workflow" --ref "$(git branch --show-current)"
 done
