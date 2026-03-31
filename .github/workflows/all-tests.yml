@@ -23,7 +23,13 @@ jobs:
       - X64
     container:
       image: condaforge/miniforge3:25.3.1-0
-    timeout-minutes: 90
+      options: >-
+        --cpus=4
+        --memory=12g
+        --memory-swap=12g
+        --pids-limit=2048
+        --shm-size=2g
+
 
     steps:
       # Install git and Git LFS inside the fresh container before checkout.
@@ -147,6 +153,12 @@ jobs:
       - X64
     container:
       image: condaforge/miniforge3:25.3.1-0
+      options: >-
+        --cpus=4
+        --memory=12g
+        --memory-swap=12g
+        --pids-limit=2048
+        --shm-size=2g
     timeout-minutes: 90
 
     steps:
