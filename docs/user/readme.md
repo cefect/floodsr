@@ -47,24 +47,6 @@ python -m sphinx -E -b html -D language=fr . "_build/fr_html"
 
 # MAINTAIN
 
-## TRANSLATION REFRESH
-
-Follow [ADR-0018: Docs and Tutorials Strategy](../dev/adr/0018-docs-and-tutorials.md) for the translation policy and review expectations.
-
-```bash
-# 1) go to the docs source directory
-cd /workspace/docs/user
-
-# 2) manually review/edit the existing fr catalogs
-
-
-# 3) compile the edited .po catalogs to .mo files
-bash scripts/compile_fr_catalogs.sh
-
- 
-```
-
-
 
 ## updating `docs/user/cli_reference.rst`
 
@@ -78,3 +60,24 @@ python docs/user/scripts/build_cli_reference.py
 
 ## update tutorial notebooks
 see [docs/user/notebooks/readme.md](../user/notebooks/readme.md)
+
+## TRANSLATION REFRESH
+
+Follow [ADR-0018: Docs and Tutorials Strategy](../dev/adr/0018-docs-and-tutorials.md) for the translation policy and review expectations.
+
+```bash
+# 1) go to the docs source directory
+cd /workspace/docs/user
+
+# 2) manually review/edit the existing fr catalogs. see AGENTS.md
+
+
+# 3) compile the edited .po catalogs to .mo files
+bash scripts/compile_fr_catalogs.sh
+
+ 
+```
+
+
+
+
