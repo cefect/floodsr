@@ -143,6 +143,8 @@ python -m jupyter lab \
 
 
 # open in windows browser
+
+# to run a tutorial notebook, probably open the docs website, right click "save as", then back on jupyter, "upload file"
 ```
 
 ## colab

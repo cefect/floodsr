@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: floodsr\n"
 "POT-Creation-Date: 2026-03-20 00:00+0000\n"
-"PO-Revision-Date: 2026-03-20 00:00+0000\n"
+"PO-Revision-Date: 2026-03-31 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
 "MIME-Version: 1.0\n"
@@ -43,8 +43,11 @@ msgstr "Voici une introduction rapide pour configurer un modèle et l'utiliser a
 msgid "Install"
 msgstr "Installation"
 
-msgid "``floodsr`` was designed as a CLI-first Python package, so we recommend installing with `pipx <https://pipx.pypa.io/stable/>`_ to ensure environment isolation:"
-msgstr "``floodsr`` a été conçu comme un paquet Python orienté CLI, donc nous recommandons une installation avec `pipx <https://pipx.pypa.io/stable/>`_ pour garantir l'isolation de l'environnement :"
+msgid "``floodsr`` was designed as a command-line interface (CLI)-first Python package, so we recommend installing with `pipx <https://pipx.pypa.io/stable/>`_ to ensure environment isolation:"
+msgstr "``floodsr`` a été conçu comme un paquet Python pensé d'abord pour l'interface de ligne de commande (CLI), donc nous recommandons une installation avec `pipx <https://pipx.pypa.io/stable/>`_ pour garantir l'isolation de l'environnement :"
+
+msgid "After install, a quick sanity check is:"
+msgstr "Après l'installation, vous pouvez faire cette vérification rapide :"
 
 msgid "For more detailed installation instructions, see :doc:`installation`."
 msgstr "Pour des instructions d'installation plus détaillées, consultez :doc:`installation`."

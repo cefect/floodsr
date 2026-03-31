@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: floodsr\n"
 "POT-Creation-Date: 2026-03-19 00:00+0000\n"
-"PO-Revision-Date: 2026-03-19 00:00+0000\n"
+"PO-Revision-Date: 2026-03-31 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
 "MIME-Version: 1.0\n"
@@ -46,8 +46,8 @@ msgstr "Comme ``floodsr`` est un simple `paquet Python distribué sur PyPI <http
 msgid "Here we provide instructions for the three most common:"
 msgstr "Nous donnons ici des instructions pour les trois contextes les plus courants :"
 
-msgid ":ref:`basic_install_cli`: best for operations and those comfortable with CLI."
-msgstr ":ref:`basic_install_cli` : recommandé pour l'exploitation et pour les utilisateurs à l'aise avec l'interface de ligne de commande (CLI)."
+msgid ":ref:`basic_install_cli`: best for operations and those comfortable with a command-line interface (CLI)."
+msgstr ":ref:`basic_install_cli` : recommandé pour l'exploitation et pour les utilisateurs à l'aise avec une interface de ligne de commande (CLI)."
 
 msgid ":ref:`basic_install_local_notebook`:  interactive use and visualization."
 msgstr ":ref:`basic_install_local_notebook` : pour un usage interactif et la visualisation."
@@ -57,6 +57,9 @@ msgstr ":ref:`basic_install_google_colab` : configuration la plus simple, mais a
 
 msgid "Command line (CLI)"
 msgstr "Ligne de commande (CLI)"
+
+msgid "A command-line interface (CLI) means running commands in a terminal instead of clicking through a graphical app."
+msgstr "Une interface de ligne de commande (CLI) consiste à exécuter des commandes dans un terminal plutôt qu'à cliquer dans une application graphique."
 
 msgid "``floodsr`` was designed as a CLI-first Python package, so we recommend installing with `pipx <https://pipx.pypa.io/stable/>`__ for simple environment isolation."
 msgstr "``floodsr`` a été conçu comme un paquet Python orienté CLI (ligne de commande) ; nous recommandons donc une installation avec `pipx <https://pipx.pypa.io/stable/>`__ pour obtenir une isolation simple de l'environnement."

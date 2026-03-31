@@ -8,6 +8,7 @@ import pytest
 from conftest import default_model_version, models_manifest_fp
 from floodsr.model_registry import (
     fetch_model,
+    fetch_model_result,
     get_retrieval_backend,
     list_models,
     list_runnable_model_versions,
@@ -42,6 +43,26 @@ def test_fetch_model_returns_cached_path(tmp_path: Path, models_manifest_fp: Pat
     )
     assert isinstance(model_fp, Path)
     assert model_fp.exists()
+
+
+@pytest.mark.fast
+def test_fetch_model_result_reports_cache_hit(tmp_path: Path, models_manifest_fp: Path):
+    """Ensure fetch metadata reports cache reuse on a second identical request."""
+    first = fetch_model_result(
+        "v-cli",
+        cache_dir=tmp_path / "cache",
+        manifest_fp=models_manifest_fp,
+        show_progress=False,
+    )
+    second = fetch_model_result(
+        "v-cli",
+        cache_dir=tmp_path / "cache",
+        manifest_fp=models_manifest_fp,
+        show_progress=False,
+    )
+    assert first.model_fp.exists()
+    assert first.retrieved_from == "fetch:file"
+    assert second.retrieved_from == "cache"
 
 
 @pytest.mark.fast

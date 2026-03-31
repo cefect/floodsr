@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: floodsr\n"
 "POT-Creation-Date: 2026-03-20 00:00+0000\n"
-"PO-Revision-Date: 2026-03-20 00:00+0000\n"
+"PO-Revision-Date: 2026-03-31 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
 "MIME-Version: 1.0\n"
@@ -51,6 +51,12 @@ msgstr "Options"
 
 msgid "show this help message and exit"
 msgstr "affiche ce message d'aide et quitte"
+
+msgid "--version"
+msgstr "--version"
+
+msgid "Print the installed FloodSR package version and exit."
+msgstr "Affiche la version installée du paquet FloodSR puis quitte."
 
 msgid "Increase logging verbosity (repeatable)."
 msgstr "Augmente le niveau de détail de journalisation (répétable)."
