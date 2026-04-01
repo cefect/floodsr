@@ -3,8 +3,8 @@
 import hashlib, json, os
 from pathlib import Path
 
-import numpy as np
 import pytest
+np = pytest.importorskip("numpy")
 
 import floodsr.models.CostGrow_Terrain as costgrow_module
 import floodsr.tohr

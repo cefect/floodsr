@@ -8,8 +8,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-import numpy as np
 import pytest
+np = pytest.importorskip("numpy")
+rasterio = pytest.importorskip("rasterio")
 
 import floodsr.dem_sources.catalog
 import floodsr.models.ResUNet_16x_DEM as resunet_module
@@ -17,7 +18,6 @@ import floodsr.tohr
 import misc.eval
 from conftest import default_model_version, logger, synthetic_tohr_tiles, synthetic_tohr_windowed_tiles, tile_case_d, tohr_model_fp
 from floodsr.model_registry import model_version_requires_artifact
-import rasterio
 
 pytestmark = pytest.mark.network
 
