@@ -106,6 +106,59 @@ def test_main_tohr_runs_in_hrdem_flagged_case(
     assert pred.size > 0
 
 
+@pytest.mark.parametrize("case_id", [pytest.param("fathom_clip", id="tutorial_3_like_fetch_force_tiling_case", marks=pytest.mark.local)])
+@pytest.mark.e2e
+@pytest.mark.network
+def test_main_tohr_runs_tutorial_3_like_fetch_force_tiling_case(
+    tohr_model_fp: Path,
+    tmp_path: Path,
+    tile_case_d: dict,
+):
+    """Ensure the Tutorial 3-style CLI command shape runs on the small fetched-HRDEM fixture."""
+    pytest.importorskip("onnxruntime")
+    rasterio = pytest.importorskip("rasterio")
+    case_spec = tile_case_d["case_spec"]
+    tile_dir = tile_case_d["tile_dir"]
+    output_fp = tmp_path / f"{tile_case_d['case_name']}_tutorial_3_like_pred.tif"
+    fetched_dem_fp = tmp_path / f"{tile_case_d['case_name']}_tutorial_3_like_fetch_dem.vrt"
+    cache_dir = tmp_path / "tutorial_3_like_cache"
+
+    assert case_spec["flags"]["in_hrdem"]
+    assert case_spec["inputs"]["dem_fp"] is False
+    exit_code = main(
+        [
+            "tohr",
+            "--in",
+            str(tile_dir / case_spec["inputs"]["lowres_fp"]),
+            "--fetch-hrdem",
+            "--fetch-out",
+            str(fetched_dem_fp),
+            "--fetch-force-tiling",
+            "--cache-dir",
+            str(cache_dir),
+            "--crs-policy",
+            "use-dem",
+            "--model-path",
+            str(tohr_model_fp),
+            "--window-method",
+            "hard",
+            "--tile-overlap",
+            "0",
+            "--out",
+            str(output_fp),
+            "--min-depth-threshold",
+            "0.1",
+        ]
+    )
+    with rasterio.open(output_fp) as ds:
+        pred = ds.read(1)
+
+    assert exit_code == 0
+    assert fetched_dem_fp.exists()
+    assert pred.dtype == np.float32
+    assert pred.size > 0
+
+
 @pytest.mark.parametrize(
     "case_id",
     [
