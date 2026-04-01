@@ -35,6 +35,7 @@ DEFAULT_ASSET = "dtm"
 ### entry point parameter placement
 - store HRDEM STAC defaults in `floodsr/dem_sources/hrdem_mosaic.py` as module-scoped constants.
 - keep these transparent by logging resolved source config at fetch start 
+- DEM fetch owns its own large-raster tiling implementation, but it should build that implementation from shared helpers in `floodsr/tiling.py` per `ADR-0008`.
  
 ### strategy/constraints for HRDEM Mosaic
 - minimize server-side processing:
@@ -53,10 +54,10 @@ DEFAULT_ASSET = "dtm"
 ### proposed implementation
 - retrieve bbox (4326) and footprint polygon (3979) from lores tile exents. 
 - query STAC with bbox (4326) to identify assets. if no intersection found, throw an error.
-- estimate memory of fetch and split workflow into `tiled` and `rapid` paths based on a threshold:
-- `rapid`:
+- estimate memory of fetch and split workflow into shared execution styles based on a threshold:
+- `simple`:
     - fetch from hrdem mosaic in one go (no tiling) and merge in-memory. (current implementation)
-- `tiled`:
+- `windowed`:
   - download HRDEM Project Extent features intersecting fetch footprint polygon (3979). throw error if no features returned.
   - build a tiling scheme in fetch-native/source CRS using source-space pixel windows (not lores pixel windows). if source resolution metadata is unavailable, assume 1m.
   - fetch tiles should align to source pixels/resolution. they do not need to align to lores pixel edges.
@@ -90,6 +91,11 @@ BIGTIFF=IF_SAFER
 - keep HRDEM fetch at native source resolution in this phase (no fetch-resolution parameter).
 - build and use a VRT to stitch fetched chunks/tiles into one virtual mosaic.
 - add early diagnostics/guards for oversized fetches so failures are explicit (not silent OOM kills).
+- DEM fetch must implement the shared mosaicking vocabulary from `ADR-0008`:
+  - `hard` (no `feather` for DEM fetching)
+- For HRDEM, the current baseline is:
+  - `simple + hard`
+  - `windowed + hard`
 
 ### decision update (explicit output path contract)
 - explicit user output paths are authoritative and must not be silently rewritten. this is a general CLI/API rule; see `0001-architecture-and-cli.md`.

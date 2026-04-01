@@ -13,6 +13,7 @@ The codebase must separate:
 - engine concerns (runtime session/provider/execution).
 
 Model concerns are defined in `ADR-0005`.
+Model-specific boundary details live in `docs/dev/adr/models/`.
 
 ## Decision
 

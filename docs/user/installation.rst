@@ -147,6 +147,7 @@ Extended Install
 ----------------
 For handling rasters too large for memory, floodsr uses GDAL backends.
 To enable these features, install `floodsr` into an environment with `GDAL <https://gdal.org/en/stable/>`_.
+If you also want to run the ``CostGrow_Terrain`` model, install `PCRaster <https://pcraster.geo.uu.nl/>`_ into that same environment.
 
 
 .. _extended_install_cli:
@@ -163,6 +164,12 @@ Once you have conda installed, use it to create a dedicated environment with GDA
    conda activate floodsr-gdal
    python -m pip install floodsr
 
+If you want the ``CostGrow_Terrain`` model, install PCRaster into that same environment:
+
+.. code-block:: bash
+
+   conda install -n floodsr-gdal -c conda-forge pcraster -y
+
 Then confirm the GDAL-backed environment is active:
 
 .. code-block:: bash
@@ -170,7 +177,8 @@ Then confirm the GDAL-backed environment is active:
    floodsr doctor
 
 
-You should see something like *gdal_config_installed=True*. 
+You should see something like *gdal_config_installed=True*.
+If PCRaster is installed, ``floodsr doctor`` should also report *pcraster_installed=True*.
 
 .. _extended_install_notebook:
 

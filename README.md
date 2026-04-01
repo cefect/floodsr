@@ -30,10 +30,10 @@ pipx install floodsr
 ```
  
 ### extended install
-for handling rasters too large for memory, floodsr requires GDAL backends.
+for handling rasters too large for memory, floodsr requires GDAL backends. the CostGrow terrain-penalty path also requires PCRaster.
 ```bash
 # advanced install for VRT workflows
-conda create -n floodsr-gdal -c conda-forge python=3.12 gdal -y
+conda create -n floodsr-gdal -c conda-forge python=3.12 gdal pcraster -y
 conda activate floodsr-gdal
 python -m pip install floodsr
 ```

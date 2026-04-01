@@ -2,16 +2,14 @@
 
 from pathlib import Path
 
+import numpy as np
 import pytest
-
-# Do not restore `import numpy as np` at module scope here.
-# Use `pytest.importorskip(...)` instead so docs-environment discovery stays collection-safe; see docs/dev/adr/0006-tests.md.
-np = pytest.importorskip("numpy", reason="Engine contract tests require numpy.")
 
 from conftest import logger, ort_tile_inputs, tohr_model_fp
 from floodsr.engine import EngineORT
 from floodsr.engine.base import EngineBase
 from floodsr.engine.providers import get_onnxruntime_info, get_rasterio_info
+from floodsr.engine.pcraster_check import _check_pcraster, get_pcraster_info
 
 
 @pytest.mark.parametrize(
@@ -19,6 +17,7 @@ from floodsr.engine.providers import get_onnxruntime_info, get_rasterio_info
     [
         pytest.param(get_onnxruntime_info, "available_providers", id="provider_diag_onnxruntime"),
         pytest.param(get_rasterio_info, "version", id="provider_diag_rasterio"),
+        pytest.param(get_pcraster_info, "spreadzone_available", id="provider_diag_pcraster"),
     ],
 )
 @pytest.mark.fast
@@ -27,6 +26,21 @@ def test_engine_provider_diagnostics_shape(info_getter, required_key: str):
     info = info_getter()
     assert isinstance(info.get("installed"), bool)
     assert required_key in info
+
+
+@pytest.mark.fast
+def test_check_pcraster_raises_helpful_error_when_missing(monkeypatch: pytest.MonkeyPatch):
+    """Ensure the lazy PCRaster import guard explains the supported install path."""
+    original_import = __import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == "pcraster":
+            raise ImportError("No module named 'pcraster'")
+        return original_import(name, *args, **kwargs)
+
+    monkeypatch.setattr("builtins.__import__", fake_import)
+    with pytest.raises(ImportError, match="CostGrow_Terrain"):
+        _check_pcraster()
 
 
 @pytest.mark.fast

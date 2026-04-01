@@ -16,6 +16,20 @@
         "rmse_m": 0.10600513437122326,
         "ssim": 0.6653909680555513
       }
+    },
+    "CostGrow_Terrain_default": {
+      "params": {
+        "model_version": "CostGrow_Terrain",
+        "min_depth_threshold": 0.01,
+        "window_method": "hard",
+        "tile_overlap": 0
+      },
+      "metrics": {
+        "precision": 3,
+        "mase_m": 0.28597870312132545,
+        "rmse_m": 0.5948179761456047,
+        "ssim": 0.08938722753932403
+      }
     }
   },
   "flags": {
