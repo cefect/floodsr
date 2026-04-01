@@ -180,7 +180,8 @@ Follow the same :ref:`extended_install_cli` instructions to set up your GDAL-bac
 
 .. code-block:: bash
 
-   python -m pip install jupyterlab ipykernel
+   conda activate floodsr-gdal # make sure you're in the GDAL-backed environment created above
+   python -m pip install jupyterlab ipykernel matplotlib 
    python -m ipykernel install --user --name floodsr-gdal --display-name "Python (floodsr-gdal)"
 
 Then launch Jupyter from that environment and select the "Python (floodsr-gdal)" kernel:
