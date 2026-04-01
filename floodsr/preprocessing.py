@@ -387,6 +387,8 @@ def _zero_nodata_in_place(fp: str | Path, nodata: float | None) -> None:
         for _, window in ds.block_windows(1):
             arr = ds.read(1, window=window).astype(np.float32, copy=False)
             ds.write(replace_nodata_with_zero(arr, nodata), 1, window=window)
+        # Match the array-level normalization by clearing stale nodata metadata.
+        ds.nodata = None
 
 
 def _resolve_alignment_context(
