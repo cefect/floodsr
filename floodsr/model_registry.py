@@ -104,6 +104,7 @@ class ModelRecord:
     url: str
     sha256: str
     description: str = ""
+    requires_model_artifact: bool = True
 
 
 @dataclass(frozen=True)
@@ -273,6 +274,9 @@ def list_models(manifest_fp: str | Path | None = None) -> list[ModelRecord]:
     """Return all models defined in the manifest."""
     records = []
     for version, payload in sorted(load_models_manifest(manifest_fp).items()):
+        requires_model_artifact = True
+        if model_worker_exists(version):
+            requires_model_artifact = model_version_requires_artifact(version)
         records.append(
             ModelRecord(
                 version=version,
@@ -280,6 +284,7 @@ def list_models(manifest_fp: str | Path | None = None) -> list[ModelRecord]:
                 url=payload["url"],
                 sha256=payload["sha256"],
                 description=payload.get("description", ""),
+                requires_model_artifact=requires_model_artifact,
             )
         )
     return records
@@ -301,6 +306,7 @@ def resolve_model(model_version: str, manifest_fp: str | Path | None = None) -> 
         url=payload["url"],
         sha256=payload["sha256"],
         description=payload.get("description", ""),
+        requires_model_artifact=model_version_requires_artifact(model_version) if model_worker_exists(model_version) else True,
     )
 
 
@@ -352,6 +358,8 @@ def fetch_model_result(
     """Fetch one model to cache and report whether it came from cache or retrieval."""
     assert isinstance(show_progress, bool), f"show_progress must be bool, got {type(show_progress)!r}"
     model = resolve_model(model_version, manifest_fp=manifest_fp)
+    if not model.requires_model_artifact:
+        raise ValueError(f"model '{model_version}' is built-in and does not support fetch")
     model_fp = get_model_cache_path(model.version, model.file_name, cache_dir=cache_dir)
     part_fp = model_fp.with_suffix(f"{model_fp.suffix}.part")
 
@@ -398,13 +406,23 @@ def model_worker_exists(model_version: str) -> bool:
     return get_model_worker_path(model_version).exists()
 
 
+def model_version_requires_artifact(model_version: str) -> bool:
+    """Return whether a worker requires a downloaded model artifact."""
+    worker_class = resolve_model_worker_class(model_version)
+    return bool(getattr(worker_class, "requires_model_artifact", True))
+
+
 def list_runnable_model_versions(manifest_fp: str | Path | None = None) -> list[str]:
     """Return manifest model versions that have matching worker modules."""
-    runnable_versions: list[str] = []
+    artifact_versions: list[str] = []
+    builtin_versions: list[str] = []
     for version in load_models_manifest(manifest_fp):
         if model_worker_exists(version):
-            runnable_versions.append(version)
-    return runnable_versions
+            if model_version_requires_artifact(version):
+                artifact_versions.append(version)
+            else:
+                builtin_versions.append(version)
+    return artifact_versions + builtin_versions
 
 
 def resolve_model_worker_class(model_version: str):
