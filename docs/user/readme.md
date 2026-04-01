@@ -19,11 +19,16 @@ cd /workspace/docs/user
 # 2) verify sphinx is available in the current environment
 python -m sphinx --version
 
-# 3) build html docs from this directory into BUILD_DIR/html
-python -m sphinx -b html . "_build/manual"
+# 3) force a clean html docs build from this directory, then print index.html
+python -m sphinx --fresh-env -b html . "_build/manual"
 
 # launch index.html in the default Windows browser (from WSL). if not on work-tree:
 "\\wsl.localhost\Ubuntu\home\cefect\LS\09_REPOS\04_TOOLS\floodsr\docs\user\_build\manual\index.html"
+```
+
+or.. run containerized from wsl
+```bash
+`/home/cefect/LS/09_REPOS/04_TOOLS/floodsr/docs/user/scripts/run_sphinx_docker.sh`
 ```
 
  ## french
@@ -77,7 +82,5 @@ bash scripts/compile_fr_catalogs.sh
 
  
 ```
-
-
 
 
