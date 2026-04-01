@@ -9,11 +9,17 @@ class Model:
     """Base class for model workers."""
 
     model_version = ""
+    requires_model_artifact = True
 
-    def __init__(self, model_fp: str | Path, *, model_version: str | None = None, logger=None):
+    def __init__(self, model_fp: str | Path | None, model_version: str | None = None, logger=None):
         """Initialize a model worker with artifact path and logger."""
-        self.model_fp = Path(model_fp).expanduser().resolve()
-        assert self.model_fp.exists(), f"model file does not exist: {self.model_fp}"
+        self.model_fp = None
+        if self.requires_model_artifact:
+            assert model_fp is not None, "model_fp is required for this model worker"
+            self.model_fp = Path(model_fp).expanduser().resolve()
+            assert self.model_fp.exists(), f"model file does not exist: {self.model_fp}"
+        elif model_fp is not None:
+            self.model_fp = Path(model_fp).expanduser().resolve()
         self.log = logger or logging.getLogger(__name__)
         if model_version is not None:
             assert model_version, "model_version cannot be empty"
@@ -25,8 +31,11 @@ class Model:
                 self.model_version = model_version
 
     @classmethod
-    def is_valid(cls, model_fp: str | Path) -> bool:
+    def is_valid(cls, model_fp: str | Path | None) -> bool:
         """Return whether this worker can run from the provided artifact path."""
+        if not cls.requires_model_artifact:
+            return True
+        assert model_fp is not None, "model_fp is required for this model worker"
         return Path(model_fp).expanduser().resolve().exists()
 
     def __enter__(self):
