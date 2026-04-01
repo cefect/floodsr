@@ -61,7 +61,7 @@ python docs/user/scripts/build_cli_reference.py
 ## update tutorial notebooks
 see [docs/user/notebooks/readme.md](../user/notebooks/readme.md)
 
-## TRANSLATION REFRESH
+## translation maintenance
 
 Follow [ADR-0018: Docs and Tutorials Strategy](../dev/adr/0018-docs-and-tutorials.md) for the translation policy and review expectations.
 
