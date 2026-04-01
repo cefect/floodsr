@@ -14,6 +14,7 @@ FloodSR needs a stable model layer that:
 - Keep model artifact retrieval/checksum policy in `model_registry.py`.
 - Add a project-wide base class `Model` and implement each model as a subclass in its own module.
 - Route `tohr` execution through model workers and make the pipeline function responsible for worker creation/teardown.
+- Keep model-specific contracts in `docs/dev/adr/models/` rather than embedding them in this shared ADR.
 
 ## Model Registry Contract
 
@@ -28,7 +29,8 @@ FloodSR needs a stable model layer that:
   - `<cache_dir>/<model_version>/<file_name>`
 - A model is runnable only when:
   - the version exists in `models.json`, and
-  - a matching model worker module exists in `floodsr/models/`.
+  - a matching model worker module exists in `floodsr/models/`, or
+  - the version is supported as a built-in worker per its model ADR under `docs/dev/adr/models/`.
 
 ## Model Worker Architecture
 
@@ -44,7 +46,9 @@ FloodSR needs a stable model layer that:
   - one module per model version
   - naming pattern: `floodsr/models/<normalized_model_version>.py`
   - normalize non-alphanumeric characters in `<model_version>` to `_`
-  - example: `floodsr/models/ResUNet_16x_DEM.py`
+  - examples:
+    - `floodsr/models/ResUNet_16x_DEM.py`
+    - `floodsr/models/CostGrow_Terrain.py`
 - Subclass behavior:
   - override `run(...)`
   - organize model-specific flow into submethods:
@@ -54,12 +58,12 @@ FloodSR needs a stable model layer that:
     - Core inference at model-engine boundary
     - Mosaicking/stitching
     - Model specific post-processing
-  - call shared tiling/windowing/mosaicking helpers from `tiling.py` (do not duplicate tiling implementations inside workers)
-  - tiling method is fixed by implementation (not a user-facing toggle); only tiling parameters are configurable
+  - own the model-phase tiling implementation, but call shared tiling/windowing/mosaicking helpers from `tiling.py` (do not duplicate shared tiling primitives inside workers)
+  - implement the shared mosaicking vocabulary from `ADR-0008` rather than model-specific method names
   - workers may support both:
     - a simple in-memory array path
     - a raster-backed windowed path for large scenes
-  - in this phase, the raster-backed windowed path only needs to support hard-window inference
+  - whole-scene algorithms must still provide a model-phase large-raster tiling strategy; upstream preprocessing alone is not sufficient as the only OOM guard
 
 ## ToHR Lifecycle Contract
 
@@ -69,69 +73,10 @@ FloodSR needs a stable model layer that:
   - `worker.run(...)`
 - `tohr` pipeline is responsible for teardown and returning final diagnostics/output metadata.
 
-## Model Types
+## Model-Specific ADRs
 
-### 16x DEM-conditioned ResUNet (`ResUNet_16x_DEM`)
-
-#### Artifact
-
-- Inference artifact format: ONNX (`model_infer.onnx`)
-- Current release reference: `v2026.02.19`
-- Related training metadata (when packaged): `train_config.json`
-- Model worker module:
-  - `floodsr/models/ResUNet_16x_DEM.py`
-
-#### Model-Engine Boundary Contract
-
-- Tensor names:
-  - inputs: `depth_lr`, `dem_hr`
-  - output: `depth_hr_pred`
-- Tensor layout and dtype:
-  - NHWC `float32`, single channel
-  - `depth_lr`: `[N, 32, 32, 1]`
-  - `dem_hr`: `[N, 512, 512, 1]`
-  - `depth_hr_pred`: `[N, 512, 512, 1]`
-- Geometry:
-  - fixed scale `16` (`512 / 32`)
-  - output H/W must match `dem_hr` H/W
-- Value-domain:
-  - entry tensors finite and normalized to `[0, 1]`
-  - output tensor normalized/log-space before inverse transform
-
-#### Workflow (from `others/inference_inline_norm_loop.ipynb`)
-
-1. Input boundary assertions, model-parameter resolution, and model-specific pre-processing
-- Platform preprocessing ownership is defined in `0001-architecture-and-cli.md` and `0009-preproccessing.md`.
-- Model workers ingest platform-model boundary artifacts and assert required boundary assumptions before model-specific transforms.
-- Load `train_config.json` and resolve model parameters (`SCALE`, LR/HR tile geometry, `MAX_DEPTH`, DEM clip settings).
-- Apply model-specific preprocessing/transforms (for example model-space resampling, `log1p` scaling, and tile-local DEM normalization) after boundary assertions.
-
-2. Tiling/windowing
-- Pad model-space arrays so LR/HR windows align exactly with fixed model tile sizes.
-- Build non-overlap HR window origins and map each HR origin to LR origin by integer `SCALE`.
-- Build feathered overlap window grid with fixed overlap/stride and forced trailing-edge coverage.
-- Reuse cached tile predictions by `(y0, x0)` key to avoid duplicate model calls across passes.
-- The simple path may materialize prepared arrays in memory before tiling.
-- The raster-backed windowed path should instead read prepared rasters on demand by window and write outputs incrementally.
-- The raster-backed windowed path is limited to hard windows in this phase.
-
-3. Core inference at model-engine boundary
-- For each window, slice aligned LR depth and HR DEM tiles.
-- Normalize LR/DEM inputs to `[0, 1]` using tile-local DEM stats.
-- Expand to batched NHWC tensors and execute model forward pass at the boundary contract.
-- Validate/persist per-tile prediction outputs and cache them for downstream stitching/diagnostics.
-
-4. Mosaicking/stitching
-- Run an initial non-overlap chip pass to populate chip outputs and diagnostics arrays.
-- Run feathered mosaicking pass over overlap windows using separable 1D feather ramps.
-- Flatten boundary feather weights on scene edges to avoid dimming at domain boundaries.
-- Accumulate weighted predictions and normalize by accumulated weight sum.
-- Crop stitched output back to valid model-space extent.
-
-5. Model specific post-processing
-- Convert stitched SR output to depth meters and clamp depth range.
-- Resample model-space SR depth back to raw HR grid (post-resample step).
-- Apply low-depth mask in meter domain.
-- Re-normalize to `[0, 1]` where needed for metric helper compatibility.
-- Compute/export full-scene diagnostics (including bilinear baseline comparison) and write output when enabled.
-- For large scenes, post-resample and output writing should support a raster-backed windowed implementation so the raw HR output grid is not fully materialized in memory.
+- Model-specific contracts and implementation notes live in `docs/dev/adr/models/`.
+- Current model ADRs:
+  - `docs/dev/adr/models/0001-resunet-16x-dem.md`
+  - `docs/dev/adr/models/0002-costgrow-terrain.md`
+- This ADR owns only the shared registry/worker contract used by all models.
