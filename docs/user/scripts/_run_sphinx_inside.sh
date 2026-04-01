@@ -9,7 +9,8 @@ sphinx_args=(-b html . "${build_dir}")
 
 # Switch to the translated docs pipeline when requested by the host wrapper.
 if [[ "${1:-}" == "--french" ]]; then
-  bash scripts/compile_fr_catalogs.sh
+  # Anchor the compile helper to the docs tree because the host wrapper starts in /workspace.
+  bash "${docs_dir}/scripts/compile_fr_catalogs.sh"
   build_dir="_build/fr_html"
   sphinx_args=(-E -b html -D language=fr . "${build_dir}")
 fi
