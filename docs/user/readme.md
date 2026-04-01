@@ -117,6 +117,12 @@ python scripts/seed_fr_review_metadata.py
 
    The LLM should update only `stale` entries, write or refresh the `msgstr`, and flip those entries to `llm_draft`. It should not touch `human_locked` entries.
 
+   Agent-only trivial-change filter:
+
+   - If a previously `human_locked` entry changed only by a tiny English wording tweak and the existing human-reviewed French still matches the meaning, the agent may keep or restore `human_locked`.
+   - Use this only for genuinely trivial edits. New sections, split or merged entries, added detail, or meaningfully revised guidance should remain `llm_draft`.
+   - This is a manual agent review step only and should not be implemented in the sync script or other automation.
+
 4. Send only `llm_draft` entries for human review using poedit.com
 
    When a reviewer approves an entry, set `review_status` to `human_locked` and refresh `reviewed_at` and `reviewer`.
@@ -140,6 +146,7 @@ Operational notes:
 - Do not infer trusted translation state from git history alone. Use the per-entry metadata comments as the primary state.
 - Git history is still useful for audit trails and for linking a review packet back to the English-side commits.
 - Prefer keeping the previous approved `msgstr` in place when an entry becomes `stale` so the reviewer can compare the prior trusted wording against the new English source.
+- This trivial-change `human_locked` filter is an agent judgment layer applied after sync, not a rule for the scripts.
 - Only touch/review `.po` files whose English source changed since the last translation refresh.
 
 ### instructions for the translator
