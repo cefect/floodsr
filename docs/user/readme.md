@@ -76,6 +76,12 @@ Use this workflow whenever you want to bring the French docs up to date with the
 The metadata-driven stale check works from the `.po` entries themselves. For each entry, the sync step normalizes the current `msgid`, hashes it, and compares that value to the stored `source_hash`. 
 If the values differ, the English source for that entry changed and the entry should no longer be treated as trusted.
 
+Initial migration only:
+
+```bash
+python scripts/seed_fr_review_metadata.py
+```
+
 1. Go to the docs source directory.
 
    ```bash
@@ -91,8 +97,16 @@ If the values differ, the English source for that entry changed and the entry sh
    - new English entry: add an empty `msgstr` and mark `stale`
 
    ```bash
-   python scripts/sync_fr_translations.py
+   python scripts/sync_fr_translations.py --repo-root /workspace
    ```
+
+   For a scoped validation pass on one catalog before a repo-wide run, use:
+
+   ```bash
+   python scripts/sync_fr_translations.py --repo-root /workspace --catalog user_guide.po --dry-run
+   ```
+
+   By default the script writes the reviewer queue to `docs/user/_build/fr_translation_review.csv` and `docs/user/_build/fr_translation_review.md`.
 
 3. Draft French translations only for entries marked `stale`.
 
