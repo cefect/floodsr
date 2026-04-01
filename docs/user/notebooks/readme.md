@@ -12,6 +12,28 @@ Sphinx renders these `.ipynb` files directly with `myst_nb`; the notebook source
 Notebook execution is disabled during docs builds, so Sphinx renders the committed notebook state rather than running cells at build time. 
 In practice, that means the committed notebooks should already be refreshed and pruned before a docs build: keep plot/image outputs that help the docs, drop noisy textual outputs when possible, and use tags such as `remove-input` for short validation-only cells that should execute during proofing but not appear in the rendered docs.
 
+### hiding cells in rendered docs
+
+The hiding behavior is driven by notebook cell metadata tags on the committed `.ipynb`, not by the shell runners.
+
+- `remove-input`: the cell still exists and still executes during proofing, but the code input is hidden in the rendered docs.
+- `remove-output`: the cell still exists and still executes during proofing, but the rendered docs hide the cell output.
+- `remove-cell`: the whole cell is omitted from the rendered docs.
+
+In this repo, that behavior is operationalized by `myst_nb` when Sphinx renders the committed notebook artifact. 
+See [ADR-0018](../../dev/adr/0018-docs-and-tutorials.md), especially the note that validation cells may be hidden with tags such as `remove-input`.
+
+
+### editing hidden cells in vscode
+
+Hidden cells are still ordinary notebook cells in VS Code. For this repo, add a short source comment to hidden-input cells so the intent is visible while editing:
+
+```python
+# HIDDEN (tags:["remove-input"])
+```
+
+If you need to inspect or edit the raw metadata, open the `.ipynb` in the text editor view and modify the cell `metadata.tags` array directly.
+
 ## environments
 
 To re-run or refresh these tutorial notebooks from the repo, use the `main` devcontainer rather than the `docs` devcontainer. 
@@ -63,4 +85,3 @@ conda run -n dev bash docs/user/notebooks/tutorial_3.sh
   - `all-tests.yml` runs the `notebook` pytest path for the real tracked tutorial notebooks.
 
 - For the direct notebook execution proof, see [`../../../tests/test_tutorials.py`](../../../tests/test_tutorials.py).
-
