@@ -80,6 +80,9 @@ conda run -n dev bash docs/user/notebooks/tutorial_1.sh && \
 conda run -n dev bash docs/user/notebooks/tutorial_2.sh && \
 conda run -n dev bash docs/user/notebooks/tutorial_3.sh
 
+# from wsl (outside the container; dispatches into .devcontainer/main/docker-compose.yml)
+/home/cefect/LS/09_REPOS/04_TOOLS/floodsr/docs/user/notebooks/run_all_container.sh
+
  
 ```
 
