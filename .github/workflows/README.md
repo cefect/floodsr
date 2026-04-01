@@ -51,6 +51,8 @@ see the [tests readme](../../tests/README.md) also
   - uses sparse-checkout notebook shims from `.github/workflows/artifacts` for notebook cases
   - uses `cefect/floodsr:install-edge-main-v0.2` for non-Colab paths
   - uses `cefect/floodsr:install-edge-colab-v0.2` for Colab paths
+- See also:
+  - [`docs/user/notebooks/readme.md`](../../docs/user/notebooks/readme.md) for how this install proof relates to tutorial notebook proofing
 - Trigger: None (i.e., `workflow_dispatch`).
 
 ## `all-tests.yml`
@@ -60,6 +62,8 @@ see the [tests readme](../../tests/README.md) also
   - runs one self-hosted job that recreates the locked `deploy` conda environment and runs `pytest -m "not sphinx and not notebook and not local"`
   - runs one self-hosted job that starts from the same locked deploy environment, layers on notebook runtime packages, and runs `pytest -m "notebook" tests/test_tutorials.py`
   - preserves logs and JUnit XML for both jobs
+- See also:
+  - [`docs/user/notebooks/readme.md`](../../docs/user/notebooks/readme.md) for where the real tutorial notebooks are proved
 - Trigger: None (i.e., `workflow_dispatch`).
 
 ## `release.yml`

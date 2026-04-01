@@ -26,7 +26,7 @@ The notebooks themselves present the following user-facing execution contexts:
 | Tutorial 2 | Yes | Yes | Yes | Yes |
 | Tutorial 3 | Yes, via extended install | Yes, via extended install | Yes, but marked experimental / not recommended | Yes |
 
-## re-running the tutorials
+## re-running the tutorials (i.e docs refresh)
 NOTE: needs to be done from main .devcontainer (not docs)
 
 Each tutorial runner stages execution in a temp-backed sandbox, keeps notebook side files there, and then copies the completed `.ipynb` back into `docs/user/notebooks`. 
@@ -54,3 +54,13 @@ conda run -n dev bash docs/user/notebooks/tutorial_3.sh
 
  
 ```
+
+
+## proving the tutorials
+
+- For workflow-level proof, see [`../../.github/workflows/README.md`](../../.github/workflows/README.md).
+  - `install-edge.yml` proves the documented notebook install paths with lightweight notebook shims.
+  - `all-tests.yml` runs the `notebook` pytest path for the real tracked tutorial notebooks.
+
+- For the direct notebook execution proof, see [`../../../tests/test_tutorials.py`](../../../tests/test_tutorials.py).
+

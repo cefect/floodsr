@@ -94,6 +94,8 @@ As these provide commands for patching the environment, they are a special case.
 - Notebook execution should remain disabled via the docs configuration so that builds are deterministic.
 - Tutorial execution for documentation refreshes should use per-notebook shell shims that live beside the notebooks under `docs/user/notebooks/` (for example `tutorial_1.sh` and `tutorial_2.sh`).
 - Those shell shims should execute a temporary copy of the notebook under a temp-backed sandbox-like working directory, then copy the completed `.ipynb` back into `docs/user/notebooks/`.
+- CI install-path proof should stay lightweight: `install-edge.yml` may execute small notebook shim artifacts that mirror the documented notebook install commands and a minimal `floodsr` sanity check, rather than the full tutorial notebooks.
+- The full tutorial notebooks should continue to be proven separately via the `notebook`-marked pytest suite and the per-notebook shell runners used for docs refreshes.
 - Generated side files from tutorial execution should stay in that temp-backed staging area, not beside the tracked source notebooks.
 - The committed notebook artifacts under `docs/user/notebooks/` should be pruned before rendering so they keep plot/image outputs that materially help the docs, while dropping textual execution output such as stream logs, CLI chatter, and one-off diagnostics.
 - The docs site should therefore render tutorial notebooks from this pruned state: markdown plus code cells, with plot outputs preserved where useful and non-plot outputs removed.

@@ -9,7 +9,7 @@ Several ADRs define packaging, testing, and publishing intent, but the GitHub Ac
 - CI owns packaging validation for published artifacts.
 - CI builds release artifacts once and reuses them across downstream workflow steps.
 - GitHub Actions test selection is limited to `fast` tests and excludes `local`.
-- Notebook execution tests marked `notebook` are not part of the default remote CI, release, or manual `all-tests` workflow paths because they require the separate notebook-capable `dev` environment rather than the runtime-locked `deploy` environment.
+- Notebook execution tests marked `notebook` are not part of the default remote CI or release workflow paths because they require a notebook-capable environment rather than the runtime-locked `deploy` environment.
 - The manual `all-tests.yml` workflow is split into two jobs:
     - one job recreates the locked `deploy` environment and runs the non-notebook pytest suite
     - one job recreates the same locked `deploy` environment, layers notebook runtime packages on top, and runs the `notebook`-marked pytest suite separately
@@ -23,6 +23,8 @@ Several ADRs define packaging, testing, and publishing intent, but the GitHub Ac
         - Publish jobs receive `id-token: write` only at the publish step/job boundary; build and test jobs remain read-only.
 - `.github/workflows/install-edge.yml` owns Unix install-path proof coverage for the install guidance documented in `docs/user/installation.rst`.
 - `install-edge.yml` should run one isolated matrix case per documented Unix install path using an appropriate Docker image for that user-facing context.
+- For notebook install paths, `install-edge.yml` should execute small notebook shim artifacts that mirror the documented in-notebook commands and sanity checks, rather than the full tutorial notebooks.
+- Full tutorial notebook execution proof should remain separate from `install-edge.yml` and continue to live in the notebook pytest path and the per-notebook shell runners.
 - On Windows, only the documented `basic` CLI install path must be proven.
 
 ## Implementation Notes
