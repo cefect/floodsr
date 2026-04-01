@@ -9,6 +9,7 @@ import pytest
 
 DOCS_SOURCE_DIR = Path("docs/user")
 DOCS_CONF_PATH = DOCS_SOURCE_DIR / "conf.py"
+SYNC_FR_SCRIPT_PATH = DOCS_SOURCE_DIR / "scripts" / "sync_fr_translations.py"
 
 
 def _run_sphinx_build(builder: str, source_dir: Path, build_dir: Path, *extra_args: str):
@@ -109,3 +110,30 @@ def test_docs_html_builds_for_supported_languages(
     assert index_fp.exists(), f"missing built docs index for language={raw_language}:\n    {index_fp}"
     assert f'<html lang="{raw_language}"' in index_html
     assert expected_title in index_html
+
+
+@pytest.mark.sphinx
+def test_sync_fr_translations_dry_run_reports_review_paths(tmp_path: Path):
+    """French translation sync should dry-run cleanly on the live docs tree."""
+    pytest.importorskip("sphinx", reason="Sphinx not detected in environment.")
+
+    report_fp = tmp_path / "fr_translation_review.csv"
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(SYNC_FR_SCRIPT_PATH),
+            "--repo-root",
+            str(Path.cwd()),
+            "--catalog",
+            "user_guide.po",
+            "--dry-run",
+            "--report-dir",
+            str(tmp_path),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, f"sync_fr_translations.py failed:\n{result.stdout}\n{result.stderr}"
+    assert "fr_translation_review.csv" in result.stdout and report_fp.is_file() is False

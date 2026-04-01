@@ -1,86 +1,226 @@
+
 msgid ""
 msgstr ""
-"Project-Id-Version: floodsr\n"
-"POT-Creation-Date: 2026-03-20 00:00+0000\n"
+"Project-Id-Version:  floodsr\n"
+"POT-Creation-Date: 2026-04-01 15:39-0600\n"
 "PO-Revision-Date: 2026-03-31 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 
+#. review_status: human_locked
+#. source_hash: d00eca1b
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Getting Started"
 msgstr "Bien démarrer"
 
-msgid "This page contains minimal info to get you up and flooding with ``floodsr``. For more detailed information, see the :doc:`user_guide`. For common questions, see :doc:`faq`. For an interactive walkthrough, see :doc:`Tutorial 1 <notebooks/tutorial_1>`."
-msgstr "Cette page rassemble le minimum nécessaire pour commencer rapidement avec ``floodsr``. Pour plus de détails, consultez :doc:`user_guide`. Pour les questions fréquentes, consultez :doc:`faq`. Pour une visite guidée interactive, consultez :doc:`notebooks/tutorial_1`."
+#. review_status: human_locked
+#. source_hash: cea6dfd3
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"This page contains minimal info to get you up and flooding with ``floodsr``. For more detailed "
+"information, see the :doc:`user_guide`. For common questions, see :doc:`faq`. For an interactive "
+"walkthrough, see :doc:`Tutorial 1 <notebooks/tutorial_1>`."
+msgstr ""
+"Cette page rassemble le minimum nécessaire pour commencer rapidement avec ``floodsr``. Pour plus "
+"de détails, consultez :doc:`user_guide`. Pour les questions fréquentes, consultez :doc:`faq`. "
+"Pour une visite guidée interactive, consultez :doc:`notebooks/tutorial_1`."
 
+#. review_status: human_locked
+#. source_hash: ec6a0de1
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "What Is ``floodsr``?"
 msgstr "Qu'est-ce que ``floodsr`` ?"
 
-msgid "``floodsr`` is a flood-depth **resolution enhancement** tool. Or a super-resolution (SR) tool in machine-speak. It takes a low-resolution depth raster as input and reconstructs higher-resolution output, using terrain (DEM) context."
-msgstr "``floodsr`` est un outil qui **améliore la résolution** des rasters de profondeur d'inondation. Autrement dit, un outil de super-résolution (SR), dans le langage des modèles. Il prend en entrée un raster de profondeur à basse résolution et reconstruit une sortie à plus haute résolution en utilisant le contexte du terrain (DEM)."
+#. review_status: human_locked
+#. source_hash: 2e3d89ad
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"``floodsr`` is a flood-depth **resolution enhancement** tool. Or a super-resolution (SR) tool in "
+"machine-speak. It takes a low-resolution depth raster as input and reconstructs higher-resolution"
+" output, using terrain (DEM) context."
+msgstr ""
+"``floodsr`` est un outil qui **améliore la résolution** des rasters de profondeur d'inondation. "
+"Autrement dit, un outil de super-résolution (SR), dans le langage des modèles. Il prend en entrée"
+" un raster de profondeur à basse résolution et reconstruit une sortie à plus haute résolution en "
+"utilisant le contexte du terrain (DEM)."
 
+#. review_status: human_locked
+#. source_hash: 30eef47c
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Downloading test data"
 msgstr "Télécharger les données d'essai"
 
-msgid "Before running commands, it's nice to have some data to play with. If you don't have your own data yet, you can download a test tile from the project."
-msgstr "Avant d'exécuter des commandes, il est pratique d'avoir quelques données sous la main. Si vous n'avez pas encore vos propres données, vous pouvez télécharger une tuile d'essai à partir du projet."
+#. review_status: human_locked
+#. source_hash: af0d1fe9
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"Before running commands, it's nice to have some data to play with. If you don't have your own "
+"data yet, you can download a test tile from the project."
+msgstr ""
+"Avant d'exécuter des commandes, il est pratique d'avoir quelques données sous la main. Si vous "
+"n'avez pas encore vos propres données, vous pouvez télécharger une tuile d'essai à partir du "
+"projet."
 
-msgid "To download manually, browse to `this release <https://github.com/cefect/floodsr/releases/tag/v0.0.3>`_ and download the assets into your current working directory."
-msgstr "Pour un téléchargement manuel, ouvrez `cette publication <https://github.com/cefect/floodsr/releases/tag/v0.0.3>`_ et téléchargez les fichiers dans votre répertoire de travail courant."
+#. review_status: human_locked
+#. source_hash: 3b79d2b4
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"To download manually, browse to `this release "
+"<https://github.com/cefect/floodsr/releases/tag/v0.0.3>`_ and download the assets into your "
+"current working directory."
+msgstr ""
+"Pour un téléchargement manuel, ouvrez `cette publication "
+"<https://github.com/cefect/floodsr/releases/tag/v0.0.3>`_ et téléchargez les fichiers dans votre "
+"répertoire de travail courant."
 
+#. review_status: human_locked
+#. source_hash: bf4e2970
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Alternatively, ``bash`` users with ``curl`` can run:"
 msgstr "Sinon, les utilisateurs de ``bash`` avec ``curl`` peuvent exécuter :"
 
+#. review_status: human_locked
+#. source_hash: c36d819e
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Use"
 msgstr "Utilisation"
 
+#. review_status: human_locked
+#. source_hash: dfda31a2
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Here we give a quick intro on setting up a model and using it to enhance a flood raster."
-msgstr "Voici une introduction rapide pour configurer un modèle et l'utiliser afin d'améliorer un raster d'inondation."
+msgstr ""
+"Voici une introduction rapide pour configurer un modèle et l'utiliser afin d'améliorer un raster "
+"d'inondation."
 
+#. review_status: human_locked
+#. source_hash: 569ca49f
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Install"
 msgstr "Installation"
 
-msgid "``floodsr`` was designed as a command-line interface (CLI)-first Python package, so we recommend installing with `pipx <https://pipx.pypa.io/stable/>`_ to ensure environment isolation:"
-msgstr "``floodsr`` a été conçu comme un paquet Python pensé d'abord pour l'interface de ligne de commande (CLI), donc nous recommandons une installation avec `pipx <https://pipx.pypa.io/stable/>`_ pour garantir l'isolation de l'environnement :"
+#. review_status: llm_draft
+#. source_hash: 40dc2c45
+msgid ""
+"``floodsr`` was designed as a command-line interface (CLI)-first Python package, so we recommend "
+"installing with `pipx <https://pipx.pypa.io/stable/>`_ to ensure environment isolation:"
+msgstr ""
+"``floodsr`` a été conçu comme un paquet Python d'abord pensé pour l'interface de ligne de "
+"commande (CLI), donc nous recommandons une installation avec `pipx "
+"<https://pipx.pypa.io/stable/>`_ afin d'isoler l'environnement :"
 
-msgid "After install, a quick sanity check is:"
-msgstr "Après l'installation, vous pouvez faire cette vérification rapide :"
+#. review_status: llm_draft
+#. source_hash: e2fd0e98
+msgid ""
+"For more detailed installation instructions, see :doc:`installation`. After install, a quick "
+"sanity check is:"
+msgstr ""
+"Pour des instructions d'installation plus détaillées, consultez :doc:`installation`. Après "
+"l'installation, voici une petite vérification rapide :"
 
-msgid "For more detailed installation instructions, see :doc:`installation`."
-msgstr "Pour des instructions d'installation plus détaillées, consultez :doc:`installation`."
-
+#. review_status: human_locked
+#. source_hash: 16296682
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Model Setup"
 msgstr "Configuration du modèle"
 
-msgid "Before using the machine-learning backend, we need to fetch the model weights. This only needs to be done once, and the weights will be cached for future runs."
-msgstr "Avant d'utiliser le moteur d'apprentissage automatique, il faut récupérer les poids du modèle. Cette étape n'est nécessaire qu'une seule fois, puis les poids seront mis en cache pour les exécutions suivantes."
+#. review_status: human_locked
+#. source_hash: ff89b87c
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"Before using the machine-learning backend, we need to fetch the model weights. This only needs to"
+" be done once, and the weights will be cached for future runs."
+msgstr ""
+"Avant d'utiliser le moteur d'apprentissage automatique, il faut récupérer les poids du modèle. "
+"Cette étape n'est nécessaire qu'une seule fois, puis les poids seront mis en cache pour les "
+"exécutions suivantes."
 
+#. review_status: human_locked
+#. source_hash: e3ac20c1
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "List available model versions:"
 msgstr "Lister les versions de modèle disponibles :"
 
+#. review_status: human_locked
+#. source_hash: 452ffa45
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "You should see `ResUNet_16x_DEM` in the list, which is the only model currently available."
 msgstr "Vous devriez voir `ResUNet_16x_DEM` dans la liste ; c'est le seul modèle actuellement disponible."
 
+#. review_status: human_locked
+#. source_hash: 92ef5f5d
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Fetch a model by version into the default cache:"
 msgstr "Récupérer un modèle par version dans le cache par défaut :"
 
+#. review_status: human_locked
+#. source_hash: cb257c1b
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Now you're ready to enhance some flood rasters!"
 msgstr "Vous êtes maintenant prêt à améliorer des rasters d'inondation!"
 
+#. review_status: human_locked
+#. source_hash: 66ec5916
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Enhance to High Resolution"
 msgstr "Passer en haute résolution"
 
-msgid "The primary tool in ``floodsr`` is the ``tohr`` command or *to high resolution*. This ingests a low-resolution flood hazard raster and a high-resolution DEM. This high-resolution DEM can either be specified as a local file or fetched from the `HRDEM Mosaic <https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b>`_ data source (for locations in Canada of course)."
-msgstr "L'outil principal de ``floodsr`` est la commande ``tohr``, ou *to high resolution*, en anglais. Elle prend un raster d'aléa d'inondation à basse résolution et un DEM à haute résolution. Ce DEM haute résolution peut être spécifié comme fichier local ou récupéré depuis la source de données `Mosaïque HRDEM <https://ouvert.canada.ca/data/fr/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b>`_ (pour des lieux au Canada)."
+#. review_status: human_locked
+#. source_hash: 589f7e73
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"The primary tool in ``floodsr`` is the ``tohr`` command or *to high resolution*. This ingests a "
+"low-resolution flood hazard raster and a high-resolution DEM. This high-resolution DEM can either"
+" be specified as a local file or fetched from the `HRDEM Mosaic "
+"<https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b>`_ data source (for "
+"locations in Canada of course)."
+msgstr ""
+"L'outil principal de ``floodsr`` est la commande ``tohr``, ou *to high resolution*, en anglais. "
+"Elle prend un raster d'aléa d'inondation à basse résolution et un DEM à haute résolution. Ce DEM "
+"haute résolution peut être spécifié comme fichier local ou récupéré depuis la source de données "
+"`Mosaïque HRDEM <https://ouvert.canada.ca/data/fr/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b>`_"
+" (pour des lieux au Canada)."
 
+#. review_status: human_locked
+#. source_hash: 744f0184
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "To enhance to high resolution, fetching the DEM from the HRDEM Mosaic, try:"
 msgstr "Pour passer en haute résolution en récupérant le DEM depuis la Mosaïque HRDEM, essayez :"
 
+#. review_status: human_locked
+#. source_hash: 7c309c43
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Alternatively, specify your own local DEM file:"
 msgstr "Sinon, spécifiez votre propre fichier DEM local :"
 
+#. review_status: human_locked
+#. source_hash: da521662
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "For more details, see the :doc:`user_guide`."
 msgstr "Pour plus de détails, consultez le :doc:`user_guide`."
