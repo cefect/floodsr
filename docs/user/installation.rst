@@ -1,3 +1,5 @@
+.. _installation:
+
 Installation
 ============
 
@@ -228,8 +230,8 @@ Uninstall
 ---------
 Use the uninstall command that matches both your install mode and execution context.
 
-Basic install
-^^^^^^^^^^^^^
+Basic uninstall
+^^^^^^^^^^^^^^^
 
 - **Command line (CLI)** with ``pipx``:
 
@@ -250,8 +252,8 @@ Basic install
 
    !python -m pip uninstall -y floodsr
 
-Extended install
-^^^^^^^^^^^^^^^^
+Extended uninstall
+^^^^^^^^^^^^^^^^^^
 
 - **Command line (CLI)** or **local notebook (Jupyter)** in the ``floodsr-gdal`` conda environment:
 
