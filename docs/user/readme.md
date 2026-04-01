@@ -63,21 +63,73 @@ see [docs/user/notebooks/readme.md](../user/notebooks/readme.md)
 
 ## TRANSLATION REFRESH
 
-Follow [ADR-0018: Docs and Tutorials Strategy](../dev/adr/0018-docs-and-tutorials.md) for the translation policy and review expectations.
+Follow [ADR-0018: Docs and Tutorials Strategy](../dev/adr/0018-docs-and-tutorials.md) for the translation architecture and review expectations.
 
-```bash
-# 1) go to the docs source directory
-cd /workspace/docs/user
+### schema
 
-# 2) manually review/edit the existing fr catalogs. see AGENTS.md
+See [ADR-0018](../dev/adr/0018-docs-and-tutorials.md) for the translation metadata schema, review-state definitions, and the `.po` entry comment example.
 
+### workflow
 
-# 3) compile the edited .po catalogs to .mo files
-bash scripts/compile_fr_catalogs.sh
+Use this workflow whenever you want to bring the French docs up to date with the current English docs.
 
- 
-```
+The metadata-driven stale check works from the `.po` entries themselves. For each entry, the sync step normalizes the current `msgid`, hashes it, and compares that value to the stored `source_hash`. 
+If the values differ, the English source for that entry changed and the entry should no longer be treated as trusted.
 
+1. Go to the docs source directory.
 
+   ```bash
+   cd /workspace/docs/user
+   ```
 
+2. Run the translation sync script to update the relevant `.po` `msgid` values to match the current English docs, recompute `hash(normalize(msgid))`, compare that value to `source_hash`, and update the review state in place.
 
+   Expected behavior:
+
+   - unchanged English + `human_locked`: leave untouched
+   - changed English: keep the current `msgstr` as reference and mark `stale`
+   - new English entry: add an empty `msgstr` and mark `stale`
+
+   ```bash
+   python scripts/sync_fr_translations.py
+   ```
+
+3. Draft French translations only for entries marked `stale`.
+
+   The LLM should update only `stale` entries, write or refresh the `msgstr`, and flip those entries to `llm_draft`. It should not touch `human_locked` entries.
+
+4. Send only `llm_draft` entries for human review.
+
+   When a reviewer approves an entry, set `review_status` to `human_locked` and refresh `reviewed_at` and `reviewer`.
+
+5. Compile the French catalogs.
+
+   ```bash
+   bash scripts/compile_fr_catalogs.sh
+   ```
+
+6. Build the French HTML and review the rendered output.
+
+   ```bash
+   python -m sphinx -E -b html -D language=fr . "_build/fr_html"
+   ```
+
+Operational notes:
+
+- Do not infer trusted translation state from git history alone. Use the per-entry metadata comments as the primary state.
+- Git history is still useful for audit trails and for linking a review packet back to the English-side commits.
+- Prefer keeping the previous approved `msgstr` in place when an entry becomes `stale` so the reviewer can compare the prior trusted wording against the new English source.
+- Only touch/review `.po` files whose English source changed since the last translation refresh.
+
+### instructions for the translator
+
+- Target French (`fr`).
+- Do not use `gettext` to generate translation files. Edit the existing `.po` catalogs directly.
+- Preserve the metadata comments on each entry and update them only when the workflow explicitly changes the entry state.
+- Keep commands, code, stdout, option names, paths, and project names unchanged, including `HRDEM` and `CostGrow`.
+- In `cli_reference.po`, translate narrative help text and explanatory prose, but do not translate literal commands, subcommands, flags, option names, paths, or code-like tokens.
+- When a term should stay tied to the English wording, explain it in French rather than forcing a literal translation. For example, `to high resolution (tohr)` should note the English phrase in the French text.
+- Translate for readability and fidelity, not word-for-word mechanical alignment.
+- If an entry is marked `human_locked` and the English source has not changed, do not rewrite it.
+- If an entry is marked `stale`, use the previous French text as context, but align the updated translation to the current English source.
+- After translation work, compile the catalogs and review the rendered French docs to confirm translation, navigation, and links behave as intended.
