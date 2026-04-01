@@ -98,9 +98,11 @@ If the values differ, the English source for that entry changed and the entry sh
 
    The LLM should update only `stale` entries, write or refresh the `msgstr`, and flip those entries to `llm_draft`. It should not touch `human_locked` entries.
 
-4. Send only `llm_draft` entries for human review.
+4. Send only `llm_draft` entries for human review using poedit.com
 
    When a reviewer approves an entry, set `review_status` to `human_locked` and refresh `reviewed_at` and `reviewer`.
+
+   import back into project with `docs/user/scripts/port_emma_po_updates.sh`
 
 5. Compile the French catalogs.
 
