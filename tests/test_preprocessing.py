@@ -244,6 +244,36 @@ def test_write_platform_prepared_rasters_honors_crs_policy(
     assert depth_prepared.size > 0 and np.allclose(depth_bounds, dem_bounds, atol=1e-9, rtol=0.0)
 
 
+@pytest.mark.parametrize(
+    "use_windowed",
+    [
+        pytest.param(False, id="platform_simple"),
+        pytest.param(True, id="platform_windowed"),
+    ],
+)
+def test_write_platform_prepared_rasters_outputs_exist_and_are_float32(
+    synthetic_tohr_tiles: dict,
+    tmp_path,
+    logger,
+    use_windowed: bool,
+) -> None:
+    """Platform-prepared outputs should exist on disk and keep float32 arrays."""
+    rasterio = pytest.importorskip("rasterio")
+    prepared = write_platform_prepared_rasters(
+        depth_lr_fp=synthetic_tohr_tiles["depth_lr_fp"],
+        dem_hr_fp=synthetic_tohr_tiles["dem_fp"],
+        out_dir=tmp_path,
+        logger=logger,
+        use_windowed=use_windowed,
+    )
+
+    assert prepared["dem_hr_prepared_fp"].exists()
+    with rasterio.open(prepared["dem_hr_prepared_fp"]) as ds:
+        dem_array = ds.read(1)
+    assert dem_array.dtype == np.float32
+    assert dem_array.size > 0
+
+
 def test_write_dem_from_asset_hrefs_outputs_float32_non_empty(
     synthetic_tohr_tiles: dict,
     tmp_path: Path,

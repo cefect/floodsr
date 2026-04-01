@@ -716,25 +716,58 @@ def write_prepared_rasters(
         ctx["dem_raw_transform"],
     )
 
-    aligned = _align_depth_and_dem_inputs(
-        depth_lr_fp,
-        dem_hr_fp,
-        scale=scale,
-        crs_policy=crs_policy,
-        logger=log,
-    )
-    depth_profile["nodata"] = aligned["depth_lr_nodata"]
-    dem_profile["nodata"] = aligned["dem_hr_nodata"]
-    dem_raw_profile["nodata"] = aligned["dem_hr_nodata"]
-    depth_prepared_path = _write_single_band_raster(depth_prepared_fp, aligned["depth_lr"], depth_profile)
-    dem_prepared_path = _write_single_band_raster(dem_prepared_fp, aligned["dem_hr"], dem_profile)
+    if use_windowed:
+        # Keep large-raster preparation on dataset-backed reprojection to avoid full-scene arrays in RAM.
+        with rasterio.open(ctx["depth_path"]) as depth_ds, rasterio.open(depth_prepared_fp, "w", **depth_profile) as dst_ds:
+            reproject(
+                source=rasterio.band(depth_ds, 1),
+                destination=rasterio.band(dst_ds, 1),
+                src_transform=depth_ds.transform,
+                src_crs=ctx["depth_crs"],
+                src_nodata=ctx["depth_nodata"],
+                dst_transform=ctx["depth_transform"],
+                dst_crs=ctx["target_crs"],
+                dst_nodata=ctx["depth_nodata"],
+                resampling=Resampling.bilinear,
+                num_threads=1,
+            )
+        _zero_nodata_in_place(depth_prepared_fp, ctx["depth_nodata"])
+        with rasterio.open(ctx["dem_path"]) as dem_ds, rasterio.open(dem_prepared_fp, "w", **dem_profile) as dst_ds:
+            reproject(
+                source=rasterio.band(dem_ds, 1),
+                destination=rasterio.band(dst_ds, 1),
+                src_transform=dem_ds.transform,
+                src_crs=ctx["dem_crs"],
+                src_nodata=ctx["dem_nodata"],
+                dst_transform=ctx["dem_model_transform"],
+                dst_crs=ctx["target_crs"],
+                dst_nodata=ctx["dem_nodata"],
+                resampling=Resampling.bilinear,
+                num_threads=1,
+            )
+        _zero_nodata_in_place(dem_prepared_fp, ctx["dem_nodata"])
+        depth_prepared_path = depth_prepared_fp.expanduser().resolve()
+        dem_prepared_path = dem_prepared_fp.expanduser().resolve()
+    else:
+        aligned = _align_depth_and_dem_inputs(
+            depth_lr_fp,
+            dem_hr_fp,
+            scale=scale,
+            crs_policy=crs_policy,
+            logger=log,
+        )
+        depth_profile["nodata"] = aligned["depth_lr_nodata"]
+        dem_profile["nodata"] = aligned["dem_hr_nodata"]
+        dem_raw_profile["nodata"] = aligned["dem_hr_nodata"]
+        depth_prepared_path = _write_single_band_raster(depth_prepared_fp, aligned["depth_lr"], depth_profile)
+        dem_prepared_path = _write_single_band_raster(dem_prepared_fp, aligned["dem_hr"], dem_profile)
     return {
         "depth_lr_prepared_fp": depth_prepared_path,
         "dem_hr_prepared_fp": dem_prepared_path,
         "depth_lr_profile": depth_profile,
         "dem_profile": dem_profile,
-        "depth_lr_nodata": aligned["depth_lr_nodata"],
-        "dem_hr_nodata": aligned["dem_hr_nodata"],
+        "depth_lr_nodata": None if use_windowed else aligned["depth_lr_nodata"],
+        "dem_hr_nodata": ctx["dem_nodata"] if use_windowed else aligned["dem_hr_nodata"],
         "crop_shape": ctx["target_hr_shape"],
         "resampled": ctx["resampled"],
         "depth_lr_shape": tuple(ctx["depth_shape"]),
@@ -788,25 +821,58 @@ def write_platform_prepared_rasters(
         ctx["dem_raw_transform"],
     )
 
-    aligned = _align_depth_and_dem_inputs(
-        depth_lr_fp,
-        dem_hr_fp,
-        scale=1,
-        crs_policy=crs_policy,
-        ctx=ctx,
-        logger=log,
-    )
-    depth_profile["nodata"] = aligned["depth_lr_nodata"]
-    dem_profile["nodata"] = aligned["dem_hr_nodata"]
-    depth_prepared_path = _write_single_band_raster(depth_prepared_fp, aligned["depth_lr"], depth_profile)
-    dem_prepared_path = _write_single_band_raster(dem_prepared_fp, aligned["dem_raw"], dem_profile)
+    if use_windowed:
+        # Keep platform preparation windowed so large fetched DEMs do not materialize as full arrays.
+        with rasterio.open(ctx["depth_path"]) as depth_ds, rasterio.open(depth_prepared_fp, "w", **depth_profile) as dst_ds:
+            reproject(
+                source=rasterio.band(depth_ds, 1),
+                destination=rasterio.band(dst_ds, 1),
+                src_transform=depth_ds.transform,
+                src_crs=ctx["depth_crs"],
+                src_nodata=ctx["depth_nodata"],
+                dst_transform=ctx["depth_transform"],
+                dst_crs=ctx["target_crs"],
+                dst_nodata=ctx["depth_nodata"],
+                resampling=Resampling.bilinear,
+                num_threads=1,
+            )
+        _zero_nodata_in_place(depth_prepared_fp, ctx["depth_nodata"])
+        with rasterio.open(ctx["dem_path"]) as dem_ds, rasterio.open(dem_prepared_fp, "w", **dem_profile) as dst_ds:
+            reproject(
+                source=rasterio.band(dem_ds, 1),
+                destination=rasterio.band(dst_ds, 1),
+                src_transform=dem_ds.transform,
+                src_crs=ctx["dem_crs"],
+                src_nodata=ctx["dem_nodata"],
+                dst_transform=ctx["dem_raw_transform"],
+                dst_crs=ctx["target_crs"],
+                dst_nodata=ctx["dem_nodata"],
+                resampling=Resampling.bilinear,
+                num_threads=1,
+            )
+        _zero_nodata_in_place(dem_prepared_fp, ctx["dem_nodata"])
+        depth_prepared_path = depth_prepared_fp.expanduser().resolve()
+        dem_prepared_path = dem_prepared_fp.expanduser().resolve()
+    else:
+        aligned = _align_depth_and_dem_inputs(
+            depth_lr_fp,
+            dem_hr_fp,
+            scale=1,
+            crs_policy=crs_policy,
+            ctx=ctx,
+            logger=log,
+        )
+        depth_profile["nodata"] = aligned["depth_lr_nodata"]
+        dem_profile["nodata"] = aligned["dem_hr_nodata"]
+        depth_prepared_path = _write_single_band_raster(depth_prepared_fp, aligned["depth_lr"], depth_profile)
+        dem_prepared_path = _write_single_band_raster(dem_prepared_fp, aligned["dem_raw"], dem_profile)
     return {
         "depth_lr_prepared_fp": depth_prepared_path,
         "dem_hr_prepared_fp": dem_prepared_path,
         "depth_lr_profile": depth_profile,
         "dem_profile": dem_profile,
-        "depth_lr_nodata": aligned["depth_lr_nodata"],
-        "dem_hr_nodata": aligned["dem_hr_nodata"],
+        "depth_lr_nodata": None if use_windowed else aligned["depth_lr_nodata"],
+        "dem_hr_nodata": ctx["dem_nodata"] if use_windowed else aligned["dem_hr_nodata"],
         "depth_lr_shape": tuple(ctx["depth_shape"]),
         "dem_hr_shape": tuple(ctx["dem_raw_shape"]),
         "crs_policy": ctx["crs_policy"],
