@@ -101,9 +101,10 @@ As these provide commands for patching the environment, they are a special case.
 - The docs site should therefore render tutorial notebooks from this pruned state: markdown plus code cells, with plot outputs preserved where useful and non-plot outputs removed.
 - Short notebook-internal validation cells may remain executable while being hidden from rendered docs by using notebook cell tags such as `remove-input` for assertion-only checks.
 - Per-notebook shell shims should assume the caller has already activated the correct notebook runtime. In this repo, proofing should be launched from the outside with `conda run -n dev ...` (or an already-active `dev` shell) rather than hard-coding a conda interpreter path inside the shim.
-- Notebook source cells should default to the same cache behavior as the application code. For `floodsr`, that means leaving cache selection to the CLI/runtime unless the user explicitly edits the notebook cell to override it.
-- When a tutorial benefits from cache reuse during docs proofing (for example, repeated HRDEM fetches in Tutorial 3), the per-notebook shell shim may combine temp-backed notebook staging with a separate shared project-cache override via environment variables. That cache override should live in the shim, not as a hard-coded path in the committed notebook source.
-- Tutorials that expose cache overrides should tell users to edit the relevant notebook cell if they want custom cache behavior.
+- Notebook source cells may define a visible, hard-coded `base_cache_dir` when that keeps the tutorial easier to read and rerun.
+- When a tutorial uses a visible `base_cache_dir`, add a hidden follow-up cell that lets docs-proofing or CI override that path from environment variables without changing the user-facing flow.
+- When a tutorial benefits from cache reuse during docs proofing (for example, repeated HRDEM fetches in Tutorial 3), the per-notebook shell shim may still inject the cache path via environment variables, but the notebook should resolve that through the hidden override cell rather than through ad hoc command-string assembly later in the tutorial.
+- Tutorials that expose cache overrides should tell users to edit the visible notebook cache cell if they want custom cache behavior.
 - When docs are previewed from a non-`main` branch, the Colab launch button may therefore open an older `main` branch notebook rather than the previewed content.
  
 
