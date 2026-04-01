@@ -32,6 +32,12 @@ Hidden cells are still ordinary notebook cells in VS Code. For this repo, add a 
 # HIDDEN (tags:["remove-input"])
 ```
 
+For cells tagged `remove-output`, add one short preceding code cell tagged `remove-input` so the hidden-output behavior is visible in the notebook editor while remaining hidden in the rendered docs:
+
+```python
+# cell below has tag:'remove-output'
+```
+
 If you need to inspect or edit the raw metadata, open the `.ipynb` in the text editor view and modify the cell `metadata.tags` array directly.
 
 ## environments
