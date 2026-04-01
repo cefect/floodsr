@@ -214,4 +214,47 @@ For the foolhardy, the below seems to be working as of March 2026, but this will
    # install floodsr
    !pip install -q floodsr
 
+
+Uninstall
+---------
+Use the uninstall command that matches both your install mode and execution context.
+
+Basic install
+^^^^^^^^^^^^^
+
+- **Command line (CLI)** with ``pipx``:
+
+.. code-block:: bash
+
+   pipx uninstall floodsr
+
+- **Local notebook (Jupyter)** with ``pip`` in the kernel environment:
+
+.. code-block:: bash
+
+   python -m pip uninstall floodsr
+   jupyter kernelspec uninstall floodsr
+
+- **Hosted notebook (Colab)** with ``pip`` in the runtime:
+
+.. code-block:: bash
+
+   !python -m pip uninstall -y floodsr
+
+Extended install
+^^^^^^^^^^^^^^^^
+
+- **Command line (CLI)** or **local notebook (Jupyter)** in the ``floodsr-gdal`` conda environment:
+
+.. code-block:: bash
+
+   conda deactivate
+   conda env remove -n floodsr-gdal
+
+- **Hosted notebook (Colab)** experimental GDAL setup:
+
+.. code-block:: bash
+
+   # easiest cleanup is to restart the runtime
+   # Runtime > Restart session
  
