@@ -34,11 +34,6 @@ def test_tutorial_notebook_executes(notebook_fp, timeout_s, shared_cache_dir, tm
     # Copy the source notebook so execution outputs never modify the tracked file.
     run_fp = tmp_path / notebook_fp.name
     shutil.copy2(notebook_fp, run_fp)
-    notebook_nb = nbformat.read(run_fp, as_version=4)
-    for cell in notebook_nb.cells:
-        if isinstance(cell, dict):
-            cell.pop("id", None)
-    nbformat.write(notebook_nb, run_fp)
 
     # Expose the local package and a CLI shim without requiring notebook source edits.
     cli_fp = tmp_path / "floodsr"
