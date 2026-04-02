@@ -1,6 +1,6 @@
 """Sync French docs catalogs against current English sources and review metadata."""
 
-import argparse, csv, hashlib, json, logging, subprocess, sys, tempfile
+import argparse, csv, hashlib, io, json, logging, subprocess, sys, tempfile
 from pathlib import Path
 
 from babel.messages import pofile
@@ -127,6 +127,7 @@ def _sync_one_catalog(
 ) -> tuple[dict, list[dict]]:
     """Sync one French catalog against the current English template and metadata."""
     assert po_fp.suffix == ".po", f"expected .po catalog, got:\n    {po_fp}"
+    original_text = po_fp.read_text(encoding="utf-8")
     rel_path = po_fp.relative_to(catalog_root)
     pot_fp = template_root / rel_path.with_suffix(".pot")
     assert pot_fp.exists(), f"missing gettext template for catalog:\n    {pot_fp}"
@@ -188,20 +189,16 @@ def _sync_one_catalog(
                 }
             )
 
+    # Skip write-back when the only diff is volatile header churn.
+    rendered_text = _render_po_catalog_text(current_catalog=current_catalog)
+    final_text = _prune_catalog_headers_text(text=rendered_text)
+    if _strip_volatile_po_headers(original_text) == _strip_volatile_po_headers(final_text):
+        return stats, report_row_l
+
     # Write the reconciled catalog after all entry metadata has been refreshed.
     if not dry_run:
         po_fp.parent.mkdir(parents=True, exist_ok=True)
-        with po_fp.open("wb") as stream:
-            pofile.write_po(
-                stream,
-                current_catalog,
-                ignore_obsolete=True,
-                include_previous=False,
-                no_location=True,
-                sort_by_file=True,
-                width=100,
-            )
-        _prune_catalog_headers(po_fp=po_fp)
+        po_fp.write_text(final_text, encoding="utf-8")
     return stats, report_row_l
 
 
@@ -256,17 +253,39 @@ def _read_baseline_catalog(repo_root: Path, baseline_commit: str, rel_path: Path
     return pofile.read_po(result.stdout.splitlines(True), locale="fr")
 
 
-def _prune_catalog_headers(po_fp: Path) -> None:
+def _render_po_catalog_text(current_catalog: Catalog) -> str:
+    """Render one Babel catalog to the normalized on-disk PO text format."""
+    stream = io.BytesIO()
+    pofile.write_po(
+        stream,
+        current_catalog,
+        ignore_obsolete=True,
+        include_previous=False,
+        no_location=True,
+        sort_by_file=True,
+        width=100,
+    )
+    return stream.getvalue().decode("utf-8")
+
+
+def _prune_catalog_headers_text(text: str) -> str:
     """Remove non-project PO header fields we do not want to track."""
-    assert po_fp.exists(), f"missing catalog path:\n    {po_fp}"
     drop_prefix_l = (
         "\"Report-Msgid-Bugs-To:",
         "\"Last-Translator:",
         "\"Generated-By:",
     )
-    line_l = po_fp.read_text(encoding="utf-8").splitlines()
+    line_l = text.splitlines()
     kept_line_l = [line for line in line_l if not line.startswith(drop_prefix_l)]
-    po_fp.write_text("\n".join(kept_line_l).rstrip() + "\n", encoding="utf-8")
+    return "\n".join(kept_line_l).rstrip() + "\n"
+
+
+def _strip_volatile_po_headers(text: str) -> str:
+    """Normalize volatile PO header lines before comparing tracked file content."""
+    volatile_prefix_l = ("\"POT-Creation-Date:",)
+    line_l = _prune_catalog_headers_text(text=text).splitlines()
+    kept_line_l = [line for line in line_l if not line.startswith(volatile_prefix_l)]
+    return "\n".join(kept_line_l).rstrip() + "\n"
 
 
 def _parse_review_metadata(message: Message) -> dict:

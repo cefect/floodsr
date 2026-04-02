@@ -33,6 +33,7 @@ The current docs stack uses Sphinx with `myst_nb` for notebook rendering and the
 - A developer-maintained sync step should normalize each entry `msgid`, hash it, and compare that value against the stored `source_hash` to decide whether a French entry remains trusted or has become stale.
 - Human-reviewed French text should remain authoritative until the corresponding English source text changes.
 - Machine-translated French text should remain explicitly marked as draft until a human review promotes it back to trusted status.
+- During agent-assisted translation maintenance, an agent may keep or restore `human_locked` for a previously human-reviewed entry when the English edit is only a trivial wording tweak and the existing French remains substantively correct without meaningful rewrite.
 - The last known fully human-proofed French baseline should be treated as the provenance anchor for initial migration into the metadata-backed workflow.
 - Compiled `.mo` files are build artifacts, not source artifacts. They should be generated for local/CI/docs builds and should not be committed to the repository.
 - Translate top-level indexes, landing pages, and internal links along with page content so the French docs are navigable as a complete experience.
@@ -110,14 +111,18 @@ As these provide commands for patching the environment, they are a special case.
 - Notebook execution should remain disabled via the docs configuration so that builds are deterministic.
 - Tutorial execution for documentation refreshes should use per-notebook shell shims that live beside the notebooks under `docs/user/notebooks/` (for example `tutorial_1.sh` and `tutorial_2.sh`).
 - Those shell shims should execute a temporary copy of the notebook under a temp-backed sandbox-like working directory, then copy the completed `.ipynb` back into `docs/user/notebooks/`.
+- CI install-path proof should stay lightweight: `install-edge.yml` may execute small notebook shim artifacts that mirror the documented notebook install commands and a minimal `floodsr` sanity check, rather than the full tutorial notebooks.
+- The full tutorial notebooks should continue to be proven separately via the `notebook`-marked pytest suite and the per-notebook shell runners used for docs refreshes.
 - Generated side files from tutorial execution should stay in that temp-backed staging area, not beside the tracked source notebooks.
 - The committed notebook artifacts under `docs/user/notebooks/` should be pruned before rendering so they keep plot/image outputs that materially help the docs, while dropping textual execution output such as stream logs, CLI chatter, and one-off diagnostics.
 - The docs site should therefore render tutorial notebooks from this pruned state: markdown plus code cells, with plot outputs preserved where useful and non-plot outputs removed.
 - Short notebook-internal validation cells may remain executable while being hidden from rendered docs by using notebook cell tags such as `remove-input` for assertion-only checks.
+- When a notebook cell uses `remove-output`, add one short preceding code cell tagged `remove-input` with a plain editor-facing note such as `# cell below has tag:'remove-output'` so the hidden-output behavior is obvious while editing the notebook in VS Code, without changing what readers see in the rendered docs.
 - Per-notebook shell shims should assume the caller has already activated the correct notebook runtime. In this repo, proofing should be launched from the outside with `conda run -n dev ...` (or an already-active `dev` shell) rather than hard-coding a conda interpreter path inside the shim.
-- Notebook source cells should default to the same cache behavior as the application code. For `floodsr`, that means leaving cache selection to the CLI/runtime unless the user explicitly edits the notebook cell to override it.
-- When a tutorial benefits from cache reuse during docs proofing (for example, repeated HRDEM fetches in Tutorial 3), the per-notebook shell shim may combine temp-backed notebook staging with a separate shared project-cache override via environment variables. That cache override should live in the shim, not as a hard-coded path in the committed notebook source.
-- Tutorials that expose cache overrides should tell users to edit the relevant notebook cell if they want custom cache behavior.
+- Notebook source cells may define a visible, hard-coded `base_cache_dir` when that keeps the tutorial easier to read and rerun.
+- When a tutorial uses a visible `base_cache_dir`, add a hidden follow-up cell that lets docs-proofing or CI override that path from environment variables without changing the user-facing flow.
+- When a tutorial benefits from cache reuse during docs proofing (for example, repeated HRDEM fetches in Tutorial 3), the per-notebook shell shim may still inject the cache path via environment variables, but the notebook should resolve that through the hidden override cell rather than through ad hoc command-string assembly later in the tutorial.
+- Tutorials that expose cache overrides should tell users to edit the visible notebook cache cell if they want custom cache behavior.
 - When docs are previewed from a non-`main` branch, the Colab launch button may therefore open an older `main` branch notebook rather than the previewed content.
  
 

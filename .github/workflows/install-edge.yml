@@ -234,7 +234,7 @@ jobs:
           conda create -n floodsr-gdal -c conda-forge python=3.12 gdal -y
           conda activate floodsr-gdal
           python -m pip install floodsr
-          python -m pip install jupyterlab ipykernel
+          python -m pip install jupyterlab ipykernel matplotlib
           python -m ipykernel install --user --name floodsr-gdal --display-name "Python (floodsr-gdal)"
 
       # Execute each notebook shim from the sparse checkout copy.
