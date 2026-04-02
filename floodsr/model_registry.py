@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import unquote, urlparse
-from urllib.request import Request, urlopen
+from urllib.request import Request, url2pathname, urlopen
 
 from floodsr.cache_paths import get_model_cache_path
 from floodsr.checksums import assert_sha256, verify_sha256
@@ -237,15 +237,7 @@ class FileRetrievalBackend(WeightsRetrievalBackend):
 
     def retrieve(self, source: str, destination: Path, show_progress: bool = True) -> Path:
         """Copy model bytes from a local path into destination."""
-        parsed = urlparse(source)
-        if parsed.scheme.lower() in {"", "file"}:
-            source_fp = (
-                Path(f"//{parsed.netloc}{unquote(parsed.path)}")
-                if parsed.netloc
-                else Path(unquote(parsed.path) or source)
-            )
-        else:
-            raise ValueError(f"unsupported scheme for file backend: {parsed.scheme}")
+        source_fp = _resolve_file_source_path(source)
         source_fp = source_fp.expanduser().resolve()
         if not source_fp.exists():
             raise FileNotFoundError(f"source model not found: {source_fp}")
@@ -254,6 +246,23 @@ class FileRetrievalBackend(WeightsRetrievalBackend):
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source_fp, destination)
         return destination
+
+
+def _resolve_file_source_path(source: str) -> Path:
+    """Normalize a local path or file URI into a platform-native `Path`."""
+    parsed = urlparse(source)
+    scheme = parsed.scheme.lower()
+    if scheme == "":
+        return Path(unquote(source))
+    if scheme != "file":
+        raise ValueError(f"unsupported scheme for file backend: {parsed.scheme}")
+
+    # Use URL-to-path normalization so Windows file URIs like `file:///C:/...`
+    # become `C:\\...` rather than `\\C:\\...`, which resolves incorrectly.
+    normalized_path = url2pathname(unquote(parsed.path))
+    if parsed.netloc:
+        return Path(f"\\\\{parsed.netloc}{normalized_path}")
+    return Path(normalized_path)
 
 
 def load_models_manifest(manifest_fp: str | Path | None = None) -> dict:

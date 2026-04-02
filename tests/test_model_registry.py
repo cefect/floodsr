@@ -1,12 +1,14 @@
 """Tests for model registry and fetch workflow."""
 
-import json, logging
+import json, logging, os
 from pathlib import Path
 
 import pytest
 
 from conftest import default_model_version, models_manifest_fp
 from floodsr.model_registry import (
+    FileRetrievalBackend,
+    _resolve_file_source_path,
     fetch_model,
     get_retrieval_backend,
     list_models,
@@ -43,6 +45,34 @@ def test_fetch_model_returns_cached_path(tmp_path: Path, models_manifest_fp: Pat
     )
     assert isinstance(model_fp, Path)
     assert model_fp.exists()
+
+
+@pytest.mark.fast
+@pytest.mark.skipif(os.name != "nt", reason="Windows file-URI normalization only applies on Windows")
+def test_resolve_file_source_path_handles_windows_drive_file_uri(tmp_path: Path):
+    """Ensure Windows file URIs normalize to a valid drive-letter path."""
+    source_fp = tmp_path / "source_model.onnx"
+    source_fp.write_bytes(b"cli-test-model")
+
+    resolved = _resolve_file_source_path(source_fp.as_uri())
+
+    assert isinstance(resolved, Path)
+    assert resolved == source_fp
+
+
+@pytest.mark.fast
+@pytest.mark.skipif(os.name != "nt", reason="Windows file-URI normalization only applies on Windows")
+def test_file_backend_retrieve_accepts_windows_drive_file_uri(tmp_path: Path):
+    """Ensure file retrieval works for Windows `file:///C:/...` manifest URLs."""
+    source_fp = tmp_path / "source_model.onnx"
+    source_fp.write_bytes(b"cli-test-model")
+    destination = tmp_path / "cache" / "model.onnx.part"
+
+    retrieved_fp = FileRetrievalBackend().retrieve(source_fp.as_uri(), destination)
+
+    assert retrieved_fp == destination
+    assert retrieved_fp.exists()
+    assert retrieved_fp.read_bytes() == source_fp.read_bytes()
 
 
 @pytest.mark.fast
