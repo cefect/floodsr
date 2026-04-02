@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version:  floodsr\n"
-"POT-Creation-Date: 2026-04-01 15:39-0600\n"
+"POT-Creation-Date: 2026-04-01 15:57-0600\n"
 "PO-Revision-Date: 2026-03-31 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
@@ -58,8 +58,10 @@ msgstr "Commandes"
 msgid "``models``"
 msgstr "``models``"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: ba15aa9a
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "List manifest models or fetch cached model weights."
 msgstr "Liste les modèles du manifeste ou récupère des poids de modèle mis en cache."
 
@@ -114,7 +116,7 @@ msgstr "``--version``"
 #. review_status: llm_draft
 #. source_hash: 7083065b
 msgid "Print the installed FloodSR package version and exit."
-msgstr "Affiche la version installée du paquet FloodSR puis quitte."
+msgstr "Afficher la version installée du paquet FloodSR et quitter."
 
 #. review_status: llm_draft
 #. source_hash: 63ec42db
@@ -153,8 +155,10 @@ msgstr "``--log-level {DEBUG,INFO,WARNING,ERROR}``"
 msgid "Explicit log level override."
 msgstr "Force explicitement le niveau de journalisation."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 8edcc26c
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "models"
 msgstr "models"
 
@@ -163,8 +167,10 @@ msgstr "models"
 msgid "``list``"
 msgstr "``list``"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 3648eff2
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "List model versions defined in the manifest."
 msgstr "Liste les versions de modèle définies dans le manifeste."
 
@@ -173,8 +179,10 @@ msgstr "Liste les versions de modèle définies dans le manifeste."
 msgid "``fetch``"
 msgstr "``fetch``"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: a9463723
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Fetch one manifest model into the local cache."
 msgstr "Récupère un modèle du manifeste dans le cache local."
 
@@ -286,8 +294,10 @@ msgstr "``--no-progress``"
 msgid "Disable progress output. Default: progress is shown."
 msgstr "Désactive l'affichage de la progression. La progression s'affiche par défaut."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: e887e16e
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "tohr"
 msgstr "tohr"
 
@@ -568,8 +578,10 @@ msgstr ""
 "traitement par tuiles à l'exécution. Utilisez ``--no-progress`` pour la désactiver. Activée par "
 "défaut."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 72f4be89
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "doctor"
 msgstr "doctor"
 

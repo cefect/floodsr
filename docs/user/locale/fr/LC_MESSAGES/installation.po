@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version:  floodsr\n"
-"POT-Creation-Date: 2026-04-01 15:39-0600\n"
+"POT-Creation-Date: 2026-04-01 15:55-0600\n"
 "PO-Revision-Date: 2026-03-31 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
@@ -423,3 +423,52 @@ msgstr ""
 "Pour les plus téméraires, ce qui suit semble fonctionner en mars 2026, mais cela cassera "
 "probablement lorsque Colab mettra à jour ses images de base, donc ne perdez peut-être pas votre "
 "temps :"
+
+#. review_status: llm_draft
+#. source_hash: fe199528
+msgid "Uninstall"
+msgstr "Désinstallation"
+
+#. review_status: llm_draft
+#. source_hash: 79562727
+msgid "Use the uninstall command that matches both your install mode and execution context."
+msgstr ""
+"Utilisez la commande de désinstallation qui correspond à la fois à votre mode d'installation et à"
+" votre contexte d'exécution."
+
+#. review_status: llm_draft
+#. source_hash: 57d5036d
+msgid "Basic uninstall"
+msgstr "Désinstallation de base"
+
+#. review_status: llm_draft
+#. source_hash: 14e5e079
+msgid "**Command line (CLI)** with ``pipx``:"
+msgstr "**Ligne de commande (CLI)** avec ``pipx`` :"
+
+#. review_status: llm_draft
+#. source_hash: 01e2e3d3
+msgid "**Local notebook (Jupyter)** with ``pip`` in the kernel environment:"
+msgstr "**Carnet local (Jupyter)** avec ``pip`` dans l’environnement du noyau :"
+
+#. review_status: llm_draft
+#. source_hash: 72dcdc70
+msgid "**Hosted notebook (Colab)** with ``pip`` in the runtime:"
+msgstr "**Carnet hébergé (Colab)** avec ``pip`` dans l’environnement d’exécution :"
+
+#. review_status: llm_draft
+#. source_hash: c7633fa7
+msgid "Extended uninstall"
+msgstr "Désinstallation étendue"
+
+#. review_status: llm_draft
+#. source_hash: 0a110220
+msgid "**Command line (CLI)** or **local notebook (Jupyter)** in the ``floodsr-gdal`` conda environment:"
+msgstr ""
+"**Ligne de commande (CLI)** ou **carnet local (Jupyter)** dans l’environnement conda ``floodsr-"
+"gdal`` :"
+
+#. review_status: llm_draft
+#. source_hash: 7cde18cd
+msgid "**Hosted notebook (Colab)** experimental GDAL setup:"
+msgstr "**Carnet hébergé (Colab)** : configuration expérimentale de GDAL :"

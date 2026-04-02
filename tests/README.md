@@ -28,7 +28,7 @@ conda activate deploy
 # move to the repository root
 cd /workspace
 
-# all tests (probably skips sphinx tests. this is the VS Code UI default)
+# all tests (this is the VS Code UI default)
 pytest -q -m "not sphinx" 2>&1 | tee "tests/log/pytest_$(date -u +%Y%m%d_%H%M%S)_all.log"
 
 

@@ -1,7 +1,7 @@
 """Unit tests for CostGrow helper behavior."""
 
-import numpy as np
 import pytest
+np = pytest.importorskip("numpy")
 
 from floodsr.models.CostGrow_Terrain import _compute_cost_surface, _filter_isolated, ModelWorker
 
