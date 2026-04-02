@@ -2,9 +2,9 @@
 
 from pathlib import Path
 
-import numpy as np
 import pytest
-import rasterio
+np = pytest.importorskip("numpy")
+rasterio = pytest.importorskip("rasterio")
 
 import floodsr.models.CostGrow_Terrain as costgrow_module
 import floodsr.tohr

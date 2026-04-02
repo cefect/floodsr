@@ -1,17 +1,31 @@
+
 msgid ""
 msgstr ""
-"Project-Id-Version: floodsr\n"
-"POT-Creation-Date: 2026-03-19 00:00+0000\n"
+"Project-Id-Version:  floodsr\n"
+"POT-Creation-Date: 2026-04-01 15:39-0600\n"
 "PO-Revision-Date: 2026-03-19 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 
+#. review_status: human_locked
+#. source_hash: 2474a130
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "``floodsr`` documentation"
 msgstr "Documentation de ``floodsr``"
 
+#. review_status: llm_draft
+#. source_hash: 874e93a3
+msgid "floodsr header"
+msgstr "en-tête floodsr"
+
+#. review_status: human_locked
+#. source_hash: 437aea62
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Contents"
 msgstr "Contenu"

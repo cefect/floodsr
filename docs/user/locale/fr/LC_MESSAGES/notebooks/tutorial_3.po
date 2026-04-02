@@ -1,107 +1,446 @@
+
 msgid ""
 msgstr ""
-"Project-Id-Version: floodsr\n"
+"Project-Id-Version:  floodsr\n"
+"POT-Creation-Date: 2026-04-01 15:55-0600\n"
 "PO-Revision-Date: 2026-03-20 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
-"Last-Translator: Codex\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 
+#. review_status: human_locked
+#. source_hash: 95ba09ee
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Tutorial 3: Large rasters"
 msgstr "Tutoriel 3 : rasters de grande taille"
 
-msgid "This tutorial demonstrates `floodsr` with a larger low-res flood raster and an end-to-end CLI run that fetches HRDEM and writes the super-resolved output in one shot."
-msgstr "Ce tutoriel montre `floodsr` sur un raster d'inondation basse résolution plus grand, avec un flux CLI complet (ligne de commande) qui récupère le HRDEM et écrit la sortie super-résolue en une seule commande."
+#. review_status: human_locked
+#. source_hash: d43ad335
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"This tutorial demonstrates `floodsr` with a larger raster and an end-to-end CLI run that fetches "
+"HRDEM and writes the super-resolved output in one shot."
+msgstr ""
+"Ce tutoriel présente `floodsr` avec un raster plus grand et une exécution CLI de bout en bout qui"
+" récupère le HRDEM et écrit la sortie super-résolue en une seule commande."
 
+#. review_status: human_locked
+#. source_hash: b1294950
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "**What you'll do:**"
 msgstr "**Ce que vous allez faire :**"
 
+#. review_status: human_locked
+#. source_hash: 79ea8652
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+#, python-brace-format
 msgid "verify the extended install from {ref}`extended_install`"
 msgstr "vérifier l'installation étendue décrite dans {ref}`extended_install`"
 
+#. review_status: human_locked
+#. source_hash: 002ebd22
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "download and visualize a larger test raster"
 msgstr "télécharger puis visualiser un raster de test plus grand"
 
+#. review_status: human_locked
+#. source_hash: de0a1a34
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "run `floodsr tohr` with `--fetch-hrdem`"
 msgstr "exécuter `floodsr tohr` avec `--fetch-hrdem`"
 
+#. review_status: human_locked
+#. source_hash: b939b00e
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "inspect both the fetched HRDEM and final output"
 msgstr "inspecter à la fois le HRDEM récupéré et la sortie finale"
 
+#. review_status: human_locked
+#. source_hash: be7c3556
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Install `floodsr`"
 msgstr "Installer `floodsr`"
 
-msgid "This tutorial requires the extended install described in {ref}`extended_install`. If you followed the instructions for the {ref}`basic_install`, the simplest way to upgrade is to install a new environment per {ref}`extended_install`. And you should probably uninstall the old/previous **basic** environment to avoid confusion and free up disk space."
-msgstr "Ce tutoriel nécessite l'installation étendue décrite dans {ref}`extended_install`. Si vous avez suivi les instructions de {ref}`basic_install`, le moyen le plus simple de passer à niveau consiste à créer un nouvel environnement selon {ref}`extended_install`. Il est d'ailleurs probablement préférable de désinstaller l'ancien environnement **de base** afin d'éviter toute confusion et de libérer un peu d'espace disque."
+#. review_status: llm_draft
+#. source_hash: db4aab5f
+#, python-brace-format
+msgid ""
+"This tutorial requires the extended install described in {ref}`extended_install`. `floodsr` uses "
+"this two-level installation approach to support as many users as possible:"
+msgstr ""
+"Ce tutoriel nécessite l’installation étendue décrite dans {ref}`extended_install`. `floodsr` "
+"utilise cette approche d’installation à deux niveaux afin de convenir au plus grand nombre "
+"d’utilisateurs possible :"
 
+#. review_status: llm_draft
+#. source_hash: 4183f94f
+msgid ""
+"the **basic** install for those who need something easy to install and dont need the extra "
+"machinery for handling large rasters, and"
+msgstr ""
+"l’installation **de base** pour celles et ceux qui veulent quelque chose de simple à installer et"
+" n’ont pas besoin de l’outillage supplémentaire pour gérer de grands rasters, et"
+
+#. review_status: llm_draft
+#. source_hash: f5f40655
+msgid ""
+"the **extended** install for those more comfortable with Python and who want to use the full "
+"power of `floodsr` for large rasters."
+msgstr ""
+"l’installation **étendue** pour les personnes plus à l’aise avec Python et qui veulent exploiter "
+"toute la puissance de `floodsr` sur de grands rasters."
+
+#. review_status: llm_draft
+#. source_hash: 97374047
+#, python-brace-format
+msgid ""
+"If you followed the instructions for the {ref}`basic_install`, the simplest way to upgrade is to "
+"install a new environment per {ref}`extended_install`."
+msgstr ""
+"Si vous avez suivi les instructions de {ref}`basic_install`, le moyen le plus simple de passer à "
+"niveau consiste à créer un nouvel environnement selon {ref}`extended_install`."
+
+#. review_status: llm_draft
+#. source_hash: 27de494b
+#, python-brace-format
+msgid ""
+"And you should probably uninstall the old/previous **basic** environment to avoid confusion and "
+"free up disk space.  See {ref}`installation` for install and uninstall commands for each mode and"
+" execution context."
+msgstr ""
+"Il est aussi conseillé de désinstaller l’ancien environnement **de base** afin d’éviter toute "
+"confusion et de libérer de l’espace disque. Consultez {ref}`installation` pour les commandes "
+"d’installation et de désinstallation correspondant à chaque mode et contexte d’exécution."
+
+#. review_status: human_locked
+#. source_hash: 9eecd2bf
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+#, python-brace-format
 msgid "Proceed with {ref}`extended_install` based on your execution context:"
 msgstr "Poursuivez avec {ref}`extended_install` selon votre contexte d'exécution :"
 
-msgid "**command line (CLI)**: copy and paste the commands from {ref}`extended_install_cli` into your terminal."
-msgstr "**ligne de commande (CLI)** : copiez-collez dans votre terminal les commandes de {ref}`extended_install_cli`."
+#. review_status: human_locked
+#. source_hash: 4571eb84
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+#, python-brace-format
+msgid ""
+"**command line (CLI)**: copy and paste the commands from {ref}`extended_install_cli` into your "
+"terminal."
+msgstr ""
+"**ligne de commande (CLI)** : copiez-collez dans votre terminal les commandes de "
+"{ref}`extended_install_cli`."
 
-msgid "**local notebook (Jupyter)**: follow the same extended install as for the CLI, then run the additional steps from {ref}`extended_install_notebook` so this notebook uses the correct kernel."
-msgstr "**carnet local (Jupyter)** : suivez la même installation étendue que pour la CLI, puis exécutez les étapes supplémentaires de {ref}`extended_install_notebook` afin que ce carnet utilise le bon noyau."
+#. review_status: llm_draft
+#. source_hash: ce85a08f
+#, python-brace-format
+msgid ""
+"**local notebook (Jupyter)**: follow the same {ref}`extended_install_cli` as for the CLI, then "
+"run the additional steps from {ref}`extended_install_notebook` so this notebook uses the correct "
+"kernel."
+msgstr ""
+"**carnet local (Jupyter)** : suivez les mêmes étapes {ref}`extended_install_cli` que pour la CLI,"
+" puis exécutez les étapes supplémentaires de {ref}`extended_install_notebook` pour que ce carnet "
+"utilise le bon noyau."
 
-msgid "**hosted notebook (Colab)**: Probably a bad idea. but see {ref}`extended_install_hosted_notebook`, or uncomment the experimental setup cell below if you're feeling brave."
-msgstr "**carnet hébergé (Colab)** : ce n'est probablement pas une très bonne idée, mais consultez {ref}`extended_install_hosted_notebook`, ou décommentez la cellule de configuration expérimentale ci-dessous si vous êtes d'humeur aventureuse."
+#. review_status: human_locked
+#. source_hash: 76e41c07
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+#, python-brace-format
+msgid ""
+"**hosted notebook (Colab)**: Probably a bad idea. but see "
+"{ref}`extended_install_hosted_notebook`, or uncomment the experimental setup cell below if you're"
+" feeling brave."
+msgstr ""
+"**carnet hébergé (Colab)** : ce n'est probablement pas une très bonne idée, mais consultez "
+"{ref}`extended_install_hosted_notebook`, ou décommentez la cellule de configuration expérimentale"
+" ci-dessous si vous êtes d'humeur aventureuse."
 
-msgid "Install additional packages"
-msgstr "Installer des paquets supplémentaires"
+#. review_status: llm_draft
+#. source_hash: f494e4b4
+msgid "Prove the install"
+msgstr "Vérifier l’installation"
 
-msgid "For this tutorial, we need the additional Python packages `matplotlib` and `rasterio` as shown in {doc}`Tutorial 2 <tutorial_2>`"
-msgstr "Pour ce tutoriel, nous avons besoin des paquets Python supplémentaires `matplotlib` et `rasterio`, comme indiqué dans {doc}`le tutoriel 2 <tutorial_2>`"
+#. review_status: llm_draft
+#. source_hash: 5e5a0d0a
+msgid "Let's check the versions now:"
+msgstr "Vérifions maintenant les versions :"
 
-msgid "After you've done this, check versions:"
-msgstr "Une fois cela fait, vérifiez les versions :"
+#. review_status: llm_draft
+#. source_hash: 3b40c31f
+msgid ""
+"If these don't work, double check you selected correct kernel (e.g., `Python (floodsr-gdal)`) for"
+" this notebook."
+msgstr ""
+"Si cela ne fonctionne pas, vérifiez bien que vous avez sélectionné le bon noyau pour ce carnet "
+"(par exemple `Python (floodsr-gdal)`)."
 
+#. review_status: human_locked
+#. source_hash: 7df60b64
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Imports"
 msgstr "Importations"
 
+#. review_status: human_locked
+#. source_hash: 893c286c
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Set Cache"
 msgstr "Définir le cache"
 
+#. review_status: human_locked
+#. source_hash: 594263e6
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "When rasters become large, caching downloads to disk can be a huge time saver."
-msgstr "Quand les rasters (cartes en grille) deviennent volumineux, mettre les téléchargements en cache sur disque peut faire gagner beaucoup de temps."
+msgstr ""
+"Quand les rasters (cartes en grille) deviennent volumineux, mettre les téléchargements en cache "
+"sur disque peut faire gagner beaucoup de temps."
 
-msgid "By default, this notebook follows the same cache behavior as the source code: if no cache override is supplied, `floodsr` uses its normal platform cache location."
-msgstr "Par défaut, ce carnet suit le même comportement de cache que le code source : si aucune surcharge n'est fournie, `floodsr` utilise son emplacement de cache habituel sur la plateforme."
+#. review_status: llm_draft
+#. source_hash: 608c60dc
+msgid ""
+"This tutorial demonstrates a reusable cache directory so repeated HRDEM fetches and model "
+"resolution do not need to start from scratch each time. The size required by the cache (and your "
+"working directory for that matter) will of course depend on the size of the rasters you work "
+"with. For large rasters, this can be >10 GB."
+msgstr ""
+"Ce tutoriel montre comment utiliser un répertoire de cache réutilisable afin que les "
+"récupérations répétées de HRDEM et l’exécution du modèle n’aient pas à repartir de zéro à chaque "
+"fois. L’espace requis par le cache, et d’ailleurs par votre répertoire de travail, dépendra bien "
+"sûr de la taille des rasters que vous manipulez. Pour de grands rasters, cela peut dépasser 10 "
+"Go."
 
-msgid "If you want to override that behavior, edit the below cell and set `base_cache_dir` to a path you want `floodsr` to reuse."
-msgstr "Si vous souhaitez modifier ce comportement, éditez la cellule ci-dessous et définissez `base_cache_dir` vers un chemin que `floodsr` pourra réutiliser."
+#. review_status: llm_draft
+#. source_hash: 6401cc2c
+msgid "Edit the below cell if you want `floodsr` to reuse a different cache directory."
+msgstr ""
+"Modifiez la cellule ci-dessous si vous voulez que `floodsr` réutilise un autre répertoire de "
+"cache."
 
-msgid "Set Output Paths"
-msgstr "Définir les chemins de sortie"
+#. review_status: llm_draft
+#. source_hash: b0003540
+msgid "Set Paths"
+msgstr "Définir les chemins"
 
+#. review_status: llm_draft
+#. source_hash: 0b873bbf
+msgid "let's start by setting some paths to python variables for convenience"
+msgstr "Commençons par affecter quelques chemins à des variables Python pour plus de commodité."
+
+#. review_status: human_locked
+#. source_hash: 46228f1f
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Download Test Data"
 msgstr "Télécharger les données de test"
 
-msgid "We use a clipped tile from the old [Aqueduct Floods Hazard Maps](https://wri-projects.s3.amazonaws.com/AqueductFloodTool/download/v2/index.html) dataset."
-msgstr "Nous utilisons une tuile découpée provenant de l'ancien jeu de données [Aqueduct Floods Hazard Maps](https://wri-projects.s3.amazonaws.com/AqueductFloodTool/download/v2/index.html)."
+#. review_status: llm_draft
+#. source_hash: 97574ce9
+msgid ""
+"For this tutorial, we use a tile from the old [Aqueduct Floods Hazard Maps](https://wri-"
+"projects.s3.amazonaws.com/AqueductFloodTool/download/v2/index.html) dataset."
+msgstr ""
+"Pour ce tutoriel, nous utilisons une tuile issue de l’ancien jeu de données [Aqueduct Floods "
+"Hazard Maps](https://wri-projects.s3.amazonaws.com/AqueductFloodTool/download/v2/index.html)."
 
-msgid "Plot the Low-Res Input"
-msgstr "Visualiser l'entrée basse résolution"
+#. review_status: llm_draft
+#. source_hash: 1906d84a
+msgid ""
+"A clip of this has been uploaded to our project repo for easy retrieval. Fetch it into your "
+"working directory using the `urlretrieve` utility function again."
+msgstr ""
+"Un extrait en a été téléversé dans le dépôt du projet pour en faciliter la récupération. "
+"Récupérez-le dans votre répertoire de travail en utilisant à nouveau la fonction utilitaire "
+"`urlretrieve`."
 
+#. review_status: llm_draft
+#. source_hash: 8c76f430
+msgid "This fetches a raster like:"
+msgstr "Cela récupère un raster comme celui-ci :"
+
+#. review_status: llm_draft
+#. source_hash: 9a7ad31d
+msgid "![Aqueduct screenshot](img/tutorial_3_aqueduct_screenshot.png)"
+msgstr "![Capture d’écran Aqueduct](img/tutorial_3_aqueduct_screenshot.png)"
+
+#. review_status: llm_draft
+#. source_hash: e457d2b2
+msgid "Aqueduct screenshot"
+msgstr "Capture d’écran Aqueduct"
+
+#. review_status: llm_draft
+#. source_hash: ddd6f8c3
+msgid "We can also plot it to get a sense of the input data."
+msgstr "On peut aussi le tracer pour se faire une idée des données d’entrée."
+
+#. review_status: human_locked
+#. source_hash: 2fd30d0b
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "yuck"
 msgstr "beurk"
 
+#. review_status: llm_draft
+#. source_hash: f28cd57a
+msgid ""
+"you'll notice this raster uses `EPSG:4326`, which is lat/lon coordinates. Hence the goofy "
+"resolution.  We'll want to keep this in mind when we set our `--crs-policy`."
+msgstr ""
+"Vous remarquerez que ce raster utilise `EPSG:4326`, c’est-à-dire des coordonnées "
+"latitude/longitude. D’où cette résolution un peu étrange. Il faudra en tenir compte au moment de "
+"définir notre `--crs-policy`."
+
+#. review_status: human_locked
+#. source_hash: ab24b8dd
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Fetch HRDEM and Run `tohr`"
 msgstr "Récupérer le HRDEM et exécuter `tohr`"
 
-msgid "For this larger example, we use one CLI command to fetch HRDEM, resolve the model, and run super-resolution in one shot. The fetched HRDEM is projected (`EPSG:3979`) while the low-res depth raster is geographic (`EPSG:4326`), so we pass `--crs-policy=use-dem` to reproject the depth raster onto the DEM grid. The `--fetch-out` argument keeps a copy of the fetched HRDEM so we can inspect it in the next section."
-msgstr "Pour cet exemple plus grand, nous utilisons une seule commande CLI (ligne de commande) pour récupérer le HRDEM, résoudre le modèle et lancer la super-résolution en une seule fois. Le HRDEM récupéré est projeté (`EPSG:3979`), tandis que le raster de profondeur basse résolution est géographique (`EPSG:4326`) ; nous passons donc `--crs-policy=use-dem` pour reprojeter le raster de profondeur sur la grille du DEM. L'argument `--fetch-out` conserve une copie du HRDEM récupéré afin que nous puissions l'inspecter dans la section suivante."
+#. review_status: llm_draft
+#. source_hash: c2c9d2db
+msgid ""
+"For this larger example, we use one CLI command to fetch HRDEM, resolve the model, and run super-"
+"resolution in one shot with the following arguments:"
+msgstr ""
+"Pour cet exemple plus grand, nous utilisons une seule commande CLI pour récupérer le HRDEM, "
+"exécuter le modèle et lancer la super-résolution d’un seul coup, avec les arguments suivants :"
 
-msgid "If you left `base_cache_dir` as `None`, this command uses the default `floodsr` cache location."
-msgstr "Si vous avez laissé `base_cache_dir` à `None`, cette commande utilise l'emplacement de cache par défaut de `floodsr`."
+#. review_status: llm_draft
+#. source_hash: b52e6926
+#, python-brace-format
+msgid "`--in {lowres_fp}` points `floodsr` at the low-resolution flood-depth raster we downloaded above."
+msgstr ""
+"`--in {lowres_fp}` indique à `floodsr` le raster de profondeur d’inondation basse résolution que "
+"nous avons téléchargé ci-dessus."
 
-msgid "Visualize the Fetched HRDEM"
-msgstr "Visualiser le HRDEM récupéré"
+#. review_status: llm_draft
+#. source_hash: c51f9692
+msgid ""
+"`-f` / `--fetch-hrdem` tells `floodsr` to fetch HRDEM directly instead of requiring a local DEM "
+"file ahead of time."
+msgstr ""
+"`-f` / `--fetch-hrdem` indique à `floodsr` de récupérer directement le HRDEM au lieu d’exiger un "
+"fichier DEM local au préalable."
 
-msgid "The previous command wrote the fetched HRDEM to `--fetch-out`, so we can inspect the DEM tile directly."
-msgstr "La commande précédente a écrit le HRDEM récupéré dans `--fetch-out`, ce qui nous permet d'inspecter directement la tuile DEM."
+#. review_status: llm_draft
+#. source_hash: 63a62736
+#, python-brace-format
+msgid ""
+"`--fetch-out {hrdem_fp.name}` keeps a copy of the fetched HRDEM on disk so we can inspect it in "
+"the next section."
+msgstr ""
+"`--fetch-out {hrdem_fp.name}` conserve sur disque une copie du HRDEM récupéré afin que nous "
+"puissions l’inspecter dans la section suivante."
 
-msgid "Visualize the Output"
-msgstr "Visualiser la sortie"
+#. review_status: llm_draft
+#. source_hash: fdb8cde7
+msgid ""
+"`--fetch-force-tiling` forces the HRDEM fetch step to run in tiled windows. This is helpful for "
+"larger extents because it avoids trying to assemble the whole DEM in one large read."
+msgstr ""
+"`--fetch-force-tiling` force l’étape de récupération du HRDEM à s’exécuter par fenêtres tuilées. "
+"C’est utile sur de grandes emprises, car cela évite d’essayer d’assembler tout le DEM en une "
+"seule grosse lecture."
+
+#. review_status: llm_draft
+#. source_hash: 870c7678
+#, python-brace-format
+msgid ""
+"`--cache-dir {base_cache_dir}` tells both the fetch step and model-resolution step to reuse the "
+"cache directory we configured above."
+msgstr ""
+"`--cache-dir {base_cache_dir}` indique à la fois à l’étape de récupération et à l’étape "
+"d’exécution du modèle de réutiliser le répertoire de cache configuré ci-dessus."
+
+#. review_status: llm_draft
+#. source_hash: 8be20e0f
+msgid ""
+"`--window-method hard` tells the ToHR runtime to use non-overlapping hard windows instead of "
+"feathered blending. For this large raster example, we set this explicitly because the large-"
+"raster memory-safe path is tied to `hard` windowing (for now)."
+msgstr ""
+"`--window-method hard` indique au runtime ToHR d’utiliser des fenêtres rigides non superposées "
+"plutôt qu’un lissage par fusion progressive. Pour cet exemple de grand raster, nous le "
+"définissons explicitement parce que le chemin mémoire-sûr pour grands rasters est actuellement "
+"lié au fenêtrage `hard`."
+
+#. review_status: llm_draft
+#. source_hash: 375628bf
+msgid ""
+"`--crs-policy use-dem` tells `floodsr` to treat the fetched DEM grid as the target grid when the "
+"input flood raster and DEM use different coordinate reference systems. In this example, the low-"
+"resolution flood raster is geographic (`EPSG:4326`) while the fetched HRDEM is projected "
+"(`EPSG:3979`)."
+msgstr ""
+"`--crs-policy use-dem` indique à `floodsr` de traiter la grille DEM récupérée comme grille cible "
+"lorsque le raster d’inondation d’entrée et le DEM utilisent des systèmes de coordonnées "
+"différents. Dans cet exemple, le raster d’inondation basse résolution est géographique "
+"(`EPSG:4326`) tandis que le HRDEM récupéré est projeté (`EPSG:3979`)."
+
+#. review_status: llm_draft
+#. source_hash: 5b84d876
+msgid ""
+"`--out result.tif` writes the final super-resolved raster to a predictable output filename in the"
+" working directory."
+msgstr ""
+"`--out result.tif` écrit le raster final super-résolu dans un fichier de sortie au nom prévisible"
+" dans le répertoire de travail."
+
+#. review_status: llm_draft
+#. source_hash: 84f58d35
+msgid "`--min-depth-threshold=0.1` masks out very small predicted depths in the final output."
+msgstr "`--min-depth-threshold=0.1` masque les très faibles profondeurs prédites dans la sortie finale."
+
+#. review_status: llm_draft
+#. source_hash: 914c0c6c
+#, python-brace-format
+msgid "See {doc}`../cli_reference` for the full CLI reference."
+msgstr "Consultez {doc}`../cli_reference` pour la référence CLI complète."
+
+#. review_status: llm_draft
+#. source_hash: e620bb4c
+msgid "Plot the results"
+msgstr "Tracer les résultats"
+
+#. review_status: human_locked
+#. source_hash: 23a35577
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"The previous command wrote the fetched HRDEM to `--fetch-out`, so we can inspect the DEM tile "
+"directly."
+msgstr ""
+"La commande précédente a écrit le HRDEM récupéré dans `--fetch-out`, ce qui nous permet "
+"d'inspecter directement la tuile DEM."
+
+#. review_status: llm_draft
+#. source_hash: 94e7ac77
+msgid ""
+"To speed up plotting, we use a resampled version of the result.  The raster is so large that the "
+"plot looks the same when resampled like this; however, be careful not to mix up your plotting "
+"work from your analysis work."
+msgstr ""
+"Pour accélérer le tracé, nous utilisons une version rééchantillonnée du résultat. Le raster est "
+"si grand que le rendu visuel reste le même avec ce rééchantillonnage ; prenez toutefois garde à "
+"ne pas confondre le travail de visualisation avec votre travail d’analyse."
+
+#. review_status: llm_draft
+#. source_hash: cf180f82
+msgid "And now we plot the hi-res result"
+msgstr "Et maintenant, traçons le résultat haute résolution"
