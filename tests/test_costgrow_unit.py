@@ -3,7 +3,7 @@
 import pytest
 np = pytest.importorskip("numpy")
 
-from floodsr.models.CostGrow_Terrain import _compute_cost_surface, _filter_isolated, ModelWorker
+from floodsr.models.CostGrow_Terrain import _compute_cost_surface, _fill_nearest_unmasked, _filter_isolated, ModelWorker
 
 
 pytestmark = pytest.mark.fast
@@ -48,8 +48,25 @@ def test_costgrow_filter_isolated_keeps_only_anchor_connected_region():
     assert not filtered[2, 3]
 
 
+def test_costgrow_fill_nearest_unmasked_returns_copy_when_array_has_no_mask():
+    """Ensure fully wet coarse WSE inputs bypass the nearest-fill transform cleanly."""
+    arr = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32)
+    masked = np.ma.MaskedArray(arr, mask=np.zeros_like(arr, dtype=bool))
+    filled = _fill_nearest_unmasked(masked)
+    assert np.array_equal(filled, arr)
+    assert filled is not arr
+
+
 def test_costgrow_worker_is_builtin_and_valid_without_artifact():
     """Ensure the built-in CostGrow worker does not require a model artifact."""
     worker = ModelWorker(model_fp=None)
     assert worker.requires_model_artifact is False
     assert worker.is_valid(None) is True
+
+
+def test_costgrow_worker_resolves_windowed_path_from_fine_grid_size():
+    """Ensure large prepared scenes switch CostGrow into the disk-backed execution path."""
+    worker = ModelWorker(model_fp=None)
+    assert worker._resolve_execution_path("hard", (2048, 2048)) == "simple"
+    assert worker._resolve_execution_path("hard", (4096, 4096)) == "windowed"
+    assert worker._resolve_execution_path("feather", (4096, 4096)) == "windowed"

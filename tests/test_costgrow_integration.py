@@ -35,6 +35,38 @@ def _fake_costgrow_core(
     return out, {"wet_anchors": 1, "wet_final": int(np.isfinite(out).sum())}
 
 
+def _fake_costgrow_core_windowed(
+    pcraster_module,
+    depth_lr,
+    depth_lr_profile,
+    dem_fine_fp,
+    dem_fine_nodata,
+    fine_profile,
+    output_fp,
+    out_nodata,
+    min_depth_threshold,
+    dp_coarse_pixel_max,
+    decay_frac,
+    distance_fill_method,
+    distance_fill_kwargs,
+    show_progress,
+):
+    """Write a deterministic synthetic raster for windowed CostGrow plumbing tests."""
+    del pcraster_module, depth_lr, depth_lr_profile, fine_profile
+    del min_depth_threshold, dp_coarse_pixel_max, decay_frac, distance_fill_method, distance_fill_kwargs, show_progress
+    with rasterio.open(dem_fine_fp) as ds:
+        profile = ds.profile.copy()
+        valid = ds.read_masks(1) > 0
+    pred = np.where(valid, 0.25, float(out_nodata)).astype(np.float32, copy=False)
+    profile.update(dtype="float32", count=1, nodata=float(out_nodata))
+    if not bool(profile.get("tiled", False)):
+        profile.pop("blockxsize", None)
+        profile.pop("blockysize", None)
+    with rasterio.open(output_fp, "w", **profile) as dst:
+        dst.write(pred, 1)
+    return Path(output_fp), {"wet_anchors": 1, "wet_final": int(valid.sum())}
+
+
 def test_costgrow_tohr_runs_with_simple_platform_materialization(
     monkeypatch: pytest.MonkeyPatch,
     synthetic_tohr_tiles: dict,
@@ -61,7 +93,7 @@ def test_costgrow_tohr_runs_with_simple_platform_materialization(
     assert pred.shape == synthetic_tohr_tiles["hr_shape"]
     assert pred.dtype == np.float32
     assert np.isfinite(pred).any()
-    assert result["execution_path"] == "global"
+    assert result["execution_path"] == "simple"
     assert result["platform_materialization"] == "simple"
 
 
@@ -72,7 +104,7 @@ def test_costgrow_tohr_uses_windowed_platform_materialization_for_large_rasters(
 ):
     """Ensure CostGrow follows the same windowed platform-preparation trigger as ResUNet on large rasters."""
     monkeypatch.setattr(costgrow_module, "_check_pcraster", lambda: object())
-    monkeypatch.setattr(costgrow_module, "_run_costgrow_core", _fake_costgrow_core)
+    monkeypatch.setattr(costgrow_module, "_run_costgrow_core_windowed", _fake_costgrow_core_windowed)
     monkeypatch.setattr(floodsr.tohr, "resolve_model_worker_class", lambda _: costgrow_module.ModelWorker)
 
     result = floodsr.tohr.tohr(
@@ -87,5 +119,5 @@ def test_costgrow_tohr_uses_windowed_platform_materialization_for_large_rasters(
     )
 
     assert Path(result["output_fp"]).exists()
-    assert result["execution_path"] == "global"
+    assert result["execution_path"] == "windowed"
     assert result["platform_materialization"] == "windowed"
