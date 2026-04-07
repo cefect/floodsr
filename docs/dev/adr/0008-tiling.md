@@ -62,7 +62,7 @@ Current implementation summary:
 - DEM fetch (HRDEM): `windowed` output is VRT-backed tile assembly.
 - preprocessing/materialization: contract is raster-backed prepared rasters on the canonical grid; current implementation writes concrete rasters.
 - `ResUNet_16x_DEM`: `windowed + hard` currently writes one concrete raster tile and may expose a VRT wrapper over that raster when GDAL VRT support is available. I guess its nice to fallback to single raster... makes things more complicated through. 
-- `CostGrow_Terrain`: current work is still transitional. The branch may use disk-backed intermediates and blockwise raster IO, but the expensive growth/fill stages still operate at whole-scene scope. That reduces memory pressure, but it is not yet the final ADR target for model-phase `windowed` execution.
+- `CostGrow_Terrain`: `windowed + hard` now uses an explicit bounded-region tile-halo contract. The worker stages coarse wet/WSE support once, then runs fine-grid growth/fill/connectivity per padded tile and writes cropped core tiles into one concrete raster. `windowed + feather` remains unimplemented.
 
 
 ## Compatibility Matrix
@@ -72,7 +72,7 @@ Current implementation summary:
 | DEM fetch (HRDEM) | `ADR-0010` / `dem_sources/hrdem_mosaic.py` | implemented | no | implemented | no |
 | preprocessing | `ADR-0009` / `preprocessing.py` | implemented | no | implemented | no |
 | ResUNet_16x_DEM | `ADR-M-0001` / model worker | implemented | implemented | implemented | planned |
-| CostGrow_Terrain | `ADR-M-0002` / model worker | n/a | n/a | planned | planned |
+| CostGrow_Terrain | `ADR-M-0002` / model worker | implemented | implemented | implemented | planned |
 
 Rules:
 - This matrix is the shared capability contract for tiling and mosaicking.
