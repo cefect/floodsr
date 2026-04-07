@@ -509,9 +509,8 @@ class ModelWorker(Model):
 
     def _resolve_execution_path(self, window_method: str, dem_fine_shape: tuple[int, int]) -> str:
         """Choose the in-memory or disk-backed CostGrow execution path."""
-        del window_method
         fine_bytes = int(dem_fine_shape[0]) * int(dem_fine_shape[1]) * 4
-        if fine_bytes >= int(self.windowed_io_min_bytes):
+        if window_method == "hard" and fine_bytes >= int(self.windowed_io_min_bytes):
             return "windowed"
         return "simple"
 
@@ -528,6 +527,9 @@ class ModelWorker(Model):
         start = time.perf_counter()
         log = self.log
         pcraster_module = _check_pcraster()
+        window_method = str(kwargs.get("window_method", "hard") or "hard").strip().lower()
+        assert window_method in {"hard", "feather"}, f"unsupported window_method={window_method}"
+        assert isinstance(show_progress, bool), f"show_progress must be bool, got {type(show_progress)!r}"
 
         depth_lr_arr, depth_lr_nodata, depth_lr_profile = _read_single_band_raster(depth_lr_fp)
         with rasterio.open(dem_hr_fp) as dem_meta_ds:
@@ -538,7 +540,14 @@ class ModelWorker(Model):
         assert np.isfinite(depth_lr_arr).all(), "prepared depth_lr must contain only finite values"
         assert float(depth_lr_arr.min()) >= 0.0, f"prepared depth_lr must be >= 0; got min={float(depth_lr_arr.min())}"
         min_depth_threshold_value = 1e-3 if min_depth_threshold is None else float(min_depth_threshold)
-        execution_path = self._resolve_execution_path(str(kwargs.get("window_method", "hard")), dem_fine_shape)
+        execution_path = self._resolve_execution_path(window_method, dem_fine_shape)
+        log.info(
+            "costgrow execution path\n"
+            f"  window_method={window_method}\n"
+            f"  execution_path={execution_path}\n"
+            "  windowed_contract="
+            f"{'transitional_disk_backed_global' if execution_path == 'windowed' else 'whole_scene'}"
+        )
         out_nodata = dem_fine_nodata if dem_fine_nodata is not None else -9999.0
         if execution_path == "simple":
             dem_fine_arr, _, _ = _read_single_band_raster(dem_hr_fp)
@@ -616,12 +625,18 @@ class ModelWorker(Model):
             "execution_path": execution_path,
             "preprocess": {
                 "min_depth_threshold": float(min_depth_threshold_value),
+                "window_method": window_method,
                 "prepared_inputs": {
                     "depth_lr_prepared_fp": str(Path(depth_lr_fp).expanduser().resolve()),
                     "dem_hr_prepared_fp": str(Path(dem_hr_fp).expanduser().resolve()),
                     "depth_lr_nodata": depth_lr_nodata,
                     "dem_hr_nodata": dem_fine_nodata,
                 },
-                "costgrow": meta,
+                "costgrow": {
+                    **meta,
+                    "windowed_contract": (
+                        "transitional_disk_backed_global" if execution_path == "windowed" else "whole_scene"
+                    ),
+                },
             },
         }

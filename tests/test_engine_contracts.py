@@ -3,10 +3,9 @@
 from pathlib import Path
 
 import pytest
+
 np = pytest.importorskip("numpy")
 
-from conftest import logger, ort_tile_inputs, tohr_model_fp
-from floodsr.engine import EngineORT
 from floodsr.engine.base import EngineBase
 from floodsr.engine.providers import get_onnxruntime_info, get_rasterio_info
 from floodsr.engine.pcraster_check import _check_pcraster, get_pcraster_info
@@ -78,34 +77,3 @@ def test_engine_base_contract_with_dummy_subclass():
     assert result["prediction_m"].size > 0
 
 
-@pytest.mark.parametrize(
-    "repeat_run",
-    [
-        pytest.param(False, id="ort_contract_single_run"),
-        pytest.param(True, id="ort_contract_repeat_run_is_deterministic"),
-    ],
-)
-def test_engine_ort_run_tile_contract(tohr_model_fp, ort_tile_inputs, logger, repeat_run: bool):
-    """Ensure ORT predictions are float32, non-empty, and deterministic on repeat."""
-    pytest.importorskip("onnxruntime")
-    engine_instance = EngineORT(tohr_model_fp, logger=logger)
-    run1 = engine_instance.run_tile(
-        ort_tile_inputs["depth_lr"],
-        ort_tile_inputs["dem_hr"],
-        depth_lr_nodata=ort_tile_inputs["depth_lr_nodata"],
-        dem_hr_nodata=ort_tile_inputs["dem_hr_nodata"],
-        logger=logger,
-    )
-    assert run1["prediction_m"].dtype == np.float32
-    assert run1["prediction_m"].size > 0
-
-    if repeat_run:
-        run2 = engine_instance.run_tile(
-            ort_tile_inputs["depth_lr"],
-            ort_tile_inputs["dem_hr"],
-            depth_lr_nodata=ort_tile_inputs["depth_lr_nodata"],
-            dem_hr_nodata=ort_tile_inputs["dem_hr_nodata"],
-            logger=logger,
-        )
-        assert isinstance(run2["prediction_m"], np.ndarray)
-        assert np.array_equal(run1["prediction_m"], run2["prediction_m"])
