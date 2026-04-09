@@ -378,7 +378,11 @@ def _build_single_band_profile(fp: str | Path, profile: dict, height: int, width
     return out_profile
 
 
-def _zero_nodata_in_place(fp: str | Path, nodata: float | None) -> None:
+def _zero_nodata_in_place(
+    fp: str | Path,
+    nodata: float | None,
+    clear_metadata: bool = True,
+) -> None:
     """Replace nodata values with zero in an on-disk raster."""
     if nodata is None:
         return
@@ -387,8 +391,9 @@ def _zero_nodata_in_place(fp: str | Path, nodata: float | None) -> None:
         for _, window in ds.block_windows(1):
             arr = ds.read(1, window=window).astype(np.float32, copy=False)
             ds.write(replace_nodata_with_zero(arr, nodata), 1, window=window)
-        # Match the array-level normalization by clearing stale nodata metadata.
-        ds.nodata = None
+        # Some windowed paths still rely on nodata metadata after zero-filling.
+        if clear_metadata:
+            ds.nodata = None
 
 
 def _resolve_alignment_context(
@@ -734,6 +739,9 @@ def write_prepared_rasters(
                 num_threads=1,
             )
         _zero_nodata_in_place(depth_prepared_fp, ctx["depth_nodata"])
+        if ctx["depth_nodata"] is not None:
+            with rasterio.open(depth_prepared_fp, "r+") as ds:
+                ds.nodata = float(ctx["depth_nodata"])
         with rasterio.open(ctx["dem_path"]) as dem_ds, rasterio.open(dem_prepared_fp, "w", **dem_profile) as dst_ds:
             reproject(
                 source=rasterio.band(dem_ds, 1),
@@ -747,7 +755,10 @@ def write_prepared_rasters(
                 resampling=Resampling.bilinear,
                 num_threads=1,
             )
-        _zero_nodata_in_place(dem_prepared_fp, ctx["dem_nodata"])
+        _zero_nodata_in_place(dem_prepared_fp, ctx["dem_nodata"], clear_metadata=False)
+        if ctx["dem_nodata"] is not None:
+            with rasterio.open(dem_prepared_fp, "r+") as ds:
+                ds.nodata = float(ctx["dem_nodata"])
         depth_prepared_path = depth_prepared_fp.expanduser().resolve()
         dem_prepared_path = dem_prepared_fp.expanduser().resolve()
     else:
@@ -822,6 +833,8 @@ def write_platform_prepared_rasters(
         ctx["dem_raw_shape"][1],
         ctx["dem_raw_transform"],
     )
+    depth_profile["nodata"] = ctx["depth_nodata"]
+    dem_profile["nodata"] = ctx["dem_nodata"]
 
     if use_windowed:
         # Keep platform preparation windowed so large fetched DEMs do not materialize as full arrays.
