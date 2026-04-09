@@ -2,6 +2,7 @@
 
 import importlib.util
 import json
+import logging
 import os
 import subprocess
 import sys
@@ -83,16 +84,21 @@ def _run_costgrow_tohr_in_subprocess(
     tile_overlap: int | None,
     tile_size: int | None,
     result_fp: Path | None = None,
+    logger=None,
 ) -> dict | None:
     """Run CostGrow ToHR in a child interpreter and exit hard before native teardown."""
+    write_result = result_fp is not None
     script = f"""
 import os
 import json
+import logging
 import sys
 from pathlib import Path
 
 sys.path.insert(0, {str(Path('.').resolve())!r})
 import floodsr.tohr
+
+logging.basicConfig(level=logging.INFO, stream=sys.stdout, force=True)
 
 result = floodsr.tohr.tohr(
     model_version={model_version!r},
@@ -108,7 +114,7 @@ result = floodsr.tohr.tohr(
     tile_size={tile_size!r},
     show_progress=False,
 )
-if {str(result_fp)!r} is not None:
+if {write_result!r}:
     Path({str(result_fp)!r}).write_text(json.dumps(result), encoding='utf-8')
 sys.stdout.flush()
 sys.stderr.flush()
@@ -124,6 +130,11 @@ os._exit(0)
         f"stdout:\n{result.stdout}\n"
         f"stderr:\n{result.stderr}"
     )
+    log = logger or logging.getLogger(__name__)
+    if result.stdout.strip():
+        log.info(f"CostGrow subprocess stdout:\n    {result.stdout.rstrip()}")
+    if result.stderr.strip():
+        log.info(f"CostGrow subprocess stderr:\n    {result.stderr.rstrip()}")
     if result_fp is None:
         return None
     return json.loads(result_fp.read_text(encoding="utf-8"))
@@ -196,6 +207,7 @@ def test_tohr_regression_matches_case_spec_metrics(
                 tile_overlap=run_params.get("tile_overlap"),
                 tile_size=run_params.get("tile_size"),
                 result_fp=tmp_path / f"{tile_case_d['case_name']}_{run_label}_result.json",
+                logger=logger,
             )
         else:
             result = floodsr.tohr.tohr(
@@ -259,4 +271,3 @@ def test_tohr_regression_matches_case_spec_metrics(
         "ssim": round(float(run_spec["metrics"]["ssim"]), precision),
     }
     assert rounded_actual == rounded_expected
-

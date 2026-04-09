@@ -1,6 +1,6 @@
 """Pytest fixtures for FloodSR tests."""
 
-import hashlib, json, logging, pathlib
+import hashlib, json, logging, pathlib, sys
 
 import pytest
 
@@ -125,7 +125,7 @@ def logger(tmp_path_factory):
     formatter = logging.Formatter("%(levelname)s:%(name)s:%(message)s")
     # keep handlers minimal to avoid duplicate logs across runs
     if not any(isinstance(handler, logging.StreamHandler) and not isinstance(handler, logging.FileHandler) for handler in log.handlers):
-        stream_handler = logging.StreamHandler()
+        stream_handler = logging.StreamHandler(sys.stdout)
         stream_handler.setLevel(logging.DEBUG)
         stream_handler.setFormatter(formatter)
         log.addHandler(stream_handler)
