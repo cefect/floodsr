@@ -9,6 +9,8 @@ Several ADRs define packaging, testing, and publishing intent, but the GitHub Ac
 - CI owns packaging validation for published artifacts.
 - CI builds release artifacts once and reuses them across downstream workflow steps.
 - GitHub Actions test selection is limited to `fast` tests and excludes `local`.
+- Branch CI keeps `fast` tests marked `network` in scope; network reachability is part of the intended signal for those checks.
+- Fast network tests should skip, rather than fail, when the upstream dependency returns a transient provider-side failure such as HTTP 502/503/504 so branch CI is not red solely because of a temporary remote outage.
 - Notebook execution tests marked `notebook` are not part of the default remote CI or release workflow paths because they require a notebook-capable environment rather than the runtime-locked `deploy` environment.
 - The manual `all-tests.yml` workflow is split into two jobs:
     - one job recreates the locked `deploy` environment and runs the non-notebook pytest suite
