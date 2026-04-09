@@ -13,6 +13,12 @@ from floodsr.cli import _parse_arguments, _resolve_default_output_path, _resolve
 
 pytestmark = pytest.mark.local
 
+
+def _main_cli_verbose(argv: list[str]) -> int:
+    """Run the CLI test entrypoint with one verbose flag enabled."""
+    return main(["-v", *argv])
+
+
 @pytest.mark.parametrize(
     "case_id",
     [
@@ -35,7 +41,7 @@ def test_main_tohr_runs_data_driven_baseline_case(
     output_fp = tmp_path / f"{tile_case_d['case_name']}_pred_cli.tif"
 
     assert not case_spec["flags"]["in_hrdem"]
-    exit_code = main(
+    exit_code = _main_cli_verbose(
         [
             "tohr",
             "--in",
@@ -96,7 +102,7 @@ def test_main_tohr_runs_in_hrdem_flagged_case(
         cli_args.extend(["--fetch-hrdem", "--crs-policy", "use-dem"])
     else:
         cli_args.extend(["--dem", str(tile_dir / case_spec["inputs"]["dem_fp"])])
-    exit_code = main(cli_args)
+    exit_code = _main_cli_verbose(cli_args)
     with rasterio.open(output_fp) as ds:
         pred = ds.read(1)
 
@@ -124,7 +130,7 @@ def test_main_tohr_runs_tutorial_3_like_fetch_force_tiling_case(
 
     assert case_spec["flags"]["in_hrdem"]
     assert case_spec["inputs"]["dem_fp"] is False
-    exit_code = main(
+    exit_code = _main_cli_verbose(
         [
             "tohr",
             "--in",
@@ -210,7 +216,7 @@ def test_resolve_tohr_model_spec_uses_cached_manifest_default(
     manifest_fp.write_text(json.dumps(manifest_payload), encoding="utf-8")
 
     cache_dir = tmp_path / "cache"
-    fetch_exit = main(
+    fetch_exit = _main_cli_verbose(
         [
             "models",
             "fetch",
