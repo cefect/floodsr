@@ -217,6 +217,10 @@ jobs:
         --memory-swap=12g
         --pids-limit=2048
         --shm-size=2g
+    env:
+      # Notebook shims keep the documented `pip install floodsr` commands.
+      # Branch wheels are setuptools-scm prereleases, so allow prerelease resolution here.
+      PIP_PRE: "1"
     timeout-minutes: 45
     needs: build-artifacts
     strategy:
