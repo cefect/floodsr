@@ -98,6 +98,49 @@ def test_costgrow_worker_builds_bounded_tile_contract():
     assert contract["staged_state"] == "global_coarse_prefill_plus_tile_local_recompute"
 
 
+@pytest.mark.parametrize(
+    "dp_coarse_pixel_max",
+    [
+        pytest.param(None, id="missing_dp_coarse_pixel_max"),
+        pytest.param(-1, id="negative_dp_coarse_pixel_max"),
+    ],
+)
+def test_costgrow_worker_rejects_invalid_windowed_tile_contract_inputs(dp_coarse_pixel_max):
+    """Ensure bounded tile contracts reject missing or negative growth-distance limits."""
+    worker = ModelWorker(model_fp=None)
+    with pytest.raises(AssertionError):
+        worker._resolve_windowed_tile_contract(downscale=16, dp_coarse_pixel_max=dp_coarse_pixel_max)
+
+
+@pytest.mark.parametrize(
+    "core_window, halo_pixels, max_shape, expected_padded, expected_crop",
+    [
+        pytest.param(
+            rasterio.windows.Window(col_off=40, row_off=30, width=20, height=10),
+            5,
+            (100, 100),
+            rasterio.windows.Window(col_off=35, row_off=25, width=30, height=20),
+            (slice(5, 15), slice(5, 25)),
+            id="interior_tile",
+        ),
+        pytest.param(
+            rasterio.windows.Window(col_off=0, row_off=0, width=20, height=10),
+            5,
+            (100, 100),
+            rasterio.windows.Window(col_off=0, row_off=0, width=25, height=15),
+            (slice(0, 10), slice(0, 20)),
+            id="edge_clipped_tile",
+        ),
+    ],
+)
+def test_costgrow_windowed_geometry_helpers(core_window, halo_pixels, max_shape, expected_padded, expected_crop):
+    """Ensure tile-halo padding and core-crop geometry stays aligned at interior and edge tiles."""
+    padded_window = costgrow_module._expand_window(core_window, halo_pixels, max_shape)
+    core_crop = costgrow_module._crop_from_padded_window(core_window, padded_window)
+    assert padded_window == expected_padded
+    assert core_crop == expected_crop
+
+
 # ---------------------------------------------------------------------------
 # Integration helpers
 # ---------------------------------------------------------------------------
