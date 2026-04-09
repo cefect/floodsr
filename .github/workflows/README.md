@@ -11,7 +11,7 @@ This directory contains the active GitHub Actions workflows for this repository.
 Push the branch first, then run a workflow from the GitHub UI or CLI.
 
 ```bash
-# launch teh local runner (needed for AllTests and Instal Edge?) [wsl only?]
+# launch teh local runner (needed for AllTests and Instal Edge?) [wsl only]
 /home/cefect/LS/09_REPOS/04_TOOLS/gh_runner/actions-runner/run.sh
 
 # push changes (MUST BE PUSHED!)

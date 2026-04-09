@@ -678,7 +678,10 @@ class ModelWorker(Model):
                 dem_meta_ds.read(1).astype(np.float32, copy=False),
                 dem_platform_nodata,
             )
-        assert dem_platform_nodata is not None, "prepared DEM nodata must be defined"
+        if dem_platform_nodata is None:
+            dem_platform_nodata = -9999.0
+            dem_platform_profile["nodata"] = float(dem_platform_nodata)
+            log.warning(f"prepared DEM nodata missing; defaulting to {dem_platform_nodata}")
         depth_crs = depth_lr_profile.get("crs")
         dem_crs = dem_platform_profile.get("crs")
         assert depth_crs is not None and dem_crs is not None, "platform-preprocessed rasters must define CRS"
