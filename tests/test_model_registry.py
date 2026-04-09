@@ -216,7 +216,6 @@ def test_manifest_injected_bad_values_fail_fetch(
     assert expected_message in str(exc_info.value)
 
 
-@pytest.mark.fast
 @pytest.mark.network
 def test_default_manifest_http_links_resolve(tmp_path: Path):
     """Ensure HTTP model URLs in the default manifest resolve with project fetch logic."""

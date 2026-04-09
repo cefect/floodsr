@@ -35,6 +35,7 @@ def test_resunet_worker_resolves_windowed_path_only_for_hard_method():
         pytest.param(True, id="ort_contract_repeat_run_is_deterministic"),
     ],
 )
+@pytest.mark.fast
 def test_engine_ort_run_tile_contract(tohr_model_fp, ort_tile_inputs, logger, repeat_run: bool):
     """Ensure ORT predictions are float32, non-empty, and deterministic on repeat."""
     pytest.importorskip("onnxruntime")
@@ -66,7 +67,7 @@ def test_engine_ort_run_tile_contract(tohr_model_fp, ort_tile_inputs, logger, re
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.network
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "window_method, tile_overlap, expected_execution_path",
     [
@@ -99,7 +100,7 @@ def test_resunet_tohr_on_the_fly_synthetic_tiles(
     assert result["execution_path"] == expected_execution_path
 
 
-@pytest.mark.network
+@pytest.mark.fast
 def test_resunet_tohr_hard_windowed_tiles(
     tohr_model_fp,
     default_model_version: str,

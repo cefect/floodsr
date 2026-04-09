@@ -22,9 +22,7 @@ from floodsr.models.CostGrow_Terrain import (
 # Unit tests
 # ---------------------------------------------------------------------------
 
-pytestmark = pytest.mark.fast
-
-
+@pytest.mark.fast
 def test_costgrow_cost_surface_penalizes_below_ground_cells():
     """Ensure the terrain penalty cost is 1 over wet cells and higher below ground."""
     wse = np.array([[5.0, 5.0], [2.0, 1.0]], dtype=np.float32)
@@ -38,6 +36,7 @@ def test_costgrow_cost_surface_penalizes_below_ground_cells():
     assert np.isclose(delta[0, 1], -0.5)
 
 
+@pytest.mark.fast
 def test_costgrow_filter_isolated_keeps_only_anchor_connected_region():
     """Ensure isolated grown regions are removed when disconnected from anchors."""
     source = np.array(
@@ -64,6 +63,7 @@ def test_costgrow_filter_isolated_keeps_only_anchor_connected_region():
     assert not filtered[2, 3]
 
 
+@pytest.mark.fast
 def test_costgrow_fill_nearest_unmasked_returns_copy_when_array_has_no_mask():
     """Ensure fully wet coarse WSE inputs bypass the nearest-fill transform cleanly."""
     arr = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32)
@@ -73,6 +73,7 @@ def test_costgrow_fill_nearest_unmasked_returns_copy_when_array_has_no_mask():
     assert filled is not arr
 
 
+@pytest.mark.fast
 def test_costgrow_worker_is_builtin_and_valid_without_artifact():
     """Ensure the built-in CostGrow worker does not require a model artifact."""
     worker = ModelWorker(model_fp=None)
@@ -80,12 +81,14 @@ def test_costgrow_worker_is_builtin_and_valid_without_artifact():
     assert worker.is_valid(None) is True
 
 
+@pytest.mark.fast
 def test_costgrow_worker_resolves_windowed_path_only_for_hard_method():
     """Ensure windowed path requires window_method=='hard' AND sufficient raster size."""
     worker = ModelWorker(model_fp=None)
     assert_hard_only_windowed_selection(worker)
 
 
+@pytest.mark.fast
 def test_costgrow_worker_builds_bounded_tile_contract():
     """Ensure windowed CostGrow advertises an explicit bounded-region tile contract."""
     worker = ModelWorker(model_fp=None)
@@ -105,6 +108,7 @@ def test_costgrow_worker_builds_bounded_tile_contract():
         pytest.param(-1, id="negative_dp_coarse_pixel_max"),
     ],
 )
+@pytest.mark.fast
 def test_costgrow_worker_rejects_invalid_windowed_tile_contract_inputs(dp_coarse_pixel_max):
     """Ensure bounded tile contracts reject missing or negative growth-distance limits."""
     worker = ModelWorker(model_fp=None)
@@ -133,6 +137,7 @@ def test_costgrow_worker_rejects_invalid_windowed_tile_contract_inputs(dp_coarse
         ),
     ],
 )
+@pytest.mark.fast
 def test_costgrow_windowed_geometry_helpers(core_window, halo_pixels, max_shape, expected_padded, expected_crop):
     """Ensure tile-halo padding and core-crop geometry stays aligned at interior and edge tiles."""
     padded_window = costgrow_module._expand_window(core_window, halo_pixels, max_shape)
@@ -233,6 +238,7 @@ def _write_prepared_geotiff(fp: Path, array: np.ndarray, transform, crs: str) ->
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.fast
 def test_costgrow_tohr_runs_with_simple_platform_materialization(
     monkeypatch: pytest.MonkeyPatch,
     synthetic_tohr_tiles: dict,
@@ -262,6 +268,7 @@ def test_costgrow_tohr_runs_with_simple_platform_materialization(
     assert result["preprocess"]["costgrow"]["windowed_contract"] == "whole_scene"
 
 
+@pytest.mark.fast
 def test_costgrow_tohr_uses_windowed_path_for_large_hard_rasters(
     monkeypatch: pytest.MonkeyPatch,
     synthetic_tohr_windowed_tiles: dict,
@@ -294,6 +301,7 @@ def test_costgrow_tohr_uses_windowed_path_for_large_hard_rasters(
     assert result["preprocess"]["costgrow"]["staged_state"] == "global_coarse_prefill_plus_tile_local_recompute"
 
 
+@pytest.mark.fast
 def test_costgrow_tohr_stays_simple_for_large_feather_rasters(
     monkeypatch: pytest.MonkeyPatch,
     synthetic_tohr_windowed_tiles: dict,
@@ -322,6 +330,7 @@ def test_costgrow_tohr_stays_simple_for_large_feather_rasters(
     assert result["preprocess"]["costgrow"]["windowed_contract"] == "whole_scene"
 
 
+@pytest.mark.fast
 def test_costgrow_windowed_tile_halo_executes_real_bounded_tiles(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

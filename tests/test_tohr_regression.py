@@ -18,9 +18,6 @@ import misc.eval
 from conftest import logger, tile_case_d
 from floodsr.model_registry import model_version_requires_artifact
 
-pytestmark = pytest.mark.network
-
-
 def _write_derived_repeat_x_geotiff(src_fp: Path, dst_fp: Path, repeat_x: int) -> None:
     """Write a temporary raster by repeating the source array horizontally."""
     assert int(repeat_x) >= 1, f"repeat_x must be >= 1; got {repeat_x}"
@@ -145,11 +142,11 @@ os._exit(0)
         pytest.param("2407_FHIMP_tile", "ResUNet_16x_DEM_default", id="fhimp_resunet"),
         pytest.param("2407_FHIMP_tile", "CostGrow_Terrain_default", id="fhimp_costgrow"),
         #pytest.param("fathom_n51w115", "ResUNet_16x_DEM_default", id="n51w115_resunet", marks=pytest.mark.local),
-        pytest.param("rss_dudelange_A", "ResUNet_16x_DEM_default", id="dudelange_resunet", marks=pytest.mark.local),
+        pytest.param("rss_dudelange_A", "ResUNet_16x_DEM_default", id="dudelange_resunet"),
         #pytest.param("rss_dudelange_A", "CostGrow_Terrain_default", id="dudelange_costgrow", marks=pytest.mark.local), #ugly.. this is pluvial
-        pytest.param("rss_mersch_A", "ResUNet_16x_DEM_default", id="mersch_resunet", marks=pytest.mark.local),
-        pytest.param("rss_mersch_A", "CostGrow_Terrain_default", id="mersch_costgrow", marks=pytest.mark.local),
-        pytest.param("rss_mersch_A", "CostGrow_Terrain_large_windowed", id="mersch_costgrow_large_windowed", marks=pytest.mark.local),
+        pytest.param("rss_mersch_A", "ResUNet_16x_DEM_default", id="mersch_resunet"),
+        pytest.param("rss_mersch_A", "CostGrow_Terrain_default", id="mersch_costgrow"),
+        pytest.param("rss_mersch_A", "CostGrow_Terrain_large_windowed", id="mersch_costgrow_large_windowed"),
     ],
 )
 @pytest.mark.local

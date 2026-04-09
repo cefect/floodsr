@@ -10,9 +10,7 @@ from conftest import models_manifest_fp
 from floodsr.cli import _parse_arguments, _resolve_log_level, main
 
 
-pytestmark = pytest.mark.fast
-
-
+@pytest.mark.fast
 def test_main_models_list_outputs_model_version(models_manifest_fp: Path, capsys: pytest.CaptureFixture[str]):
     """Ensure models list prints version rows."""
     exit_code = main(["models", "list", "--manifest", str(models_manifest_fp)])
@@ -31,6 +29,7 @@ def test_main_models_list_reports_builtin_model_annotation(capsys: pytest.Captur
     assert "(built-in, no download)" in stdout
 
 
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "cli_args, expected_level",
     [
@@ -47,6 +46,7 @@ def test_resolve_log_level_from_cli_arguments(cli_args: list[str], expected_leve
     assert resolved_level == expected_level
 
 
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "backend_name",
     [
@@ -83,6 +83,7 @@ def test_main_models_fetch_prints_existing_path(
     assert output_fp.exists()
 
 
+@pytest.mark.fast
 def test_main_models_fetch_prints_cache_hit_summary(
     tmp_path: Path,
     models_manifest_fp: Path,
@@ -109,6 +110,7 @@ def test_main_models_fetch_prints_cache_hit_summary(
     assert " retrieved_from=cache" in second_stdout
 
 
+@pytest.mark.fast
 @pytest.mark.parametrize(
     "progress_flag, expected_show_progress",
     [
@@ -123,6 +125,7 @@ def test_parse_models_fetch_progress_flags(progress_flag: str, expected_show_pro
     assert parsed_args.show_progress is expected_show_progress
 
 
+@pytest.mark.fast
 def test_main_models_fetch_routes_errors_to_stderr(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
@@ -161,6 +164,7 @@ def test_main_models_fetch_routes_errors_to_stderr(
     assert ("ERROR" in stderr) or ("source model not found" in caplog.text)
 
 
+@pytest.mark.fast
 def test_main_models_fetch_rejects_builtin_model(
     capsys: pytest.CaptureFixture[str],
     caplog: pytest.LogCaptureFixture,
@@ -173,6 +177,7 @@ def test_main_models_fetch_rejects_builtin_model(
     assert ("built-in" in stderr) or ("built-in" in caplog.text)
 
 
+@pytest.mark.fast
 def test_main_version_reports_installed_package_version(capsys: pytest.CaptureFixture[str]):
     """Ensure the top-level version flag reports the installed package version."""
     exit_code = main(["--version"])
@@ -181,6 +186,7 @@ def test_main_version_reports_installed_package_version(capsys: pytest.CaptureFi
     assert stdout == f"floodsr {floodsr.__version__}"
 
 
+@pytest.mark.fast
 def test_main_doctor_reports_runtime_diagnostics(capsys: pytest.CaptureFixture[str]):
     """Ensure doctor command reports dependency and provider diagnostics."""
     exit_code = main(["doctor"])
@@ -195,6 +201,7 @@ def test_main_doctor_reports_runtime_diagnostics(capsys: pytest.CaptureFixture[s
     assert "pcraster_spreadzone_available=" in stdout
 
 
+@pytest.mark.fast
 def test_main_doctor_reports_runtime_diagnostics_json(capsys: pytest.CaptureFixture[str]):
     """Ensure doctor command can emit machine-readable JSON diagnostics."""
     exit_code = main(["doctor", "--json"])
