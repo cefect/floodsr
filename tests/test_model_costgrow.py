@@ -9,13 +9,13 @@ rasterio = pytest.importorskip("rasterio")
 
 import floodsr.models.CostGrow_Terrain as costgrow_module
 import floodsr.tohr
+from conftest import assert_hard_only_windowed_selection, assert_result_raster_contract
 from floodsr.models.CostGrow_Terrain import (
     ModelWorker,
     _compute_cost_surface,
     _fill_nearest_unmasked,
     _filter_isolated,
 )
-from model_test_utils import assert_hard_only_windowed_selection, assert_result_raster_contract
 
 
 # ---------------------------------------------------------------------------

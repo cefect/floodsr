@@ -6,8 +6,8 @@ np = pytest.importorskip("numpy")
 
 import floodsr.models.ResUNet_16x_DEM as resunet_module
 import floodsr.tohr
+from conftest import assert_hard_only_windowed_selection, assert_result_raster_contract
 from floodsr.engine import EngineORT
-from model_test_utils import assert_hard_only_windowed_selection, assert_result_raster_contract
 
 
 # ---------------------------------------------------------------------------
