@@ -146,10 +146,10 @@ os._exit(0)
         pytest.param("2407_FHIMP_tile", "CostGrow_Terrain_default", id="fhimp_costgrow"),
         #pytest.param("fathom_n51w115", "ResUNet_16x_DEM_default", id="n51w115_resunet", marks=pytest.mark.local),
         pytest.param("rss_dudelange_A", "ResUNet_16x_DEM_default", id="dudelange_resunet", marks=pytest.mark.local),
-        pytest.param("rss_dudelange_A", "CostGrow_Terrain_default", id="dudelange_costgrow", marks=pytest.mark.local),
-        pytest.param("rss_dudelange_A", "CostGrow_Terrain_large_windowed", id="dudelange_costgrow_large_windowed", marks=pytest.mark.local),
+        #pytest.param("rss_dudelange_A", "CostGrow_Terrain_default", id="dudelange_costgrow", marks=pytest.mark.local), #ugly.. this is pluvial
         pytest.param("rss_mersch_A", "ResUNet_16x_DEM_default", id="mersch_resunet", marks=pytest.mark.local),
         pytest.param("rss_mersch_A", "CostGrow_Terrain_default", id="mersch_costgrow", marks=pytest.mark.local),
+        pytest.param("rss_mersch_A", "CostGrow_Terrain_large_windowed", id="mersch_costgrow_large_windowed", marks=pytest.mark.local),
     ],
 )
 @pytest.mark.local

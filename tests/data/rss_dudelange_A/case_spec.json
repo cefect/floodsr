@@ -30,29 +30,6 @@
         "rmse_m": 14.59590799083279,
         "ssim": -0.0001104531049176937
       }
-    },
-    "CostGrow_Terrain_large_windowed": {
-      "params": {
-        "model_version": "CostGrow_Terrain",
-        "min_depth_threshold": 0.01,
-        "window_method": "hard",
-        "tile_overlap": 0
-      },
-      "input_derivation": {
-        "mode": "repeat_x",
-        "repeat_x": 2
-      },
-      "runtime": {
-        "platform_materialization": "windowed",
-        "execution_path": "windowed",
-        "windowed_contract": "tile_halo"
-      },
-      "metrics": {
-        "precision": 3,
-        "mase_m": 7.611291716855904,
-        "rmse_m": 18.409077411030747,
-        "ssim": -0.00006746631558523898
-      }
     }
   },
   "flags": {
