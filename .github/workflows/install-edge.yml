@@ -95,7 +95,7 @@ jobs:
       matrix:
         include:
           - case_id: basic_cli
-            case_name: basic CLI / pipx
+            case_name: Install Edge / basic CLI / pipx
             container_image: cefect/floodsr:install-edge-main-v0.2
             notebook_fp: "__none__"
             expect_python_bindings_installed: "false"
@@ -105,7 +105,7 @@ jobs:
             expect_pcraster_spreadzone_available: "false"
             expected_gdal_config_version: "__none__"
           - case_id: basic_local_notebook
-            case_name: basic local notebook / jupyter
+            case_name: Install Edge / basic local notebook / jupyter
             container_image: cefect/floodsr:install-edge-main-v0.2
             notebook_fp: .github/workflows/artifacts/basic_local_notebook.ipynb
             expect_python_bindings_installed: "false"
@@ -115,7 +115,7 @@ jobs:
             expect_pcraster_spreadzone_available: "false"
             expected_gdal_config_version: "__none__"
           - case_id: basic_hosted_notebook
-            case_name: basic hosted notebook / colab
+            case_name: Install Edge / basic hosted notebook / colab
             container_image: cefect/floodsr:install-edge-colab-v0.2
             notebook_fp: .github/workflows/artifacts/basic_hosted_notebook_colab.ipynb
             expect_python_bindings_installed: "true"
@@ -125,7 +125,7 @@ jobs:
             expect_pcraster_spreadzone_available: "false"
             expected_gdal_config_version: "__skip__"
           - case_id: extended_cli
-            case_name: extended CLI / conda
+            case_name: Install Edge / extended CLI / conda
             container_image: cefect/floodsr:install-edge-main-v0.2
             notebook_fp: "__none__"
             expect_python_bindings_installed: "true"
@@ -135,7 +135,7 @@ jobs:
             expect_pcraster_spreadzone_available: "true"
             expected_gdal_config_version: "__skip__"
           - case_id: extended_local_notebook
-            case_name: extended local notebook / jupyter
+            case_name: Install Edge / extended local notebook / jupyter
             container_image: cefect/floodsr:install-edge-main-v0.2
             notebook_fp: .github/workflows/artifacts/extended_local_notebook.ipynb
             expect_python_bindings_installed: "true"
@@ -145,7 +145,7 @@ jobs:
             expect_pcraster_spreadzone_available: "true"
             expected_gdal_config_version: "__skip__"
           - case_id: extended_hosted_notebook
-            case_name: extended hosted notebook / colab
+            case_name: Install Edge / extended hosted notebook / colab
             container_image: cefect/floodsr:install-edge-colab-v0.2
             notebook_fp: .github/workflows/artifacts/extended_hosted_notebook_colab.ipynb
             expect_python_bindings_installed: "true"
@@ -262,6 +262,8 @@ jobs:
         if: matrix.notebook_fp != '__none__'
         shell: bash
         run: |
+          export FLOODSR_WHEEL_FP="$(find "${GITHUB_WORKSPACE}/dist" -maxdepth 1 -type f -name 'floodsr-*.whl' | sort | head -n 1)"
+          test -n "${FLOODSR_WHEEL_FP}"
           if [ "${{ matrix.case_id }}" = "extended_local_notebook" ]; then
             conda run -n floodsr-gdal jupyter nbconvert \
               --to notebook \
