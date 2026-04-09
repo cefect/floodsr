@@ -166,6 +166,7 @@ def _run_costgrow_core_windowed(
     if dp_coarse_pixel_max is None:
         raise AssertionError("windowed CostGrow requires finite dp_coarse_pixel_max to bound tile halos")
 
+    # Initialize the output raster and the coarse-grid DEM support arrays once.
     fine_shape = (int(fine_profile["height"]), int(fine_profile["width"]))
     output_path = Path(output_fp).expanduser().resolve()
     output_profile = _build_single_band_profile(
@@ -178,6 +179,8 @@ def _run_costgrow_core_windowed(
     output_profile["nodata"] = float(out_nodata)
     dem_lr_arr = np.full(depth_lr.shape, np.nan, dtype=np.float32)
     dem_lr_valid_arr = np.zeros(depth_lr.shape, dtype=np.uint8)
+
+    # Reproject the fine DEM down to the coarse grid used to reconstruct coarse WSE anchors.
     with rasterio.open(dem_fine_fp) as dem_ds:
         reproject(
             source=rasterio.band(dem_ds, 1),
@@ -191,6 +194,8 @@ def _run_costgrow_core_windowed(
             resampling=Resampling.bilinear,
             num_threads=1,
         )
+
+    # Build coarse validity conservatively by aggregating fine valid pixels block by block.
     with rasterio.open(dem_fine_fp) as dem_ds:
         for _, window in iter_block_windows(dem_ds, show_progress=show_progress, desc="costgrow coarse mask pass"):
             dem_block = dem_ds.read(1, window=window).astype(np.float32, copy=False)
@@ -211,6 +216,7 @@ def _run_costgrow_core_windowed(
             np.maximum(dem_lr_valid_arr, block_lr_valid, out=dem_lr_valid_arr)
     dem_lr_valid_mask = dem_lr_valid_arr > 0
 
+    # Reconstruct coarse wet cells and a filled coarse WSE field shared by all tiles.
     coarse_wet = dem_lr_valid_mask & (depth_lr > float(min_depth_threshold))
     if not coarse_wet.any():
         raise AssertionError("depth_lr contains no wet/source cells above the minimum depth threshold")
@@ -233,6 +239,7 @@ def _run_costgrow_core_windowed(
     y_starts = build_tile_starts(fine_shape[0], tile_h, tile_h)
     x_starts = build_tile_starts(fine_shape[1], tile_w, tile_w)
 
+    # Process one padded tile at a time, then write only the cropped core to the output.
     with rasterio.open(dem_fine_fp) as dem_ds, rasterio.open(output_path, "w", **output_profile) as dst_ds:
         for _, _, y0, x0 in iter_window_origins(
             y_starts,
@@ -258,6 +265,7 @@ def _run_costgrow_core_windowed(
                 transform=dem_ds.window_transform(padded_window),
             )
 
+            # Interpolate the coarse anchor/fill fields onto this padded fine-grid tile.
             wse_tile = _resample_array_to_profile(
                 coarse_wse,
                 depth_lr_profile,
@@ -284,6 +292,7 @@ def _run_costgrow_core_windowed(
                 dst_ds.write(empty_core, 1, window=core_window)
                 continue
 
+            # Run the CostGrow growth/decay/connectivity sequence within the padded tile only.
             partial_tile = np.where(anchor_tile, wse_tile, np.nan).astype(np.float32, copy=False)
             cost_tile, _ = _compute_cost_surface(filled_tile, dem_tile, valid_tile)
             grown_tile = _distance_fill_cost_pcraster(pcraster_module, partial_tile, cost_tile, tile_profile)
@@ -307,6 +316,7 @@ def _run_costgrow_core_windowed(
                 np.nan,
             ).astype(np.float32, copy=False)
 
+            # Crop back to the core window so overlap/halo context never leaks into neighbors.
             core_anchor = anchor_tile[core_crop]
             core_final_depth = final_depth_tile[core_crop]
             wet_anchor_count += int(core_anchor.sum())
@@ -354,11 +364,13 @@ def _run_costgrow_core(
     if distance_fill_kwargs is None:
         distance_fill_kwargs = {}
 
+    # Reconstruct coarse wet anchors and coarse WSE from prepared depth and DEM inputs.
     coarse_wet = dem_lr_valid_mask & (depth_lr > float(min_depth_threshold))
     if not coarse_wet.any():
         raise AssertionError("depth_lr contains no wet/source cells above the minimum depth threshold")
     coarse_wse = np.where(coarse_wet, dem_lr + depth_lr, np.nan).astype(np.float32, copy=False)
 
+    # Interpolate the coarse anchors onto the fine grid and keep only wet-above-ground partials.
     wse_fine = _resample_array_to_profile(
         coarse_wse,
         depth_lr_profile,
@@ -373,6 +385,7 @@ def _run_costgrow_core(
         raise AssertionError("wet-above-ground filtering fully masked the input wet cells")
     wse_partials = np.where(wet_above_ground, wse_fine, np.nan).astype(np.float32, copy=False)
 
+    # Fill the coarse WSE holes first, then use that filled field to derive the terrain cost surface.
     filled_coarse_wse = _fill_nearest_unmasked(
         np.ma.MaskedArray(coarse_wse, mask=~np.isfinite(coarse_wse)),
         method=distance_fill_method,
@@ -391,6 +404,7 @@ def _run_costgrow_core(
     cost, _ = _compute_cost_surface(filled_fine_wse, dem_fine, dem_fine_valid_mask)
     grown_wse = _distance_fill_cost_pcraster(pcraster_module, wse_partials, cost, fine_profile)
 
+    # Limit growth by coarse-pixel distance, then apply decay away from the original anchors.
     pixel_size_m = float(np.mean([abs(float(fine_profile["transform"].a)), abs(float(fine_profile["transform"].e))]))
     downscale = int(round(dem_fine.shape[0] / depth_lr.shape[0]))
     distance = scipy.ndimage.distance_transform_cdt(
@@ -409,6 +423,7 @@ def _run_costgrow_core(
     grown_valid = grow_threshold & np.isfinite(decayed_wse) & dem_fine_valid_mask & (decayed_wse > dem_fine)
     wse_after_growth = np.where(np.isfinite(wse_partials), wse_partials, np.where(grown_valid, decayed_wse, np.nan))
 
+    # Remove disconnected grown islands, then convert the final WSE surface back to depth.
     connected = _filter_isolated(np.isfinite(wse_after_growth), np.isfinite(wse_partials))
     final_wse = np.where(connected & dem_fine_valid_mask, wse_after_growth, np.nan).astype(np.float32, copy=False)
     final_depth = np.where(np.isfinite(final_wse), np.clip(final_wse - dem_fine, 0.0, None), np.nan).astype(np.float32, copy=False)
@@ -473,6 +488,8 @@ class ModelWorker(Model):
         """Run the CostGrow terrain-penalty algorithm on aligned prepared rasters."""
         start = time.perf_counter()
         log = self.log
+
+        # Validate the runtime mode and prepared inputs before choosing a solve path.
         pcraster_module = _check_pcraster()
         window_method = str(kwargs.get("window_method", "hard") or "hard").strip().lower()
         assert window_method in {"hard", "feather"}, f"unsupported window_method={window_method}"
@@ -502,6 +519,7 @@ class ModelWorker(Model):
         )
         out_nodata = dem_fine_nodata if dem_fine_nodata is not None else -9999.0
         if execution_path == "simple":
+            # The simple path materializes the full fine-grid solve in memory.
             dem_fine_arr, _, _ = _read_single_band_raster(dem_hr_fp)
             dem_fine_valid_mask = valid_mask_from_array(dem_fine_arr, dem_fine_nodata)
             dem_lr_profile = depth_lr_profile.copy()
@@ -548,6 +566,7 @@ class ModelWorker(Model):
             out_profile["nodata"] = float(out_nodata)
             out_fp = _write_single_band_raster(output_fp, final_depth_written, out_profile)
         else:
+            # The windowed path keeps the coarse support global but bounds fine-grid work per tile.
             out_fp, meta = _run_costgrow_core_windowed(
                 pcraster_module,
                 depth_lr_arr,
@@ -567,6 +586,7 @@ class ModelWorker(Model):
                 tile_halo_pixels=int(tile_contract["halo_px"]),
             )
 
+        # Return one structured runtime payload so callers can inspect the chosen execution mode.
         runtime_s = time.perf_counter() - start
         out_size = int(out_fp.stat().st_size)
         log.info(f"finished CostGrow terrain penalty in {runtime_s:.3f}s; wrote {out_size:,} bytes to\n    {out_fp}")
