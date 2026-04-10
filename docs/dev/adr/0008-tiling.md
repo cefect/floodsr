@@ -37,6 +37,11 @@ We still need one shared vocabulary and helper layer for:
 - Keep two execution styles available across phases:
   - `simple`: may materialize the full scene in memory
   - `windowed`: reads and/or writes windows on demand
+- For the model-execution phase, `windowed` means more than just disk-backed intermediates:
+  - the worker must own a bounded large-raster execution strategy for the model phase itself
+  - the expensive model-stage operations should run per tile or per bounded region, not only as one full-scene solve with arrays spilled to disk
+  - the worker ADR should document the tile contract, including any halo/context rule, staged intermediate state, and final merge rule
+- A disk-backed whole-scene solve may be a transitional implementation, but it is not by itself the final model-phase tiling contract required by this ADR.
 - Keep one shared mosaicking-method vocabulary across phases:
   - `hard`: direct writes or last-write/no-weight stitching for non-overlap or cropped windows
   - `feather`: overlap-aware weighted blending
@@ -57,7 +62,7 @@ Current implementation summary:
 - DEM fetch (HRDEM): `windowed` output is VRT-backed tile assembly.
 - preprocessing/materialization: contract is raster-backed prepared rasters on the canonical grid; current implementation writes concrete rasters.
 - `ResUNet_16x_DEM`: `windowed + hard` currently writes one concrete raster tile and may expose a VRT wrapper over that raster when GDAL VRT support is available. I guess its nice to fallback to single raster... makes things more complicated through. 
-- `CostGrow_Terrain`: model-phase `windowed` output packaging is not implemented yet. probably simplest to window write to tif (i.e., no vrt)
+- `CostGrow_Terrain`: `windowed + hard` now uses an explicit bounded-region tile-halo contract. The worker stages coarse wet/WSE support once, then runs fine-grid growth/fill/connectivity per padded tile and writes cropped core tiles into one concrete raster. `windowed + feather` remains unimplemented.
 
 
 ## Compatibility Matrix
@@ -67,12 +72,13 @@ Current implementation summary:
 | DEM fetch (HRDEM) | `ADR-0010` / `dem_sources/hrdem_mosaic.py` | implemented | no | implemented | no |
 | preprocessing | `ADR-0009` / `preprocessing.py` | implemented | no | implemented | no |
 | ResUNet_16x_DEM | `ADR-M-0001` / model worker | implemented | implemented | implemented | planned |
-| CostGrow_Terrain | `ADR-M-0002` / model worker | n/a | n/a | planned | planned |
+| CostGrow_Terrain | `ADR-M-0002` / model worker | implemented | implemented | implemented | planned |
 
 Rules:
 - This matrix is the shared capability contract for tiling and mosaicking.
 - A phase implementation may reject a method only when that limit is documented by its ADR and reflected in this matrix.
 - Whole-scene algorithms, including `CostGrow_Terrain`, must still provide a model-phase large-raster tiling strategy for `windowed` execution. Upstream preprocessing alone is not a sufficient OOM guard.
+- For avoidance of doubt: a worker does not satisfy this rule merely by moving full-scene arrays to memmaps or block-writing outputs while still running the core model solve globally.
 
 
 ## Consequences

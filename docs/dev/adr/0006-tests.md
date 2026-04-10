@@ -36,6 +36,7 @@ See `ADR-0017` for CI/CD workflow policy.
 - `sphinx`: tests that require the documentation environment.
 - `local`: local-only tests that depend on local fixture data.
 - Do not use a `dev` mark; classify those tests as `local`.
+- Do not use module-level `pytestmark` for tier marks; apply marks explicitly to each test or parameterized case so scope stays visible at the test definition.
 - Register these marks in `pytest.ini`.
 - Keep test module imports collection-safe across supported environments. If a module needs optional runtime dependencies that are absent from the docs environment, guard them with `pytest.importorskip(...)` or move the imports inside the tests or fixtures that need them so discovery can skip cleanly instead of erroring during collection.
 

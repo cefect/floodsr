@@ -44,7 +44,14 @@ This ADR owns the model-specific contract for `CostGrow_Terrain`.
 - The worker must implement the shared model-phase mosaicking vocabulary from `ADR-0008`:
   - `hard`
   - `feather`
-- Because CostGrow is natively whole-raster, its model-phase tiling implementation may require halos, staged intermediate rasters, or tile-local growth plus a later merge step. Those mechanics are owned by this model ADR, but the window generation and mosaicking primitives should come from `floodsr/tiling.py`.
+- Because CostGrow is natively whole-raster, its model-phase tiling contract is tile-local and halo-based. Those mechanics are owned by this model ADR, but the window generation and mosaicking primitives should come from `floodsr/tiling.py`.
+- `windowed + hard` uses this explicit tile contract:
+  - tile extent: fixed-size fine-grid core tiles on the canonical prepared DEM grid
+  - halo/context rule: expand each core tile by a symmetric halo derived from `dp_coarse_pixel_max * downscale`, with an additional model-owned safety factor
+  - staged intermediate state: build coarse wet/WSE support once on the low-res grid, keep the filled coarse WSE in memory, then recompute fine-grid WSE/cost/growth/connectivity separately for each padded tile
+  - merge rule: `hard_crop_core`, meaning only the cropped core extent of each padded tile is written into the final raster
+- This satisfies the `ADR-0008` requirement that the expensive CostGrow growth/fill/connectivity stages run per tile or bounded region rather than as one global fine-grid solve.
+- Until `windowed + feather` is explicitly implemented and tested for this worker, support for that method should be documented as not yet complete rather than silently treated as equivalent to `hard`.
 - Because the CLI contract is depth-based, `min_depth_threshold` is applied to the low-res depth input for CostGrow before coarse WSE reconstruction, so it controls which coarse cells become wet source anchors. The low-resolution depth input should be interpreted as a real-valued depth raster, with dry cells represented by low/zero depth rather than by a separate runtime mask artifact. This is different from the ResUNet path, where `min_depth_threshold` is applied later as a post-inference mask on predicted output depth. The current CostGrow worker default is `1e-3` when the flag is omitted; the notebook has no equivalent threshold because it starts from coarse WSE rather than coarse depth.
 - Final CostGrow masking should treat the prepared DEM valid domain as the source of truth for where output may exist.
 

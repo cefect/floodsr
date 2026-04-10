@@ -20,6 +20,13 @@ from rasterio.transform import array_bounds, from_bounds, from_origin
 from rasterio.windows import Window
 from rasterio.warp import transform_bounds
 
+
+def _skip_on_transient_hrdem_api_error(err: Exception):
+    """Skip known transient upstream STAC gateway failures in network tests."""
+    err_msg = str(err)
+    if "504 Gateway Time-out" in err_msg or "502 Bad Gateway" in err_msg or "503 Service Unavailable" in err_msg:
+        pytest.skip(f"transient upstream HRDEM/STAC failure: {err_msg}")
+
 # Match synthetic low-res raster origin to tests/data/2407_FHIMP_tile/lowres032.tif.
 SYNTHETIC_DEPTH_ORIGIN_X = -1300733.0767616061
 SYNTHETIC_DEPTH_ORIGIN_Y = 430719.82318666467
@@ -285,13 +292,17 @@ def test_public_hrdem_asset_without_boto3_is_suppressed_during_hrdem_fetch(
         SYNTHETIC_REAL_FETCH_BASE_D["depth_crs"],
     )
     depth_query = floodsr.dem_sources.hrdem_mosaic._resolve_depth_query_geometry(depth_lr_fp)
-    _, asset_hrefs, _ = floodsr.dem_sources.hrdem_mosaic._query_hrdem_assets(
-        depth_query["bbox_4326"],
-        stac_url=floodsr.dem_sources.hrdem_mosaic.STAC_URL,
-        collection=floodsr.dem_sources.hrdem_mosaic.COLLECTION,
-        asset_key=floodsr.dem_sources.hrdem_mosaic.DEFAULT_ASSET,
-        stac_query_limit=5,
-    )
+    try:
+        _, asset_hrefs, _ = floodsr.dem_sources.hrdem_mosaic._query_hrdem_assets(
+            depth_query["bbox_4326"],
+            stac_url=floodsr.dem_sources.hrdem_mosaic.STAC_URL,
+            collection=floodsr.dem_sources.hrdem_mosaic.COLLECTION,
+            asset_key=floodsr.dem_sources.hrdem_mosaic.DEFAULT_ASSET,
+            stac_query_limit=5,
+        )
+    except Exception as err:
+        _skip_on_transient_hrdem_api_error(err)
+        raise
     asset_href = asset_hrefs[0]
 
     # Public HRDEM assets are S3-backed HTTPS URLs, which is what triggers the
@@ -306,15 +317,19 @@ def test_public_hrdem_asset_without_boto3_is_suppressed_during_hrdem_fetch(
         caplog.clear()
         output_fp = tmp_path / "fetched_dem_session_probe.vrt"
         with caplog.at_level("INFO", logger="rasterio.session"):
-            result = floodsr.dem_sources.hrdem_mosaic.main_fetch_hrdem_for_lowres_tile(
-                depth_lr_fp=depth_lr_fp,
-                output_fp=output_fp,
-                use_cache=False,
-                force_tiling=True,
-                fetch_window_size=32,
-                memory_limit_gib=16.0,
-                show_progress=False,
-            )
+            try:
+                result = floodsr.dem_sources.hrdem_mosaic.main_fetch_hrdem_for_lowres_tile(
+                    depth_lr_fp=depth_lr_fp,
+                    output_fp=output_fp,
+                    use_cache=False,
+                    force_tiling=True,
+                    fetch_window_size=32,
+                    memory_limit_gib=16.0,
+                    show_progress=False,
+                )
+            except Exception as err:
+                _skip_on_transient_hrdem_api_error(err)
+                raise
         assert Path(result.dem_fp).exists() is True
         assert "boto3 not available, falling back to a DummySession." not in caplog.text
     else:
@@ -684,13 +699,17 @@ def test_main_fetch_hrdem_for_lowres_tile_rejects_explicit_tif_in_tiled_mode(
     )
 
     with pytest.raises(ValueError, match="VRT artifacts"):
-        floodsr.dem_sources.hrdem_mosaic.main_fetch_hrdem_for_lowres_tile(
-            depth_lr_fp=depth_lr_fp,
-            output_fp=tmp_path / "fetched_dem_invalid.tif",
-            logger=logger,
-            use_cache=False,
-            force_tiling=True,
-            fetch_window_size=80,
-            memory_limit_gib=16.0,
-            show_progress=False,
-        )
+        try:
+            floodsr.dem_sources.hrdem_mosaic.main_fetch_hrdem_for_lowres_tile(
+                depth_lr_fp=depth_lr_fp,
+                output_fp=tmp_path / "fetched_dem_invalid.tif",
+                logger=logger,
+                use_cache=False,
+                force_tiling=True,
+                fetch_window_size=80,
+                memory_limit_gib=16.0,
+                show_progress=False,
+            )
+        except Exception as err:
+            _skip_on_transient_hrdem_api_error(err)
+            raise
