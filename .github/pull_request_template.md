@@ -4,6 +4,7 @@
 - [ ] `.github/workflows/ci.yml` passing
 - [ ] `.github/workflows/install-edge.yml` passing
 - [ ] `pytest -q -m "not sphinx"` passing
+- [ ] `conda run -n dev pytest -q -m "notebook"` passing
 - [ ] tutorials updated (for new features) and rebuilt (`docs/user/notebooks/readme.md`) and passing
 - [ ] english documentation updated (`docs/user/readme.md`) and tests passing
 - [ ] english documentation human read/reviewed
