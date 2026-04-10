@@ -75,5 +75,3 @@ def test_engine_base_contract_with_dummy_subclass():
     result = engine_instance.run_tile(np.zeros((2, 2), dtype=np.float32), np.ones((2, 2), dtype=np.float32))
     assert result["prediction_m"].dtype == np.float32
     assert result["prediction_m"].size > 0
-
-

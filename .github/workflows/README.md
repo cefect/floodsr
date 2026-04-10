@@ -26,7 +26,7 @@ for workflow in ci.yml install-edge.yml all-tests.yml; do
     gh workflow run "$workflow" --ref "$(git branch --show-current)"
 done
 
-# cancel non-completed running workflows 
+# cancel non-completed running workflows
 gh run list --branch "$(git branch --show-current)" --limit 100 --json databaseId,status \
   --jq '.[] | select(.status != "completed") | .databaseId' | xargs -r -n1 gh run cancel
 
