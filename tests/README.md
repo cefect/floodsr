@@ -39,7 +39,7 @@ pytest -q -m "fast and not sphinx" 2>&1 | tee "tests/log/pytest_$(date -u +%Y%m%
 pytest -q -m "fast and not local and not sphinx" 2>&1 | tee "tests/log/pytest_$(date -u +%Y%m%d_%H%M%S)_ci.log"
 
 # specific module
-pytest -q tests/test_cli_models.py
+pytest -q tests/test_cli_models.py 2>&1 | tee "tests/log/pytest_$(date -u +%Y%m%d_%H%M%S)_test_cli_models.log"
 
  
  
