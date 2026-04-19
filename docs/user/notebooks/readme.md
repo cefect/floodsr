@@ -53,6 +53,7 @@ The notebooks themselves present the following user-facing execution contexts:
 | Tutorial 1 | Yes | Yes | Yes | Yes |
 | Tutorial 2 | Yes | Yes | Yes | Yes |
 | Tutorial 3 | Yes, via extended install | Yes, via extended install | Yes, but marked experimental / not recommended | Yes |
+| Tutorial 4 | Yes, via extended install | Yes, via extended install | Not recommended | Yes |
 
 ## re-running the tutorials (i.e docs refresh)
 NOTE: needs to be done from main .devcontainer (not docs)
@@ -75,10 +76,14 @@ conda run -n dev bash docs/user/notebooks/tutorial_2.sh
 # large-raster tutorial; runs from temp, but keeps heavy HRDEM/model cache reuse
 conda run -n dev bash docs/user/notebooks/tutorial_3.sh
 
+# CostGrow and ResUNet comparison tutorial; runs from temp and requires extended install
+conda run -n dev bash docs/user/notebooks/tutorial_4.sh
+
 # or do them all at once
 conda run -n dev bash docs/user/notebooks/tutorial_1.sh && \
 conda run -n dev bash docs/user/notebooks/tutorial_2.sh && \
-conda run -n dev bash docs/user/notebooks/tutorial_3.sh
+conda run -n dev bash docs/user/notebooks/tutorial_3.sh && \
+conda run -n dev bash docs/user/notebooks/tutorial_4.sh
 
 # from wsl (outside the container; dispatches into .devcontainer/main/docker-compose.yml)
 /home/cefect/LS/09_REPOS/04_TOOLS/floodsr/docs/user/notebooks/run_all_container.sh

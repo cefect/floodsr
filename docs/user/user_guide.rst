@@ -74,4 +74,23 @@ Inference
 CostGrow
 ~~~~~~~~~~~~~~~
 
-Rules-based. Not implemented yet.
+``CostGrow_Terrain`` is a built-in rules-based model for propagating low-resolution
+flood depth across a high-resolution DEM. Instead of using learned weights, it
+uses terrain-penalty growth logic to reconstruct a higher-resolution flood surface
+from the prepared low-resolution depth raster and the supplied DEM.
+
+This model is a good fit when you want a deterministic terrain-driven result and
+when you prefer a built-in method over a downloaded machine-learning artifact.
+Compared with ``ResUNet_16x_DEM``, CostGrow is more explicitly tied to the DEM-driven
+propagation rules, while ResUNet uses a learned DEM-aware reconstruction model.
+
+``CostGrow_Terrain`` runs through the same ``floodsr tohr`` command as the other
+models and produces the same final high-resolution depth raster output contract.
+As with any ``tohr`` workflow, the quality of the result depends heavily on the
+quality of the DEM and on whether that DEM represents the intended flood
+propagation surface.
+
+Unlike ``ResUNet_16x_DEM``, ``CostGrow_Terrain`` does not require downloaded model
+weights. It does require `PCRaster <https://pcraster.geo.uu.nl/>`_. If PCRaster is not
+available in your environment, use the extended installation workflow described
+in :doc:`installation`.

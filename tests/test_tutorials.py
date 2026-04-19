@@ -15,6 +15,7 @@ import pytest
         pytest.param(pathlib.Path("docs/user/notebooks/tutorial_1.ipynb"), 600, None, id="tutorial_1"),
         pytest.param(pathlib.Path("docs/user/notebooks/tutorial_2.ipynb"), 600, None, id="tutorial_2"),
         pytest.param(pathlib.Path("docs/user/notebooks/tutorial_3.ipynb"), 3600, pathlib.Path.cwd() / "_cache", id="tutorial_3"),
+        pytest.param(pathlib.Path("docs/user/notebooks/tutorial_4.ipynb"), 1200, None, id="tutorial_4"),
     ],
 )
 @pytest.mark.network

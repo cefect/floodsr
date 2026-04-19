@@ -9,7 +9,7 @@ set -euo pipefail
 # - `conda run -n dev bash docs/user/notebooks/run_all.sh`
 #
 # Progress notes:
-# - starts all three notebook shims in parallel
+# - starts all four notebook shims in parallel
 # - prints each PID after launch
 # - reports completion per tutorial as waits resolve
 # - returns non-zero if any tutorial fails
@@ -36,9 +36,12 @@ echo "[run_all] started tutorial_2.sh pid=${pid_2}"
 conda run -n dev bash docs/user/notebooks/tutorial_3.sh &
 pid_3=$!
 echo "[run_all] started tutorial_3.sh pid=${pid_3}"
+conda run -n dev bash docs/user/notebooks/tutorial_4.sh &
+pid_4=$!
+echo "[run_all] started tutorial_4.sh pid=${pid_4}"
 
 status=0
-for pair in "tutorial_1:${pid_1}" "tutorial_2:${pid_2}" "tutorial_3:${pid_3}"; do
+for pair in "tutorial_1:${pid_1}" "tutorial_2:${pid_2}" "tutorial_3:${pid_3}" "tutorial_4:${pid_4}"; do
     name="${pair%%:*}"
     pid="${pair##*:}"
     echo "[run_all] waiting for ${name} pid=${pid}"

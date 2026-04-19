@@ -149,7 +149,8 @@ Extended Install
 ----------------
 For handling rasters too large for memory, floodsr uses GDAL backends.
 To enable these features, install `floodsr` into an environment with `GDAL <https://gdal.org/en/stable/>`_.
-If you also want to run the ``CostGrow_Terrain`` model, install `PCRaster <https://pcraster.geo.uu.nl/>`_ into that same environment.
+The downloaded ``ResUNet_16x_DEM`` model works in this environment, and the built-in
+``CostGrow_Terrain`` model additionally requires `PCRaster <https://pcraster.geo.uu.nl/>`_ in that same environment.
 
 
 .. _extended_install_cli:
@@ -181,6 +182,7 @@ Then confirm the GDAL-backed environment is active:
 
 You should see something like *gdal_config_installed=True*.
 If PCRaster is installed, ``floodsr doctor`` should also report *pcraster_installed=True*.
+At that point you can run either ``ResUNet_16x_DEM`` or ``CostGrow_Terrain`` through ``floodsr tohr``.
 
 .. _extended_install_notebook:
 

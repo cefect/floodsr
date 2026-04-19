@@ -423,7 +423,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Fetch one manifest model into the local cache.",
         description="Fetch one manifest model into the local cache.",
     )
-    models_fetch_parser.add_argument("version", help="Model version key to fetch from the manifest.")
+    models_fetch_parser.add_argument(
+        "version",
+        help=(
+            "Model version key to fetch from the manifest. "
+            "Built-in models such as `CostGrow_Terrain` report metadata without downloading weights."
+        ),
+    )
     models_fetch_parser.add_argument(
         "--manifest",
         type=Path,
@@ -493,13 +499,20 @@ def build_parser() -> argparse.ArgumentParser:
     tohr_parser.add_argument(
         "--model-version",
         default=None,
-        help="Manifest model version to run or fetch when `--model-path` is not provided.",
+        help=(
+            "Model version to run when `--model-path` is not provided. "
+            "Use `ResUNet_16x_DEM` for the downloaded ONNX model or "
+            "`CostGrow_Terrain` for the built-in PCRaster-backed rules model."
+        ),
     )
     tohr_parser.add_argument(
         "--model-path",
         type=Path,
         default=None,
-        help="Use an explicit local ONNX model file instead of resolving from cache/manifest.",
+        help=(
+            "Use an explicit local ONNX model file instead of resolving a downloaded model "
+            "from cache/manifest. Not used by built-in models such as `CostGrow_Terrain`."
+        ),
     )
     tohr_parser.add_argument(
         "--manifest",
