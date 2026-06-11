@@ -1,0 +1,12 @@
+name: floodsr-rss-validate-fig
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12.12
+  - ipykernel=7.2.0
+  - nbconvert=7.17.0
+  - numpy=2.4.2
+  - pandas=3.0.1
+  - rasterio=1.5.0
+  - matplotlib=3.10.8
+
