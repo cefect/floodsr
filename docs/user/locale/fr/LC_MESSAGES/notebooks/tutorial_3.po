@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version:  floodsr\n"
-"POT-Creation-Date: 2026-04-01 15:55-0600\n"
+"POT-Creation-Date: 2026-06-13 17:47-0600\n"
 "PO-Revision-Date: 2026-03-20 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
@@ -394,13 +394,15 @@ msgstr ""
 "(`EPSG:4326`) tandis que le HRDEM récupéré est projeté (`EPSG:3979`)."
 
 #. review_status: llm_draft
-#. source_hash: 5b84d876
+#. source_hash: 33b72634
 msgid ""
-"`--out result.tif` writes the final super-resolved raster to a predictable output filename in the"
-" working directory."
+"`--out result.tif` requests a predictable output basename in the working directory. Depending on "
+"the active backend, the final artifact may be materialized as either a GeoTIFF or a VRT, and "
+"`floodsr` prints the resolved output path on the last output line."
 msgstr ""
-"`--out result.tif` écrit le raster final super-résolu dans un fichier de sortie au nom prévisible"
-" dans le répertoire de travail."
+"`--out result.tif` demande un nom de base de sortie prévisible dans le répertoire de travail. "
+"Selon le moteur actif, l'artéfact final peut être matérialisé sous forme de GeoTIFF ou de VRT, et"
+" `floodsr` affiche le chemin de sortie résolu sur la dernière ligne de sortie."
 
 #. review_status: llm_draft
 #. source_hash: 84f58d35
