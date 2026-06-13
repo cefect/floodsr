@@ -57,22 +57,22 @@ After install, a quick sanity check is:
 Model Setup
 ^^^^^^^^^^^
 
-Before using the machine-learning backend, we need to fetch the model weights.
-This only needs to be done once, and the weights will be cached for future runs.
-
-List available model versions:
+``floodsr`` currently exposes both a downloaded machine-learning model
+(``ResUNet_16x_DEM``) and a built-in rules-based model (``CostGrow_Terrain``).
+List the available model versions with:
 
 .. code-block:: bash
 
    floodsr models list
 
-You should see `ResUNet_16x_DEM` in the list, which is the only model currently available.
-
-Fetch a model by version into the default cache:
+For the machine-learning backend, fetch the weights once and reuse them from cache:
 
 .. code-block:: bash
 
    floodsr models fetch ResUNet_16x_DEM
+
+``CostGrow_Terrain`` does not require downloaded weights, but it does require the
+extended install with PCRaster. See :doc:`installation` if you want to use that model.
 
 Now you're ready to enhance some flood rasters!
 
@@ -94,5 +94,11 @@ Alternatively, specify your own local DEM file:
 .. code-block:: bash
 
    floodsr tohr --in lowres032.tif --dem hires002_dem.tif
+
+To run the built-in CostGrow model explicitly, use the same command with a model version:
+
+.. code-block:: bash
+
+   floodsr tohr --in lowres032.tif --dem hires002_dem.tif --model-version CostGrow_Terrain
 
 For more details, see the :doc:`user_guide`.
