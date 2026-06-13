@@ -74,7 +74,7 @@ For the machine-learning backend, fetch the weights once and reuse them from cac
 ``CostGrow_Terrain`` does not require downloaded weights, but it does require the
 extended install with PCRaster. See :doc:`installation` if you want to use that model.
 
-Now you're ready to enhance some flood rasters.
+Now you're ready to enhance some flood rasters!
 
 Enhance to High Resolution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
