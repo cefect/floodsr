@@ -16,8 +16,7 @@ To best use the tutorials, we recommend running them in a notebook environment:
 Alternatively, you can copy/paste the commands from the tutorials into your terminal. See :ref:`basic_install_cli`.
 If you are sanity-checking an environment before starting a tutorial, run ``floodsr --version`` first and ``floodsr doctor`` when you need backend diagnostics.
 
-Select Tutorial 1 from the list below to get started. Tutorial 4 extends the earlier
-examples with a CostGrow walkthrough and a direct comparison against ResUNet.
+Select Tutorial 1 from the list below to get started.
 
 .. toctree::
    :maxdepth: 1
