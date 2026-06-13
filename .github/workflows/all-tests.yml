@@ -204,7 +204,7 @@ jobs:
             jupyterlab=4.5.4 \
             notebook=7.5.3 \
             ipykernel=7.2.0 \
-            matplotlib=3.10.8
+            matplotlib-base=3.10.8
           conda run -n notebook-ci python --version
 
       # Install the editable package plus pytest extras into the layered notebook env.
