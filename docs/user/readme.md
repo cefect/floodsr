@@ -31,7 +31,7 @@ or.. run containerized from wsl
 `/home/cefect/LS/09_REPOS/04_TOOLS/floodsr/docs/user/scripts/run_sphinx_docker.sh`
 ```
 
- ## french
+## french
 
 ```bash
 # 1) go to the docs source directory
@@ -78,7 +78,8 @@ See [ADR-0018](../dev/adr/0018-docs-and-tutorials.md) for the translation metada
 
 Use this workflow whenever you want to bring the French docs up to date with the current English docs.
 
-The metadata-driven stale check works from the `.po` entries themselves. For each entry, the sync step normalizes the current `msgid`, hashes it, and compares that value to the stored `source_hash`. 
+The metadata-driven stale check works from the `.po` entries themselves. 
+For each entry, the sync step normalizes the current `msgid`, hashes it, and compares that value to the stored `source_hash`. 
 If the values differ, the English source for that entry changed and the entry should no longer be treated as trusted.
 
 Initial migration only:

@@ -401,8 +401,8 @@ msgid ""
 "`floodsr` prints the resolved output path on the last output line."
 msgstr ""
 "`--out result.tif` demande un nom de base de sortie prévisible dans le répertoire de travail. "
-"Selon le moteur actif, l'artéfact final peut être matérialisé sous forme de GeoTIFF ou de VRT, et"
-" `floodsr` affiche le chemin de sortie résolu sur la dernière ligne de sortie."
+"Selon le moteur actif, l'artefact final peut être produit sous forme de GeoTIFF ou de VRT, et "
+"`floodsr` affiche le chemin de sortie résolu sur la dernière ligne de sortie."
 
 #. review_status: llm_draft
 #. source_hash: 84f58d35

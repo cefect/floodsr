@@ -406,7 +406,7 @@ msgid ""
 msgstr ""
 "Version du modèle à exécuter lorsque `--model-path` n'est pas fourni. Utilisez `ResUNet_16x_DEM` "
 "pour le modèle ONNX téléchargé ou `CostGrow_Terrain` pour le modèle intégré basé sur des règles "
-"et adossé à PCRaster."
+"et s'appuyant sur PCRaster."
 
 #. review_status: llm_draft
 #. source_hash: 97c75a86
@@ -420,7 +420,8 @@ msgid ""
 "cache/manifest. Not used by built-in models such as `CostGrow_Terrain`."
 msgstr ""
 "Utilise un fichier modèle ONNX local explicite au lieu de résoudre un modèle téléchargé depuis le"
-" cache ou le manifeste. Non utilisé par les modèles intégrés comme `CostGrow_Terrain`."
+" cache ou le manifeste. Cette option n'est pas utilisée par les modèles intégrés comme "
+"`CostGrow_Terrain`."
 
 #. review_status: human_locked
 #. source_hash: 5c34104c
