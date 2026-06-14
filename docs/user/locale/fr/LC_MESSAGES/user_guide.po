@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version:  floodsr\n"
-"POT-Creation-Date: 2026-06-13 17:47-0600\n"
+"POT-Creation-Date: 2026-06-14 11:55-0600\n"
 "PO-Revision-Date: 2026-03-19 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
@@ -157,8 +157,10 @@ msgstr ""
 "*modèles* pour réaliser le rehaussement de la résolution. Pour voir les modèles pris en charge, "
 "utilisez la commande ``floodsr models list``."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 76f6be9e
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "ResUNet_16x_DEM"
 msgstr "ResUNet_16x_DEM"
 
@@ -237,8 +239,10 @@ msgstr ""
 msgid "The final output is converted back to depth units on the target grid."
 msgstr "Les résultats finaux sont convertis en unités de profondeur sur la trame cible."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: ebc72588
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "CostGrow"
 msgstr "CostGrow"
 
@@ -261,8 +265,8 @@ msgstr ""
 msgid ""
 "This model is a good fit when you want a deterministic terrain-driven result or if you don't want"
 " to download any model weights. Compared with ``ResUNet_16x_DEM``, CostGrow is more explicitly "
-"tied to the DEM-driven propagation rules, while ResUNet uses a "
-"learned DEM-aware reconstruction model."
+"tied to the DEM-driven propagation rules, while ResUNet uses a learned DEM-aware reconstruction "
+"model."
 msgstr ""
 "Ce modèle convient bien lorsque vous voulez un résultat déterministe piloté par le terrain ou si "
 "vous ne voulez pas télécharger de poids de modèle. Par rapport à ``ResUNet_16x_DEM``, CostGrow "

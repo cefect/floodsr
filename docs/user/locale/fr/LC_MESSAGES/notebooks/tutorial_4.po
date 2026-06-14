@@ -34,13 +34,17 @@ msgstr ""
 msgid "By the end, you will have:"
 msgstr "À la fin, vous aurez :"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: b68f6bf2
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "a CostGrow output raster"
 msgstr "un raster de sortie CostGrow"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: ad6eba23
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "a ResUNet output raster"
 msgstr "un raster de sortie ResUNet"
 
@@ -54,8 +58,10 @@ msgstr "un raster de comparaison contenant ``CostGrow - ResUNet``"
 msgid "a side-by-side plot of the two model outputs"
 msgstr "un graphique côte à côte des deux sorties de modèle"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 74e492d5
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Before you start"
 msgstr "Avant de commencer"
 
@@ -85,13 +91,17 @@ msgstr ""
 "**carnet hébergé (Colab)** : non recommandé pour ce tutoriel, car la pile étendue est plus lourde"
 " et moins fiable."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 5e0740b6
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Install additional packages"
 msgstr "Installer des paquets supplémentaires"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: f494e4b4
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Prove the install"
 msgstr "Vérifier l'installation"
 
@@ -100,8 +110,10 @@ msgstr "Vérifier l'installation"
 msgid "Let's check the versions now:"
 msgstr "Vérifions maintenant les versions :"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 7df60b64
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Imports"
 msgstr "Importations"
 
@@ -119,13 +131,17 @@ msgstr ""
 "Nous réutilisons les petits rasters d'exemple des tutoriels précédents afin que la comparaison "
 "reste rapide à exécuter et facile à examiner."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: ab953a64
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Resolve the input paths"
 msgstr "Résoudre les chemins d'entrée"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: cb9ff6e8
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Fetch ResUNet weights"
 msgstr "Récupérer les poids ResUNet"
 
@@ -139,13 +155,17 @@ msgstr ""
 "``ResUNet_16x_DEM`` en a besoin, donc nous les récupérons une fois ici avant de lancer la "
 "comparaison."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 153272e5
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Plot the tutorial inputs"
 msgstr "Tracer les entrées du tutoriel"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: c412a340
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Run CostGrow"
 msgstr "Exécuter CostGrow"
 
@@ -159,8 +179,10 @@ msgstr ""
 "explicitement ``--window-method hard`` afin que le tutoriel reflète le chemin CostGrow actuel "
 "adapté aux grands rasters."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: f5cb01e4
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Run the ResUNet baseline"
 msgstr "Exécuter la référence ResUNet"
 
@@ -173,8 +195,10 @@ msgstr ""
 "Exécutez ensuite le modèle appris ``ResUNet_16x_DEM`` sur les mêmes entrées afin de comparer "
 "directement les deux sorties."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: fd0d79ef
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Write a comparison raster"
 msgstr "Écrire un raster de comparaison"
 
@@ -190,8 +214,10 @@ msgstr ""
 "profondes avec CostGrow, et les valeurs négatives indiquent des prédictions plus profondes avec "
 "ResUNet."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 919a7f66
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Plot the results side by side"
 msgstr "Tracer les résultats côte à côte"
 

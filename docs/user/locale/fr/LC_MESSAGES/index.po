@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version:  floodsr\n"
-"POT-Creation-Date: 2026-04-01 15:39-0600\n"
+"POT-Creation-Date: 2026-06-14 11:55-0600\n"
 "PO-Revision-Date: 2026-03-19 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
@@ -18,8 +18,10 @@ msgstr ""
 msgid "``floodsr`` documentation"
 msgstr "Documentation de ``floodsr``"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 874e93a3
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "floodsr header"
 msgstr "en-tête floodsr"
 

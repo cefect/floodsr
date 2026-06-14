@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version:  floodsr\n"
-"POT-Creation-Date: 2026-04-01 15:39-0600\n"
+"POT-Creation-Date: 2026-06-14 11:55-0600\n"
 "PO-Revision-Date: 2026-03-20 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
@@ -288,8 +288,10 @@ msgstr ""
 "Hourra ! Vous venez d'exécuter votre première commande `floodsr`. Vous méritez bien un peu de "
 "<span style=\"font-size: 1.4em;\">🍰</span>."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 7c25b6ae
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Run `tohr` with fetched HRDEM data"
 msgstr "Exécuter `tohr` avec des données HRDEM récupérées"
 

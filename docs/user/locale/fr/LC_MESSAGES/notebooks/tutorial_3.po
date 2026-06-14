@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version:  floodsr\n"
-"POT-Creation-Date: 2026-06-13 17:47-0600\n"
+"POT-Creation-Date: 2026-06-14 11:55-0600\n"
 "PO-Revision-Date: 2026-03-20 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
@@ -169,8 +169,10 @@ msgstr ""
 "{ref}`extended_install_hosted_notebook`, ou décommentez la cellule de configuration expérimentale"
 " ci-dessous si vous êtes d'humeur aventureuse."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: f494e4b4
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Prove the install"
 msgstr "Vérifier l’installation"
 
@@ -232,8 +234,10 @@ msgstr ""
 "Modifiez la cellule ci-dessous si vous voulez que `floodsr` réutilise un autre répertoire de "
 "cache."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: b0003540
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Set Paths"
 msgstr "Définir les chemins"
 
@@ -268,18 +272,24 @@ msgstr ""
 "Récupérez-le dans votre répertoire de travail en utilisant à nouveau la fonction utilitaire "
 "`urlretrieve`."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 8c76f430
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "This fetches a raster like:"
 msgstr "Cela récupère un raster comme celui-ci :"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 9a7ad31d
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "![Aqueduct screenshot](img/tutorial_3_aqueduct_screenshot.png)"
 msgstr "![Capture d’écran Aqueduct](img/tutorial_3_aqueduct_screenshot.png)"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: e457d2b2
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Aqueduct screenshot"
 msgstr "Capture d’écran Aqueduct"
 
@@ -415,8 +425,10 @@ msgstr "`--min-depth-threshold=0.1` masque les très faibles profondeurs prédit
 msgid "See {doc}`../cli_reference` for the full CLI reference."
 msgstr "Consultez {doc}`../cli_reference` pour la référence CLI complète."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: e620bb4c
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Plot the results"
 msgstr "Tracer les résultats"
 

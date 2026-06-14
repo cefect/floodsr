@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version:  floodsr\n"
-"POT-Creation-Date: 2026-04-01 15:39-0600\n"
+"POT-Creation-Date: 2026-06-14 11:55-0600\n"
 "PO-Revision-Date: 2026-03-20 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
@@ -164,8 +164,10 @@ msgstr ""
 "**carnet hébergé (Colab)** : décommentez la cellule Colab ci-dessous et exécutez-la. Voir "
 "{ref}`basic_install_google_colab` pour les détails."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: f494e4b4
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Prove the install"
 msgstr "Vérifier l'installation"
 
@@ -211,8 +213,10 @@ msgstr ""
 "Ici, nous associons les chemins téléchargés à des variables pour plus de commodité (et nous "
 "vérifions qu'ils existent)"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 02318e50
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Fetch model weights"
 msgstr "Récupérer les poids du modèle"
 
@@ -254,8 +258,10 @@ msgstr ""
 msgid "this shows the not-so-great coarse pluvial flood raster at 32m"
 msgstr "On voit ici le raster pluvial grossier en 32 m, pas franchement idéal."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 3594ab81
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Plot the Tutorial 1 outputs"
 msgstr "Tracer les sorties du tutoriel 1"
 
@@ -268,13 +274,17 @@ msgstr ""
 "Reconstituons maintenant le raster de profondeur d'inondation haute résolution en utilisant la "
 "même commande que dans le tutoriel 1, puis traçons le résultat."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 7593f480
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "And a quick plot:"
 msgstr "Et un rapide graphique :"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 3eae61e0
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "CRS policies"
 msgstr "Politiques de SCR"
 
@@ -340,8 +350,10 @@ msgstr ""
 "C'est pratique pour un jeu de données de test simple, mais moins intéressant pour montrer comment"
 " `floodsr` gère une incompatibilité de SCR. Ajoutons un peu de désordre."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: fff8bdde
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Create a CRS mismatch"
 msgstr "Créer volontairement un décalage de SCR"
 
@@ -440,8 +452,10 @@ msgstr "Cela me semble identique ! comme prévu..."
 msgid "Check out the {ref}`user_faq` for more discussion on CRS policies."
 msgstr "Consultez {ref}`user_faq` pour en savoir plus sur les politiques de SCR."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 94ad09f5
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Minimum depth threshold"
 msgstr "Seuil minimal de profondeur"
 
