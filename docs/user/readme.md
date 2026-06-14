@@ -120,9 +120,10 @@ python scripts/seed_fr_review_metadata.py
 
    Agent-only trivial-change filter:
 
-   - If a previously `human_locked` entry changed only by a tiny English wording tweak and the existing human-reviewed French still matches the meaning, the agent may keep or restore `human_locked`.
-   - Use this only for genuinely trivial edits. New sections, split or merged entries, added detail, or meaningfully revised guidance should remain `llm_draft`.
-   - This is a manual agent review step only and should not be implemented in the sync script or other automation.
+	   - If a previously `human_locked` entry changed only by a tiny English wording tweak and the existing human-reviewed French still matches the meaning, the agent may keep or restore `human_locked`.
+	   - If an entry changed only because of source wrapping, gettext segmentation, or literal/code markup around an untranslated command, option, path, or code token, keep or restore `human_locked` when the rendered meaning is unchanged.
+	   - Use this only for genuinely trivial edits. New sections, split or merged entries, added detail, or meaningfully revised guidance should remain `llm_draft`.
+	   - This is a manual agent review step only and should not be implemented in the sync script or other automation.
 
 4. Send only `llm_draft` entries for human review using poedit.com
 

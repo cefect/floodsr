@@ -53,8 +53,10 @@ msgstr "Utilisation"
 msgid "Commands"
 msgstr "Commandes"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: b101a1c6
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``models``"
 msgstr "``models``"
 
@@ -65,8 +67,10 @@ msgstr "``models``"
 msgid "List manifest models or fetch cached model weights."
 msgstr "Liste les modèles du manifeste ou récupère des poids de modèle mis en cache."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 2515ebff
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``tohr``"
 msgstr "``tohr``"
 
@@ -77,8 +81,10 @@ msgstr "``tohr``"
 msgid "Run one super-resolution pass for a low-res depth raster."
 msgstr "Exécute une passe de super-résolution pour un raster de profondeur à basse résolution."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: e175c7fc
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``doctor``"
 msgstr "``doctor``"
 
@@ -96,8 +102,10 @@ msgstr "Signale l'état des dépendances d'exécution et des fournisseurs."
 msgid "Options"
 msgstr "Options"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 7b084307
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``-h, --help``"
 msgstr "``-h, --help``"
 
@@ -108,8 +116,10 @@ msgstr "``-h, --help``"
 msgid "show this help message and exit"
 msgstr "affiche ce message d'aide et quitte"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 54eef670
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``--version``"
 msgstr "``--version``"
 
@@ -118,8 +128,10 @@ msgstr "``--version``"
 msgid "Print the installed FloodSR package version and exit."
 msgstr "Afficher la version installée du paquet FloodSR et quitter."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 63ec42db
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``-v, --verbose``"
 msgstr "``-v, --verbose``"
 
@@ -130,8 +142,10 @@ msgstr "``-v, --verbose``"
 msgid "Increase logging verbosity (repeatable)."
 msgstr "Augmente le niveau de détail de journalisation (répétable)."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 2a3b8d57
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``-q, --quiet``"
 msgstr "``-q, --quiet``"
 
@@ -142,8 +156,10 @@ msgstr "``-q, --quiet``"
 msgid "Decrease logging verbosity (repeatable)."
 msgstr "Diminue le niveau de détail de journalisation (répétable)."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: e67464eb
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 #, python-brace-format
 msgid "``--log-level {DEBUG,INFO,WARNING,ERROR}``"
 msgstr "``--log-level {DEBUG,INFO,WARNING,ERROR}``"
@@ -162,8 +178,10 @@ msgstr "Force explicitement le niveau de journalisation."
 msgid "models"
 msgstr "models"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 7ea0ea05
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``list``"
 msgstr "``list``"
 
@@ -174,8 +192,10 @@ msgstr "``list``"
 msgid "List model versions defined in the manifest."
 msgstr "Liste les versions de modèle définies dans le manifeste."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: f60a8e44
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``fetch``"
 msgstr "``fetch``"
 
@@ -193,8 +213,10 @@ msgstr "Récupère un modèle du manifeste dans le cache local."
 msgid "models list"
 msgstr "models list"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: ca171f93
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``--manifest MANIFEST``"
 msgstr "``--manifest MANIFEST``"
 
@@ -219,8 +241,10 @@ msgstr "models fetch"
 msgid "Positional Arguments"
 msgstr "Arguments positionnels"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: dc434632
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``version``"
 msgstr "``version``"
 
@@ -233,8 +257,10 @@ msgstr ""
 "Clé de version du modèle à récupérer dans le manifeste. Les modèles intégrés comme "
 "`CostGrow_Terrain` renvoient les métadonnées sans télécharger les poids."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 225c49df
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``--cache-dir CACHE_DIR``"
 msgstr "``--cache-dir CACHE_DIR``"
 
@@ -245,8 +271,10 @@ msgstr "``--cache-dir CACHE_DIR``"
 msgid "Store downloaded weights in an alternate cache directory."
 msgstr "Enregistre les poids téléchargés dans un autre répertoire de cache."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 11d15abb
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 #, python-brace-format
 msgid "``--backend {http,file}``"
 msgstr "``--backend {http,file}``"
@@ -258,8 +286,10 @@ msgstr "``--backend {http,file}``"
 msgid "Override weight retrieval backend selection."
 msgstr "Force le choix du moteur de récupération des poids."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: f493d282
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``--force``"
 msgstr "``--force``"
 
@@ -270,8 +300,10 @@ msgstr "``--force``"
 msgid "Redownload even when a valid cached weight file already exists."
 msgstr "Retélécharge même lorsqu'un fichier de poids valide existe déjà en cache."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: c11dd5ba
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``--show-progress``"
 msgstr "``--show-progress``"
 
@@ -284,8 +316,10 @@ msgstr ""
 "Affiche la progression pendant le téléchargement du modèle. Utilisez ``--no-progress`` pour la "
 "désactiver. Activée par défaut."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 728314de
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``--no-progress``"
 msgstr "``--no-progress``"
 
@@ -303,8 +337,10 @@ msgstr "Désactive l'affichage de la progression. La progression s'affiche par d
 msgid "tohr"
 msgstr "tohr"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 23f68248
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``--machine-json MACHINE_JSON``"
 msgstr "``--machine-json MACHINE_JSON``"
 
@@ -315,8 +351,10 @@ msgstr "``--machine-json MACHINE_JSON``"
 msgid "Load `tohr` parameters from JSON; explicit CLI flags still take precedence."
 msgstr "Charge les paramètres de ``tohr`` depuis JSON; les drapeaux CLI explicites demeurent prioritaires."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: b5cf47d8
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``--in IN_FP``"
 msgstr "``--in IN_FP``"
 
@@ -327,8 +365,10 @@ msgstr "``--in IN_FP``"
 msgid "Input low-res depth raster path."
 msgstr "Chemin du raster de profondeur à basse résolution en entrée."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 6ac7780c
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``--dem DEM``"
 msgstr "``--dem DEM``"
 
@@ -339,8 +379,10 @@ msgstr "``--dem DEM``"
 msgid "Input high-res DEM raster path."
 msgstr "Chemin du raster de DEM à haute résolution en entrée."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 5d8496b3
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``-f, --fetch-hrdem``"
 msgstr "``-f, --fetch-hrdem``"
 
@@ -351,8 +393,10 @@ msgstr "``-f, --fetch-hrdem``"
 msgid "Fetch HRDEM for the low-res raster footprint instead of passing `--dem`."
 msgstr "Récupère le HRDEM pour l'emprise du raster basse résolution au lieu de spécifier ``--dem``."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 4b959149
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``--fetch-out FETCH_OUT``"
 msgstr "``--fetch-out FETCH_OUT``"
 
@@ -363,8 +407,10 @@ msgstr "``--fetch-out FETCH_OUT``"
 msgid "Write a fetched HRDEM raster to this path instead of a temporary location."
 msgstr "Écrit le raster HRDEM récupéré à cet emplacement plutôt que dans un emplacement temporaire."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: af369d01
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``--fetch-force-tiling``"
 msgstr "``--fetch-force-tiling``"
 
@@ -377,8 +423,10 @@ msgstr ""
 "Force l'utilisation de fenêtres de récupération par tuiles du HRDEM au lieu de s'appuyer sur le "
 "tuilage automatique."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: a13324b9
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``--out OUT``"
 msgstr "``--out OUT``"
 
@@ -393,8 +441,10 @@ msgstr ""
 "Chemin du raster de sortie. Par défaut : ``./<input_stem>_sr<input_suffix>`` dans le répertoire "
 "de travail courant."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 4ed6b751
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``--model-version MODEL_VERSION``"
 msgstr "``--model-version MODEL_VERSION``"
 
@@ -408,8 +458,10 @@ msgstr ""
 "pour le modèle ONNX téléchargé ou `CostGrow_Terrain` pour le modèle intégré basé sur des règles "
 "et s'appuyant sur PCRaster."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 97c75a86
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``--model-path MODEL_PATH``"
 msgstr "``--model-path MODEL_PATH``"
 
@@ -453,8 +505,10 @@ msgstr ""
 "Retélécharge une version spécifique du modèle lorsque la résolution du cache ferait en sorte de "
 "le réutiliser."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 0148f413
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``--max-depth MAX_DEPTH``"
 msgstr "``--max-depth MAX_DEPTH``"
 
@@ -472,8 +526,10 @@ msgstr ""
 "sont plafonnées pendant le prétraitement et après la mise à l'échelle inverse. La valeur par "
 "défaut actuelle pour ``ResUNet_16x_DEM`` est de 5,0."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 9ca13863
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``--min-depth-threshold MIN_DEPTH_THRESHOLD``"
 msgstr "``--min-depth-threshold MIN_DEPTH_THRESHOLD``"
 
@@ -489,8 +545,10 @@ msgstr ""
 "écrites comme ``0.0`` après l'inférence. La valeur par défaut actuelle pour ``ResUNet_16x_DEM`` "
 "est de 0,01."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 8426e339
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``--dem-pct-clip DEM_PCT_CLIP``"
 msgstr "``--dem-pct-clip DEM_PCT_CLIP``"
 
@@ -509,8 +567,10 @@ msgstr ""
 "statistiques explicites de normalisation du DEM ne sont pas disponibles. La valeur par défaut "
 "actuelle de ``ResUNet_16x_DEM`` est de 95,0."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 78b8761e
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 #, python-brace-format
 msgid "``--window-method {hard,feather}``"
 msgstr "``--window-method {hard,feather}``"
@@ -529,8 +589,10 @@ msgstr ""
 "se chevauchent avec un mélange pondéré afin de réduire les artefacts de raccord. La valeur par "
 "défaut actuelle est ``feather``."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 926391c8
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``--tile-overlap TILE_OVERLAP``"
 msgstr "``--tile-overlap TILE_OVERLAP``"
 
@@ -541,8 +603,10 @@ msgstr "``--tile-overlap TILE_OVERLAP``"
 msgid "Feather overlap in low-res pixels. Ignored unless `--window-method=feather`."
 msgstr "Chevauchement ``feather`` en pixels basse résolution. Ignoré sauf si ``--window-method=feather``."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: d2703819
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``--tile-size TILE_SIZE``"
 msgstr "``--tile-size TILE_SIZE``"
 
@@ -555,8 +619,10 @@ msgstr ""
 "Remplace la taille des tuiles basse résolution; doit correspondre à la taille d'entrée LR du "
 "modèle."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: e1f1d0f6
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 #, python-brace-format
 msgid "``--crs-policy {strict,use-dem,use-lores}``"
 msgstr "``--crs-policy {strict,use-dem,use-lores}``"
@@ -589,8 +655,10 @@ msgstr ""
 msgid "doctor"
 msgstr "doctor"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 30d3721a
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
 msgid "``--json``"
 msgstr "``--json``"
 

@@ -35,6 +35,7 @@ The current docs stack uses Sphinx with `myst_nb` for notebook rendering and the
 - Human-reviewed French text should remain authoritative until the corresponding English source text changes.
 - Machine-translated French text should remain explicitly marked as draft until a human review promotes it back to trusted status.
 - During agent-assisted translation maintenance, an agent may keep or restore `human_locked` for a previously human-reviewed entry when the English edit is only a trivial wording tweak and the existing French remains substantively correct without meaningful rewrite.
+- During agent-assisted translation maintenance, entries whose English change is only source wrapping, gettext segmentation, or literal/code markup around an untranslated token may remain `human_locked` when the rendered meaning and French text are unchanged.
 - The last known fully human-proofed French baseline should be treated as the provenance anchor for initial migration into the metadata-backed workflow.
 - Compiled `.mo` files are build artifacts, not source artifacts. They should be generated for local/CI/docs builds and should not be committed to the repository.
 - Translate top-level indexes, landing pages, and internal links along with page content so the French docs are navigable as a complete experience.
