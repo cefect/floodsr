@@ -20,6 +20,7 @@ The current docs stack uses Sphinx with `myst_nb` for notebook rendering and the
 - Keep one shared Sphinx source tree under `docs/user` rather than duplicating content per language.
 - Keep the docs in the main repo and publish translations from separate Read the Docs projects that point at the same repository.
 - Treat the landing pages, getting-started pages, installation pages, and tutorial introductions as beginner-facing content for readers with minimal programming and GIS knowledge.
+- Author `.rst` prose with one sentence per source line, keeping lists, directives, tables, code blocks, and generated artifacts in their native formatting.
 - Treat the Python CLI parser definition as the source of truth for CLI reference documentation, while maintaining the committed docs page as a manually refreshed artifact rather than regenerating it during docs builds.
 
 ## French docs
