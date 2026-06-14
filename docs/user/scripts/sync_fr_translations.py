@@ -106,7 +106,7 @@ def main_sync_fr_translations(
 
 
 def copy_review_catalogs(catalog_root: Path, review_dir: Path, report_row_l: list[dict], dry_run: bool = False) -> dict:
-    """Copy catalogs with ``llm_draft`` entries into the human review folder."""
+    """Write review-only catalogs with ``llm_draft`` entries into the human review folder."""
     assert catalog_root.exists(), f"missing catalog root:\n    {catalog_root}"
     review_dir = review_dir.resolve()
     catalog_rel_l = sorted({row["catalog"] for row in report_row_l if row.get("status") == "llm_draft"})
@@ -120,9 +120,46 @@ def copy_review_catalogs(catalog_root: Path, review_dir: Path, report_row_l: lis
         source_fp = catalog_root / catalog_rel
         target_fp = review_dir / catalog_rel
         assert source_fp.exists(), f"missing review catalog source:\n    {source_fp}"
+        review_catalog = _build_llm_draft_catalog(source_catalog=_read_po_catalog(po_fp=source_fp, locale="fr"))
+        assert any(message.id for message in review_catalog), f"no llm_draft entries found in:\n    {source_fp}"
         target_fp.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source_fp, target_fp)
+        target_fp.write_text(_render_po_catalog_text(current_catalog=review_catalog), encoding="utf-8")
     return {"review_dir": str(review_dir), "review_catalogs": len(catalog_rel_l)}
+
+
+def _build_llm_draft_catalog(source_catalog: Catalog) -> Catalog:
+    """Build a catalog containing only entries still flagged for human review."""
+    review_catalog = Catalog(
+        locale=source_catalog.locale,
+        project=source_catalog.project,
+        version=source_catalog.version,
+        copyright_holder=source_catalog.copyright_holder,
+        msgid_bugs_address=source_catalog.msgid_bugs_address,
+        creation_date=source_catalog.creation_date,
+        revision_date=source_catalog.revision_date,
+        last_translator=source_catalog.last_translator,
+        language_team=source_catalog.language_team,
+        charset=source_catalog.charset,
+        fuzzy=False,
+    )
+    for message in source_catalog:
+        if not message.id:
+            continue
+        metadata = _parse_review_metadata(message=message)
+        if metadata.get("review_status") != "llm_draft":
+            continue
+        review_catalog.add(
+            message.id,
+            string=message.string,
+            locations=message.locations,
+            flags=message.flags,
+            auto_comments=message.auto_comments,
+            user_comments=message.user_comments,
+            previous_id=message.previous_id,
+            lineno=message.lineno,
+            context=message.context,
+        )
+    return review_catalog
 
 
 def _run_gettext_build(docs_dir: Path, temp_dir: Path) -> Path:
