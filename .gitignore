@@ -37,6 +37,7 @@ venv.bak/
 
 # docs
 docs/user/_build
+docs/user/_fr_review
 *.mo
 
 #windows shortcuts

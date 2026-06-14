@@ -125,19 +125,28 @@ python scripts/seed_fr_review_metadata.py
 	   - Use this only for genuinely trivial edits. New sections, split or merged entries, added detail, or meaningfully revised guidance should remain `llm_draft`.
 	   - This is a manual agent review step only and should not be implemented in the sync script or other automation.
 
-4. Send only `llm_draft` entries for human review using poedit.com
+4. Send only `llm_draft` entries for human review using poedit.com.
+
+   The sync script copies only catalogs with `llm_draft` entries to `docs/user/_fr_review/`.
+   To refresh that folder without rerunning the full sync, run:
+
+   ```bash
+   bash scripts/copy_fr_review_catalogs.sh
+   ```
+
+5. Reviewer reviews .po entries in poedit.com
 
    When a reviewer approves an entry, set `review_status` to `human_locked` and refresh `reviewed_at` and `reviewer`.
 
    import back into project with `docs/user/scripts/port_emma_po_updates.sh`
 
-5. Compile the French catalogs.
+6. Compile the French catalogs.
 
    ```bash
    bash scripts/compile_fr_catalogs.sh
    ```
 
-6. Build the French HTML and review the rendered output.
+7. Build the French HTML and review the rendered output.
 
    ```bash
    python -m sphinx -E -b html -D language=fr . "_build/fr_html"

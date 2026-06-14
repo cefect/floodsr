@@ -1,6 +1,6 @@
 """Sync French docs catalogs against current English sources and review metadata."""
 
-import argparse, csv, hashlib, io, json, logging, subprocess, sys, tempfile
+import argparse, csv, hashlib, io, json, logging, shutil, subprocess, sys, tempfile
 from pathlib import Path
 
 from babel.messages import pofile
@@ -19,6 +19,7 @@ def main_sync_fr_translations(
     catalog_rel_l: list[str] | None = None,
     baseline_commit: str = BASELINE_COMMIT,
     report_dir: Path | None = None,
+    review_dir: Path | None = None,
     dry_run: bool = False,
 ) -> dict:
     """Sync French catalogs to current docs sources and refresh review metadata.
@@ -33,6 +34,8 @@ def main_sync_fr_translations(
         Git commit used as the last fully human-reviewed French baseline.
     report_dir : Path | None, default=None
         Directory for the reviewer report artifacts. Defaults to ``docs/user/_build``.
+    review_dir : Path | None, default=None
+        Directory for copies of catalogs with ``llm_draft`` entries. Defaults to ``docs/user/_fr_review``.
     dry_run : bool, default=False
         When ``True``, do not write catalogs or reports.
 
@@ -47,6 +50,7 @@ def main_sync_fr_translations(
     docs_dir = repo_root / "docs" / "user"
     catalog_root = docs_dir / "locale" / "fr" / "LC_MESSAGES"
     report_dir = report_dir or docs_dir / "_build"
+    review_dir = review_dir or docs_dir / "_fr_review"
     assert docs_dir.exists(), f"missing docs dir:\n    {docs_dir}"
     assert catalog_root.exists(), f"missing fr catalog dir:\n    {catalog_root}"
 
@@ -59,6 +63,7 @@ def main_sync_fr_translations(
                 "catalogs": catalog_rel_l or "ALL",
                 "dry_run": dry_run,
                 "report_dir": str(report_dir),
+                "review_dir": str(review_dir),
             },
             indent=2,
         )
@@ -86,11 +91,38 @@ def main_sync_fr_translations(
 
     report_path_d = _write_review_reports(report_dir=report_dir, report_row_l=report_row_l, dry_run=dry_run)
     stats.update(report_path_d)
+    review_path_d = copy_review_catalogs(
+        catalog_root=catalog_root,
+        review_dir=review_dir,
+        report_row_l=report_row_l,
+        dry_run=dry_run,
+    )
+    stats.update(review_path_d)
     log.info(
         f"synced {stats['files']} catalog(s), {stats['entries']} entry(ies), "
         f"{stats['human_locked']} human_locked, {stats['llm_draft']} llm_draft, {stats['stale']} stale"
     )
     return stats
+
+
+def copy_review_catalogs(catalog_root: Path, review_dir: Path, report_row_l: list[dict], dry_run: bool = False) -> dict:
+    """Copy catalogs with ``llm_draft`` entries into the human review folder."""
+    assert catalog_root.exists(), f"missing catalog root:\n    {catalog_root}"
+    review_dir = review_dir.resolve()
+    catalog_rel_l = sorted({row["catalog"] for row in report_row_l if row.get("status") == "llm_draft"})
+    if dry_run:
+        return {"review_dir": str(review_dir), "review_catalogs": len(catalog_rel_l)}
+
+    if review_dir.exists():
+        shutil.rmtree(review_dir)
+    review_dir.mkdir(parents=True, exist_ok=True)
+    for catalog_rel in catalog_rel_l:
+        source_fp = catalog_root / catalog_rel
+        target_fp = review_dir / catalog_rel
+        assert source_fp.exists(), f"missing review catalog source:\n    {source_fp}"
+        target_fp.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source_fp, target_fp)
+    return {"review_dir": str(review_dir), "review_catalogs": len(catalog_rel_l)}
 
 
 def _run_gettext_build(docs_dir: Path, temp_dir: Path) -> Path:
@@ -434,6 +466,12 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
         default=Path(__file__).resolve().parents[1] / "_build",
         help="Output directory for the review CSV/Markdown artifacts.",
     )
+    parser.add_argument(
+        "--review-dir",
+        type=Path,
+        default=Path(__file__).resolve().parents[1] / "_fr_review",
+        help="Output directory for .po catalogs that still contain llm_draft entries.",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Compute updates without writing catalogs or reports.")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging.")
     return parser.parse_args(argv)
@@ -447,6 +485,7 @@ if __name__ == "__main__":
         catalog_rel_l=parsed_args.catalog or None,
         baseline_commit=parsed_args.baseline_commit,
         report_dir=parsed_args.report_dir.resolve(),
+        review_dir=parsed_args.review_dir.resolve(),
         dry_run=parsed_args.dry_run,
     )
     print(json.dumps(summary, ensure_ascii=False, indent=2))
