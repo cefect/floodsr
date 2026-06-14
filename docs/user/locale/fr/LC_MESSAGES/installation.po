@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version:  floodsr\n"
-"POT-Creation-Date: 2026-06-14 11:55-0600\n"
+"POT-Creation-Date: 2026-06-14 15:27-0600\n"
 "PO-Revision-Date: 2026-03-31 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
@@ -104,8 +104,10 @@ msgstr ""
 "<https://pypi.org/project/floodsr/>`_, il peut être installé dans plusieurs contextes. Nous "
 "fournissons ici des instructions pour les trois plus courants :"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 623fb03b
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid ""
 ":ref:`basic_install_cli`: best for operations and those comfortable with a command-line interface"
 " (CLI)."

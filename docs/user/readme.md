@@ -127,7 +127,8 @@ python scripts/seed_fr_review_metadata.py
 
 4. Send only `llm_draft` entries for human review using poedit.com.
 
-   The sync script writes review-only catalogs with `llm_draft` entries to `docs/user/_fr_review/`.
+   The sync script writes one review-only catalog with `llm_draft` entries to `docs/user/_fr_review/fr_review.po`.
+   Each entry keeps its review metadata and includes a `po_file` field with the source catalog path.
    To refresh that folder without rerunning the full sync, run:
 
    ```bash

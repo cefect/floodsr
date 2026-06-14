@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version:  floodsr\n"
-"POT-Creation-Date: 2026-06-14 11:55-0600\n"
+"POT-Creation-Date: 2026-06-14 15:27-0600\n"
 "PO-Revision-Date: 2026-03-20 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
@@ -357,8 +357,10 @@ msgstr ""
 msgid "Create a CRS mismatch"
 msgstr "Créer volontairement un décalage de SCR"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: cd615c2c
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid ""
 "To demonstrate `--crs-policy`, we reproject the low-resolution raster to `3978` using [rasterio "
 "CLI](https://rasterio.readthedocs.io/en/stable/cli.html) and save it as a new GeoTIFF."

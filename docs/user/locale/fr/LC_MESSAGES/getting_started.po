@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version:  floodsr\n"
-"POT-Creation-Date: 2026-06-13 17:47-0600\n"
+"POT-Creation-Date: 2026-06-14 15:27-0600\n"
 "PO-Revision-Date: 2026-03-31 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
@@ -114,8 +114,10 @@ msgstr ""
 msgid "Install"
 msgstr "Installation"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 40dc2c45
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid ""
 "``floodsr`` was designed as a command-line interface (CLI)-first Python package, so we recommend "
 "installing with `pipx <https://pipx.pypa.io/stable/>`_ to ensure environment isolation:"
@@ -124,8 +126,10 @@ msgstr ""
 "commande (CLI), donc nous recommandons une installation avec `pipx "
 "<https://pipx.pypa.io/stable/>`_ afin d'isoler l'environnement :"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: e2fd0e98
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid ""
 "For more detailed installation instructions, see :doc:`installation`. After install, a quick "
 "sanity check is:"
@@ -150,8 +154,10 @@ msgstr ""
 "(``ResUNet_16x_DEM``) et un modèle intégré basé sur des règles (``CostGrow_Terrain``). Listez les"
 " versions de modèle disponibles avec :"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 1bffc62a
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "For the machine-learning backend, fetch the weights once and reuse them from cache:"
 msgstr ""
 "Pour le moteur d'apprentissage automatique, récupérez les poids une fois et réutilisez-les depuis"

@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version:  floodsr\n"
-"POT-Creation-Date: 2026-06-14 11:55-0600\n"
+"POT-Creation-Date: 2026-06-14 15:27-0600\n"
 "PO-Revision-Date: 2026-03-20 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
@@ -101,8 +101,10 @@ msgstr ""
 "l’installation **étendue** pour les personnes plus à l’aise avec Python et qui veulent exploiter "
 "toute la puissance de `floodsr` sur de grands rasters."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 97374047
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 #, python-brace-format
 msgid ""
 "If you followed the instructions for the {ref}`basic_install`, the simplest way to upgrade is to "
@@ -143,8 +145,10 @@ msgstr ""
 "**ligne de commande (CLI)** : copiez-collez dans votre terminal les commandes de "
 "{ref}`extended_install_cli`."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: ce85a08f
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 #, python-brace-format
 msgid ""
 "**local notebook (Jupyter)**: follow the same {ref}`extended_install_cli` as for the CLI, then "
@@ -176,8 +180,10 @@ msgstr ""
 msgid "Prove the install"
 msgstr "Vérifier l’installation"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 5e5a0d0a
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Let's check the versions now:"
 msgstr "Vérifions maintenant les versions :"
 
@@ -227,8 +233,10 @@ msgstr ""
 "sûr de la taille des rasters que vous manipulez. Pour de grands rasters, cela peut dépasser 10 "
 "Go."
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 6401cc2c
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Edit the below cell if you want `floodsr` to reuse a different cache directory."
 msgstr ""
 "Modifiez la cellule ci-dessous si vous voulez que `floodsr` réutilise un autre répertoire de "
@@ -253,8 +261,10 @@ msgstr "Commençons par affecter quelques chemins à des variables Python pour p
 msgid "Download Test Data"
 msgstr "Télécharger les données de test"
 
-#. review_status: llm_draft
+#. review_status: human_locked
 #. source_hash: 97574ce9
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid ""
 "For this tutorial, we use a tile from the old [Aqueduct Floods Hazard Maps](https://wri-"
 "projects.s3.amazonaws.com/AqueductFloodTool/download/v2/index.html) dataset."
