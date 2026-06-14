@@ -55,8 +55,9 @@ docker compose -f .devcontainer/docs/docker-compose.yml run --rm dev 'pytest -q 
 ```
 
 ### notebook tests
-NOTE: these run in the `dev` conda environment, not `deploy`.
-
+NOTE: 
+- these run in the `dev` conda environment, not `deploy`.
+- these are included in `all-tests.yml`
 ```bash
 conda run -n dev pytest -q -m "notebook"
 ```
