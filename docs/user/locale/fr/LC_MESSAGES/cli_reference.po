@@ -1,173 +1,670 @@
+
 msgid ""
 msgstr ""
-"Project-Id-Version: floodsr\n"
-"POT-Creation-Date: 2026-03-20 00:00+0000\n"
+"Project-Id-Version:  floodsr\n"
+"POT-Creation-Date: 2026-06-13 17:47-0600\n"
 "PO-Revision-Date: 2026-03-31 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 
+#. review_status: human_locked
+#. source_hash: d8a451eb
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "CLI Reference"
 msgstr "Référence CLI"
 
+#. review_status: human_locked
+#. source_hash: 5dc0083c
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Auto-generated from live CLI parser metadata."
 msgstr "Générée automatiquement à partir des métadonnées actives de l'analyseur CLI."
 
+#. review_status: human_locked
+#. source_hash: b372d0b8
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Main Command"
 msgstr "Commande principale"
 
+#. review_status: human_locked
+#. source_hash: 1aca3f26
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Run FloodSR model, cache, and runtime utility commands."
 msgstr "Exécute les commandes FloodSR liées au modèle, au cache et aux utilitaires d'exécution."
 
+#. review_status: human_locked
+#. source_hash: 8d59829c
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Usage"
 msgstr "Utilisation"
 
+#. review_status: human_locked
+#. source_hash: b269dc4e
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Commands"
 msgstr "Commandes"
 
-msgid "tohr"
-msgstr "tohr"
+#. review_status: human_locked
+#. source_hash: b101a1c6
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``models``"
+msgstr "``models``"
 
-msgid "Run one super-resolution pass for a low-res depth raster."
-msgstr "Exécute une passe de super-résolution pour un raster de profondeur à basse résolution."
-
-msgid "models"
-msgstr "models"
-
+#. review_status: human_locked
+#. source_hash: ba15aa9a
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "List manifest models or fetch cached model weights."
 msgstr "Liste les modèles du manifeste ou récupère des poids de modèle mis en cache."
 
-msgid "doctor"
-msgstr "doctor"
+#. review_status: human_locked
+#. source_hash: 2515ebff
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``tohr``"
+msgstr "``tohr``"
 
+#. review_status: human_locked
+#. source_hash: 40c3c64d
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid "Run one super-resolution pass for a low-res depth raster."
+msgstr "Exécute une passe de super-résolution pour un raster de profondeur à basse résolution."
+
+#. review_status: human_locked
+#. source_hash: e175c7fc
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``doctor``"
+msgstr "``doctor``"
+
+#. review_status: human_locked
+#. source_hash: 03dc17a0
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Report runtime dependency and provider diagnostics."
 msgstr "Signale l'état des dépendances d'exécution et des fournisseurs."
 
+#. review_status: human_locked
+#. source_hash: d0db8b5e
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Options"
 msgstr "Options"
 
+#. review_status: human_locked
+#. source_hash: 7b084307
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``-h, --help``"
+msgstr "``-h, --help``"
+
+#. review_status: human_locked
+#. source_hash: 608017da
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "show this help message and exit"
 msgstr "affiche ce message d'aide et quitte"
 
-msgid "--version"
-msgstr "--version"
+#. review_status: human_locked
+#. source_hash: 54eef670
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``--version``"
+msgstr "``--version``"
 
+#. review_status: llm_draft
+#. source_hash: 7083065b
 msgid "Print the installed FloodSR package version and exit."
-msgstr "Affiche la version installée du paquet FloodSR puis quitte."
+msgstr "Afficher la version installée du paquet FloodSR et quitter."
 
+#. review_status: human_locked
+#. source_hash: 63ec42db
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``-v, --verbose``"
+msgstr "``-v, --verbose``"
+
+#. review_status: human_locked
+#. source_hash: b7bd431c
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Increase logging verbosity (repeatable)."
 msgstr "Augmente le niveau de détail de journalisation (répétable)."
 
+#. review_status: human_locked
+#. source_hash: 2a3b8d57
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``-q, --quiet``"
+msgstr "``-q, --quiet``"
+
+#. review_status: human_locked
+#. source_hash: dd37d389
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Decrease logging verbosity (repeatable)."
 msgstr "Diminue le niveau de détail de journalisation (répétable)."
 
+#. review_status: human_locked
+#. source_hash: e67464eb
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+#, python-brace-format
+msgid "``--log-level {DEBUG,INFO,WARNING,ERROR}``"
+msgstr "``--log-level {DEBUG,INFO,WARNING,ERROR}``"
+
+#. review_status: human_locked
+#. source_hash: b9b6a2f1
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Explicit log level override."
 msgstr "Force explicitement le niveau de journalisation."
 
-msgid "models list"
-msgstr "models list"
+#. review_status: human_locked
+#. source_hash: 8edcc26c
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid "models"
+msgstr "models"
 
+#. review_status: human_locked
+#. source_hash: 7ea0ea05
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``list``"
+msgstr "``list``"
+
+#. review_status: human_locked
+#. source_hash: 3648eff2
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "List model versions defined in the manifest."
 msgstr "Liste les versions de modèle définies dans le manifeste."
 
-msgid "fetch"
-msgstr "fetch"
+#. review_status: human_locked
+#. source_hash: f60a8e44
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``fetch``"
+msgstr "``fetch``"
 
+#. review_status: human_locked
+#. source_hash: a9463723
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Fetch one manifest model into the local cache."
 msgstr "Récupère un modèle du manifeste dans le cache local."
 
+#. review_status: human_locked
+#. source_hash: f4445656
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid "models list"
+msgstr "models list"
+
+#. review_status: human_locked
+#. source_hash: ca171f93
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``--manifest MANIFEST``"
+msgstr "``--manifest MANIFEST``"
+
+#. review_status: human_locked
+#. source_hash: 8e33a0f1
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Read models from an alternate `models.json` manifest."
 msgstr "Lit les modèles à partir d'un fichier ``models.json`` alternatif."
 
+#. review_status: human_locked
+#. source_hash: ce0966dd
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "models fetch"
 msgstr "models fetch"
 
+#. review_status: human_locked
+#. source_hash: 60f950e7
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Positional Arguments"
 msgstr "Arguments positionnels"
 
-msgid "Model version key to fetch from the manifest."
-msgstr "Clé de version du modèle à récupérer dans le manifeste."
+#. review_status: human_locked
+#. source_hash: dc434632
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``version``"
+msgstr "``version``"
 
+#. review_status: llm_draft
+#. source_hash: a474efa6
+msgid ""
+"Model version key to fetch from the manifest. Built-in models such as `CostGrow_Terrain` report "
+"metadata without downloading weights."
+msgstr ""
+"Clé de version du modèle à récupérer dans le manifeste. Les modèles intégrés comme "
+"`CostGrow_Terrain` renvoient les métadonnées sans télécharger les poids."
+
+#. review_status: human_locked
+#. source_hash: 225c49df
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``--cache-dir CACHE_DIR``"
+msgstr "``--cache-dir CACHE_DIR``"
+
+#. review_status: human_locked
+#. source_hash: c46766f3
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Store downloaded weights in an alternate cache directory."
 msgstr "Enregistre les poids téléchargés dans un autre répertoire de cache."
 
+#. review_status: human_locked
+#. source_hash: 11d15abb
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+#, python-brace-format
+msgid "``--backend {http,file}``"
+msgstr "``--backend {http,file}``"
+
+#. review_status: human_locked
+#. source_hash: acee80c8
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Override weight retrieval backend selection."
 msgstr "Force le choix du moteur de récupération des poids."
 
+#. review_status: human_locked
+#. source_hash: f493d282
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``--force``"
+msgstr "``--force``"
+
+#. review_status: human_locked
+#. source_hash: 198913b9
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Redownload even when a valid cached weight file already exists."
 msgstr "Retélécharge même lorsqu'un fichier de poids valide existe déjà en cache."
 
-msgid "Show progress output during model download. Use `--no-progress` to disable it. Default: enabled."
-msgstr "Affiche la progression pendant le téléchargement du modèle. Utilisez ``--no-progress`` pour la désactiver. Activée par défaut."
+#. review_status: human_locked
+#. source_hash: c11dd5ba
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``--show-progress``"
+msgstr "``--show-progress``"
 
+#. review_status: human_locked
+#. source_hash: 25d476ab
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid "Show progress output during model download. Use `--no-progress` to disable it. Default: enabled."
+msgstr ""
+"Affiche la progression pendant le téléchargement du modèle. Utilisez ``--no-progress`` pour la "
+"désactiver. Activée par défaut."
+
+#. review_status: human_locked
+#. source_hash: 728314de
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``--no-progress``"
+msgstr "``--no-progress``"
+
+#. review_status: human_locked
+#. source_hash: 3a5d2910
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Disable progress output. Default: progress is shown."
 msgstr "Désactive l'affichage de la progression. La progression s'affiche par défaut."
 
+#. review_status: human_locked
+#. source_hash: e887e16e
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid "tohr"
+msgstr "tohr"
+
+#. review_status: human_locked
+#. source_hash: 23f68248
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``--machine-json MACHINE_JSON``"
+msgstr "``--machine-json MACHINE_JSON``"
+
+#. review_status: human_locked
+#. source_hash: 50db8485
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Load `tohr` parameters from JSON; explicit CLI flags still take precedence."
 msgstr "Charge les paramètres de ``tohr`` depuis JSON; les drapeaux CLI explicites demeurent prioritaires."
 
+#. review_status: human_locked
+#. source_hash: b5cf47d8
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``--in IN_FP``"
+msgstr "``--in IN_FP``"
+
+#. review_status: human_locked
+#. source_hash: e52062f4
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Input low-res depth raster path."
 msgstr "Chemin du raster de profondeur à basse résolution en entrée."
 
+#. review_status: human_locked
+#. source_hash: 6ac7780c
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``--dem DEM``"
+msgstr "``--dem DEM``"
+
+#. review_status: human_locked
+#. source_hash: c32ccfe4
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Input high-res DEM raster path."
 msgstr "Chemin du raster de DEM à haute résolution en entrée."
 
+#. review_status: human_locked
+#. source_hash: 5d8496b3
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``-f, --fetch-hrdem``"
+msgstr "``-f, --fetch-hrdem``"
+
+#. review_status: human_locked
+#. source_hash: af5f52c9
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Fetch HRDEM for the low-res raster footprint instead of passing `--dem`."
 msgstr "Récupère le HRDEM pour l'emprise du raster basse résolution au lieu de spécifier ``--dem``."
 
+#. review_status: human_locked
+#. source_hash: 4b959149
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``--fetch-out FETCH_OUT``"
+msgstr "``--fetch-out FETCH_OUT``"
+
+#. review_status: human_locked
+#. source_hash: cbfaa286
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Write a fetched HRDEM raster to this path instead of a temporary location."
 msgstr "Écrit le raster HRDEM récupéré à cet emplacement plutôt que dans un emplacement temporaire."
 
+#. review_status: human_locked
+#. source_hash: af369d01
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``--fetch-force-tiling``"
+msgstr "``--fetch-force-tiling``"
+
+#. review_status: human_locked
+#. source_hash: 88bc3d20
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Force tiled HRDEM fetch windows instead of relying on automatic tiling."
-msgstr "Force l'utilisation de fenêtres de récupération par tuiles du HRDEM au lieu de s'appuyer sur le tuilage automatique."
+msgstr ""
+"Force l'utilisation de fenêtres de récupération par tuiles du HRDEM au lieu de s'appuyer sur le "
+"tuilage automatique."
 
-msgid "Output raster path. Defaults to `./<input_stem>_sr<input_suffix>` in the current working directory."
-msgstr "Chemin du raster de sortie. Par défaut : ``./<input_stem>_sr<input_suffix>`` dans le répertoire de travail courant."
+#. review_status: human_locked
+#. source_hash: a13324b9
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``--out OUT``"
+msgstr "``--out OUT``"
 
-msgid "Manifest model version to run or fetch when `--model-path` is not provided."
-msgstr "Version du modèle du manifeste à exécuter ou à récupérer lorsque ``--model-path`` n'est pas fourni."
+#. review_status: human_locked
+#. source_hash: a0d36c30
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"Output raster path. Defaults to `./<input_stem>_sr<input_suffix>` in the current working "
+"directory."
+msgstr ""
+"Chemin du raster de sortie. Par défaut : ``./<input_stem>_sr<input_suffix>`` dans le répertoire "
+"de travail courant."
 
-msgid "Use an explicit local ONNX model file instead of resolving from cache/manifest."
-msgstr "Utilise un fichier modèle ONNX local explicite au lieu de le résoudre depuis le cache ou le manifeste."
+#. review_status: human_locked
+#. source_hash: 4ed6b751
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``--model-version MODEL_VERSION``"
+msgstr "``--model-version MODEL_VERSION``"
 
+#. review_status: llm_draft
+#. source_hash: 8bc18688
+msgid ""
+"Model version to run when `--model-path` is not provided. Use `ResUNet_16x_DEM` for the "
+"downloaded ONNX model or `CostGrow_Terrain` for the built-in PCRaster-backed rules model."
+msgstr ""
+"Version du modèle à exécuter lorsque `--model-path` n'est pas fourni. Utilisez `ResUNet_16x_DEM` "
+"pour le modèle ONNX téléchargé ou `CostGrow_Terrain` pour le modèle intégré basé sur des règles "
+"et s'appuyant sur PCRaster."
+
+#. review_status: human_locked
+#. source_hash: 97c75a86
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``--model-path MODEL_PATH``"
+msgstr "``--model-path MODEL_PATH``"
+
+#. review_status: llm_draft
+#. source_hash: 59fea94d
+msgid ""
+"Use an explicit local ONNX model file instead of resolving a downloaded model from "
+"cache/manifest. Not used by built-in models such as `CostGrow_Terrain`."
+msgstr ""
+"Utilise un fichier modèle ONNX local explicite au lieu de résoudre un modèle téléchargé depuis le"
+" cache ou le manifeste. Cette option n'est pas utilisée par les modèles intégrés comme "
+"`CostGrow_Terrain`."
+
+#. review_status: human_locked
+#. source_hash: 5c34104c
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Read model metadata from an alternate `models.json` manifest."
 msgstr "Lit les métadonnées du modèle à partir d'un fichier ``models.json`` alternatif."
 
+#. review_status: human_locked
+#. source_hash: 2690d0da
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Use an alternate cache directory for resolved model weights."
 msgstr "Utilise un autre répertoire de cache pour les poids de modèle résolus."
 
+#. review_status: human_locked
+#. source_hash: dd43133f
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Override model weight retrieval backend selection."
 msgstr "Remplace le choix du moteur d'obtention des poids du modèle."
 
+#. review_status: human_locked
+#. source_hash: 965612d8
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Redownload a versioned model when cache resolution would otherwise reuse it."
-msgstr "Retélécharge une version spécifique du modèle lorsque la résolution du cache ferait en sorte de le réutiliser."
+msgstr ""
+"Retélécharge une version spécifique du modèle lorsque la résolution du cache ferait en sorte de "
+"le réutiliser."
 
-msgid "Maximum depth used when clipping low-res depth values before log1p scaling into the model input range. Values above this threshold are capped during preprocessing and after inverse scaling. The current ResUNet_16x_DEM default resolves to 5.0."
-msgstr "Profondeur maximale utilisée pour l'écrêtage des valeurs de profondeur basse résolution avant la mise à l'échelle ``log1p`` vers la plage d'entrée du modèle. Les valeurs au-dessus de ce seuil sont plafonnées pendant le prétraitement et après la mise à l'échelle inverse. La valeur par défaut actuelle pour ``ResUNet_16x_DEM`` est de 5,0."
+#. review_status: human_locked
+#. source_hash: 0148f413
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``--max-depth MAX_DEPTH``"
+msgstr "``--max-depth MAX_DEPTH``"
 
-msgid "Minimum predicted depth retained in the final raster. Values below this threshold are written as 0.0 after inference. The current ResUNet_16x_DEM default resolves to 0.01."
-msgstr "Profondeur minimale prédite conservée dans le raster final. Les valeurs sous ce seuil sont écrites comme ``0.0`` après l'inférence. La valeur par défaut actuelle pour ``ResUNet_16x_DEM`` est de 0,01."
+#. review_status: human_locked
+#. source_hash: 89b31166
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"Maximum depth used when clipping low-res depth values before log1p scaling into the model input "
+"range. Values above this threshold are capped during preprocessing and after inverse scaling. The"
+" current ResUNet_16x_DEM default resolves to 5.0."
+msgstr ""
+"Profondeur maximale utilisée pour l'écrêtage des valeurs de profondeur basse résolution avant la "
+"mise à l'échelle ``log1p`` vers la plage d'entrée du modèle. Les valeurs au-dessus de ce seuil "
+"sont plafonnées pendant le prétraitement et après la mise à l'échelle inverse. La valeur par "
+"défaut actuelle pour ``ResUNet_16x_DEM`` est de 5,0."
 
-msgid "Percentile used to cap high DEM values before min-max normalization to [0, 1]. Lower values clip high terrain more aggressively; higher values preserve more of the upper tail. Used when explicit DEM normalization stats are unavailable. The current ResUNet_16x_DEM default resolves to 95.0."
-msgstr "Percentile utilisé pour plafonner les valeurs élevées du DEM avant la normalisation min-max vers ``[0, 1]``. Des valeurs plus basses écrêtent le relief de façon plus agressive; des valeurs plus élevées conservent davantage la partie supérieure de la distribution. Utilisé lorsque des statistiques explicites de normalisation du DEM ne sont pas disponibles. La valeur par défaut actuelle de ``ResUNet_16x_DEM`` est de 95,0."
+#. review_status: human_locked
+#. source_hash: 9ca13863
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``--min-depth-threshold MIN_DEPTH_THRESHOLD``"
+msgstr "``--min-depth-threshold MIN_DEPTH_THRESHOLD``"
 
-msgid "Tile mosaicing method used when stitching model windows. `hard` uses non-overlapping tiles with direct writes; `feather` uses overlapping tiles with weighted blending to reduce seam artifacts. The current default is `feather`."
-msgstr "Méthode de mosaïquage des tuiles utilisée lors de l'assemblage des fenêtres du modèle. ``hard`` utilise des tuiles sans chevauchement avec écriture directe; ``feather`` utilise des tuiles qui se chevauchent avec un mélange pondéré afin de réduire les artefacts de raccord. La valeur par défaut actuelle est ``feather``."
+#. review_status: human_locked
+#. source_hash: cb17f489
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"Minimum predicted depth retained in the final raster. Values below this threshold are written as "
+"0.0 after inference. The current ResUNet_16x_DEM default resolves to 0.01."
+msgstr ""
+"Profondeur minimale prédite conservée dans le raster final. Les valeurs sous ce seuil sont "
+"écrites comme ``0.0`` après l'inférence. La valeur par défaut actuelle pour ``ResUNet_16x_DEM`` "
+"est de 0,01."
 
+#. review_status: human_locked
+#. source_hash: 8426e339
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``--dem-pct-clip DEM_PCT_CLIP``"
+msgstr "``--dem-pct-clip DEM_PCT_CLIP``"
+
+#. review_status: human_locked
+#. source_hash: 79dd0eca
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"Percentile used to cap high DEM values before min-max normalization to [0, 1]. Lower values clip "
+"high terrain more aggressively; higher values preserve more of the upper tail. Used when explicit"
+" DEM normalization stats are unavailable. The current ResUNet_16x_DEM default resolves to 95.0."
+msgstr ""
+"Percentile utilisé pour plafonner les valeurs élevées du DEM avant la normalisation min-max vers "
+"``[0, 1]``. Des valeurs plus basses écrêtent le relief de façon plus agressive; des valeurs plus "
+"élevées conservent davantage la partie supérieure de la distribution. Utilisé lorsque des "
+"statistiques explicites de normalisation du DEM ne sont pas disponibles. La valeur par défaut "
+"actuelle de ``ResUNet_16x_DEM`` est de 95,0."
+
+#. review_status: human_locked
+#. source_hash: 78b8761e
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+#, python-brace-format
+msgid "``--window-method {hard,feather}``"
+msgstr "``--window-method {hard,feather}``"
+
+#. review_status: human_locked
+#. source_hash: 7d819c4c
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"Tile mosaicing method used when stitching model windows. `hard` uses non-overlapping tiles with "
+"direct writes; `feather` uses overlapping tiles with weighted blending to reduce seam artifacts. "
+"The current default is `feather`."
+msgstr ""
+"Méthode de mosaïquage des tuiles utilisée lors de l'assemblage des fenêtres du modèle. ``hard`` "
+"utilise des tuiles sans chevauchement avec écriture directe; ``feather`` utilise des tuiles qui "
+"se chevauchent avec un mélange pondéré afin de réduire les artefacts de raccord. La valeur par "
+"défaut actuelle est ``feather``."
+
+#. review_status: human_locked
+#. source_hash: 926391c8
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``--tile-overlap TILE_OVERLAP``"
+msgstr "``--tile-overlap TILE_OVERLAP``"
+
+#. review_status: human_locked
+#. source_hash: 51722936
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Feather overlap in low-res pixels. Ignored unless `--window-method=feather`."
 msgstr "Chevauchement ``feather`` en pixels basse résolution. Ignoré sauf si ``--window-method=feather``."
 
+#. review_status: human_locked
+#. source_hash: d2703819
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``--tile-size TILE_SIZE``"
+msgstr "``--tile-size TILE_SIZE``"
+
+#. review_status: human_locked
+#. source_hash: e04a7d3e
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Override the low-res tile size; must match the model LR input size."
-msgstr "Remplace la taille des tuiles basse résolution; doit correspondre à la taille d'entrée LR du modèle."
+msgstr ""
+"Remplace la taille des tuiles basse résolution; doit correspondre à la taille d'entrée LR du "
+"modèle."
 
+#. review_status: human_locked
+#. source_hash: e1f1d0f6
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+#, python-brace-format
+msgid "``--crs-policy {strict,use-dem,use-lores}``"
+msgstr "``--crs-policy {strict,use-dem,use-lores}``"
+
+#. review_status: human_locked
+#. source_hash: 10eb4929
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Policy for CRS mismatches between the low-res depth raster and DEM."
-msgstr "Politique de gestion des divergences de SCR entre le raster de profondeur à basse résolution et le DEM."
+msgstr ""
+"Politique de gestion des divergences de SCR entre le raster de profondeur à basse résolution et "
+"le DEM."
 
-msgid "Show progress output during model download, DEM fetch, and tiled runtime work. Use `--no-progress` to disable it. Default: enabled."
-msgstr "Affiche la progression pendant le téléchargement du modèle, la récupération du DEM et le traitement par tuiles à l'exécution. Utilisez ``--no-progress`` pour la désactiver. Activée par défaut."
+#. review_status: human_locked
+#. source_hash: 748c6957
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"Show progress output during model download, DEM fetch, and tiled runtime work. Use `--no-"
+"progress` to disable it. Default: enabled."
+msgstr ""
+"Affiche la progression pendant le téléchargement du modèle, la récupération du DEM et le "
+"traitement par tuiles à l'exécution. Utilisez ``--no-progress`` pour la désactiver. Activée par "
+"défaut."
 
+#. review_status: human_locked
+#. source_hash: 72f4be89
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid "doctor"
+msgstr "doctor"
+
+#. review_status: human_locked
+#. source_hash: 30d3721a
+#. reviewed_at: 2026-06-14
+#. reviewer: literal_noop
+msgid "``--json``"
+msgstr "``--json``"
+
+#. review_status: human_locked
+#. source_hash: 844b5cf9
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Emit machine-readable JSON instead of line-oriented text."
 msgstr "Produit du JSON lisible par machine au lieu d'un texte orienté ligne."

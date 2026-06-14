@@ -26,7 +26,9 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/../../.." && pwd)"
 notebook_fp="${script_dir}/tutorial_3.ipynb"
-shared_cache_dir="${FLOODSR_SHARED_CACHE_DIR:-/home/cefect/LS/09_REPOS/04_TOOLS/floodsr/_cache}"
+# Default proofing keeps heavy cache reuse inside the repo project cache, while
+# still allowing callers to override it via `FLOODSR_SHARED_CACHE_DIR`.
+shared_cache_dir="${FLOODSR_SHARED_CACHE_DIR:-${repo_root}/_cache}"
 stage_dir="${FLOODSR_NOTEBOOK_STAGE_DIR:-${FLOODSR_NOTEBOOK_CACHE_DIR:-}}"
 cleanup_stage=0
 if [ -z "${stage_dir}" ]; then

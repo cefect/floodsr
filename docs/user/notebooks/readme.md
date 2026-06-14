@@ -12,6 +12,34 @@ Sphinx renders these `.ipynb` files directly with `myst_nb`; the notebook source
 Notebook execution is disabled during docs builds, so Sphinx renders the committed notebook state rather than running cells at build time. 
 In practice, that means the committed notebooks should already be refreshed and pruned before a docs build: keep plot/image outputs that help the docs, drop noisy textual outputs when possible, and use tags such as `remove-input` for short validation-only cells that should execute during proofing but not appear in the rendered docs.
 
+### hiding cells in rendered docs
+
+The hiding behavior is driven by notebook cell metadata tags on the committed `.ipynb`, not by the shell runners.
+
+- `remove-input`: the cell still exists and still executes during proofing, but the code input is hidden in the rendered docs.
+- `remove-output`: the cell still exists and still executes during proofing, but the rendered docs hide the cell output.
+- `remove-cell`: the whole cell is omitted from the rendered docs.
+
+In this repo, that behavior is operationalized by `myst_nb` when Sphinx renders the committed notebook artifact. 
+See [ADR-0018](../../dev/adr/0018-docs-and-tutorials.md), especially the note that validation cells may be hidden with tags such as `remove-input`.
+
+
+### editing hidden cells in vscode
+
+Hidden cells are still ordinary notebook cells in VS Code. For this repo, add a short source comment to hidden-input cells so the intent is visible while editing:
+
+```python
+# HIDDEN (tags:["remove-input"])
+```
+
+For cells tagged `remove-output`, add one short preceding code cell tagged `remove-input` so the hidden-output behavior is visible in the notebook editor while remaining hidden in the rendered docs:
+
+```python
+# cell below has tag:'remove-output'
+```
+
+If you need to inspect or edit the raw metadata, open the `.ipynb` in the text editor view and modify the cell `metadata.tags` array directly.
+
 ## environments
 
 To re-run or refresh these tutorial notebooks from the repo, use the `main` devcontainer rather than the `docs` devcontainer. 
@@ -25,8 +53,9 @@ The notebooks themselves present the following user-facing execution contexts:
 | Tutorial 1 | Yes | Yes | Yes | Yes |
 | Tutorial 2 | Yes | Yes | Yes | Yes |
 | Tutorial 3 | Yes, via extended install | Yes, via extended install | Yes, but marked experimental / not recommended | Yes |
+| Tutorial 4 | Yes, via extended install | Yes, via extended install | Not recommended | Yes |
 
-## re-running the tutorials
+## re-running the tutorials (i.e docs refresh)
 NOTE: needs to be done from main .devcontainer (not docs)
 
 Each tutorial runner stages execution in a temp-backed sandbox, keeps notebook side files there, and then copies the completed `.ipynb` back into `docs/user/notebooks`. 
@@ -47,10 +76,26 @@ conda run -n dev bash docs/user/notebooks/tutorial_2.sh
 # large-raster tutorial; runs from temp, but keeps heavy HRDEM/model cache reuse
 conda run -n dev bash docs/user/notebooks/tutorial_3.sh
 
+# CostGrow and ResUNet comparison tutorial; runs from temp and requires extended install
+conda run -n dev bash docs/user/notebooks/tutorial_4.sh
+
 # or do them all at once
 conda run -n dev bash docs/user/notebooks/tutorial_1.sh && \
 conda run -n dev bash docs/user/notebooks/tutorial_2.sh && \
-conda run -n dev bash docs/user/notebooks/tutorial_3.sh
+conda run -n dev bash docs/user/notebooks/tutorial_3.sh && \
+conda run -n dev bash docs/user/notebooks/tutorial_4.sh
+
+# from wsl (outside the container; dispatches into .devcontainer/main/docker-compose.yml)
+/home/cefect/LS/09_REPOS/04_TOOLS/floodsr/docs/user/notebooks/run_all_container.sh
 
  
 ```
+
+
+## proving the tutorials
+
+- For workflow-level proof, see [`../../.github/workflows/README.md`](../../.github/workflows/README.md).
+  - `install-edge.yml` proves the documented notebook install paths with lightweight notebook shims.
+  - `all-tests.yml` runs the `notebook` pytest path for the real tracked tutorial notebooks.
+
+- For the direct notebook execution proof, see [`../../../tests/test_tutorials.py`](../../../tests/test_tutorials.py).

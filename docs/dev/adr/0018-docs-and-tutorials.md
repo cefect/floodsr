@@ -14,30 +14,48 @@ The current docs stack uses Sphinx with `myst_nb` for notebook rendering and the
 - Render tutorial notebooks into the docs site with `myst_nb`.
 - Keep notebook execution disabled during docs builds.
 - Treat tutorial notebooks as documentation artifacts first, not as build-time executed tests.
-- Track any future interactive-launch button as a separate implementation issue rather than in this ADR.
 - Keep English as the source language for user docs.
 - Add French (`fr`) as a translated docs target using Sphinx i18n catalogs under `docs/user/locale/`.
 - Keep one shared Sphinx source tree under `docs/user` rather than duplicating content per language.
 - Keep the docs in the main repo and publish translations from separate Read the Docs projects that point at the same repository.
 - Treat the landing pages, getting-started pages, installation pages, and tutorial introductions as beginner-facing content for readers with minimal programming and GIS knowledge.
+- Author `.rst` prose with one sentence per source line, keeping lists, directives, tables, code blocks, and generated artifacts in their native formatting.
 - Treat the Python CLI parser definition as the source of truth for CLI reference documentation, while maintaining the committed docs page as a manually refreshed artifact rather than regenerating it during docs builds.
 
 ## French docs
 
 - The canonical authored docs remain the English files  `docs/user`.
 - French content should be maintained as `.po` catalogs under `docs/user/locale/fr/LC_MESSAGES/`.
+- French `.po` entries should carry lightweight per-entry review metadata in translator comments so review state is tracked in source rather than inferred from git history.
+- The per-entry metadata schema should be kept minimal and should record, at minimum, `review_status`, `source_hash`, `reviewed_at`, and `reviewer`.
+- `review_status` should be limited to `human_locked`, `llm_draft`, and `stale`.
+- The current English source text for change detection should be the `.po` entry `msgid`, not a direct parse of the `.rst` source file.
+- A developer-maintained sync step should normalize each entry `msgid`, hash it, and compare that value against the stored `source_hash` to decide whether a French entry remains trusted or has become stale.
+- Human-reviewed French text should remain authoritative until the corresponding English source text changes.
+- Machine-translated French text should remain explicitly marked as draft until a human review promotes it back to trusted status.
+- During agent-assisted translation maintenance, an agent may keep or restore `human_locked` for a previously human-reviewed entry when the English edit is only a trivial wording tweak and the existing French remains substantively correct without meaningful rewrite.
+- During agent-assisted translation maintenance, entries whose English change is only source wrapping, gettext segmentation, or literal/code markup around an untranslated token may remain `human_locked` when the rendered meaning and French text are unchanged.
+- The last known fully human-proofed French baseline should be treated as the provenance anchor for initial migration into the metadata-backed workflow.
 - Compiled `.mo` files are build artifacts, not source artifacts. They should be generated for local/CI/docs builds and should not be committed to the repository.
 - Translate top-level indexes, landing pages, and internal links along with page content so the French docs are navigable as a complete experience.
 
-### translator instructions
-- target French (`fr`)
-- Do not use `gettext` to generate translation files. Create the `.po` files directly, with a best-effort translation that preserves the tone and meaning of the English source.
-- After editing `.po` files, compile them to `.mo` files for the build/review step, but do not treat the compiled `.mo` files as tracked source files.
-- Keep commands, code, stdout, and project names unchanged, including `HRDEM` and `CostGrow`.
-- In `cli_reference.po`, translate the narrative help text and explanatory prose, but do not translate literal commands, subcommands, flags, option names, paths, or code-like tokens.
-- When a term should stay tied to the English wording, explain it in French rather than forcing a literal translation. For example, `to high resolution (tohr)` should note the English phrase in the French text.
-- Critically review translations for readability and fidelity rather than translating mechanically.
-- Build the docs after translation work and review the rendered result to confirm the translation, navigation, and links behave as intended.
+### French translation metadata
+
+- `review_status`: one of `human_locked`, `llm_draft`, or `stale`
+- `source_hash`: normalized hash of the current entry `msgid`
+- `reviewed_at`: ISO date for the last human approval
+- `reviewer`: short reviewer id or name
+
+Example:
+
+```po
+#. review_status: human_locked
+#. source_hash: 8d13d6d5
+#. reviewed_at: 2026-04-01
+#. reviewer: Emma H
+msgid "Run the CLI from the project root."
+msgstr "Exécutez l'interface CLI depuis la racine du projet."
+```
 
 ## Tutorials
 
@@ -94,14 +112,18 @@ As these provide commands for patching the environment, they are a special case.
 - Notebook execution should remain disabled via the docs configuration so that builds are deterministic.
 - Tutorial execution for documentation refreshes should use per-notebook shell shims that live beside the notebooks under `docs/user/notebooks/` (for example `tutorial_1.sh` and `tutorial_2.sh`).
 - Those shell shims should execute a temporary copy of the notebook under a temp-backed sandbox-like working directory, then copy the completed `.ipynb` back into `docs/user/notebooks/`.
+- CI install-path proof should stay lightweight: `install-edge.yml` may execute small notebook shim artifacts that mirror the documented notebook install commands and a minimal `floodsr` sanity check, rather than the full tutorial notebooks.
+- The full tutorial notebooks should continue to be proven separately via the `notebook`-marked pytest suite and the per-notebook shell runners used for docs refreshes.
 - Generated side files from tutorial execution should stay in that temp-backed staging area, not beside the tracked source notebooks.
 - The committed notebook artifacts under `docs/user/notebooks/` should be pruned before rendering so they keep plot/image outputs that materially help the docs, while dropping textual execution output such as stream logs, CLI chatter, and one-off diagnostics.
 - The docs site should therefore render tutorial notebooks from this pruned state: markdown plus code cells, with plot outputs preserved where useful and non-plot outputs removed.
 - Short notebook-internal validation cells may remain executable while being hidden from rendered docs by using notebook cell tags such as `remove-input` for assertion-only checks.
+- When a notebook cell uses `remove-output`, add one short preceding code cell tagged `remove-input` with a plain editor-facing note such as `# cell below has tag:'remove-output'` so the hidden-output behavior is obvious while editing the notebook in VS Code, without changing what readers see in the rendered docs.
 - Per-notebook shell shims should assume the caller has already activated the correct notebook runtime. In this repo, proofing should be launched from the outside with `conda run -n dev ...` (or an already-active `dev` shell) rather than hard-coding a conda interpreter path inside the shim.
-- Notebook source cells should default to the same cache behavior as the application code. For `floodsr`, that means leaving cache selection to the CLI/runtime unless the user explicitly edits the notebook cell to override it.
-- When a tutorial benefits from cache reuse during docs proofing (for example, repeated HRDEM fetches in Tutorial 3), the per-notebook shell shim may combine temp-backed notebook staging with a separate shared project-cache override via environment variables. That cache override should live in the shim, not as a hard-coded path in the committed notebook source.
-- Tutorials that expose cache overrides should tell users to edit the relevant notebook cell if they want custom cache behavior.
+- Notebook source cells may define a visible, hard-coded `base_cache_dir` when that keeps the tutorial easier to read and rerun.
+- Tutorials that use a visible `base_cache_dir` should include a hidden override cell so docs-proofing or CI can override that path from environment variables without changing the user-facing flow.
+- When a tutorial benefits from cache reuse during docs proofing (for example, repeated HRDEM fetches in Tutorial 3), the per-notebook shell shim may still inject the cache path via environment variables, but the notebook should resolve that through the hidden override cell rather than through ad hoc command-string assembly later in the tutorial.
+- Tutorials that expose cache overrides should tell users to edit the visible notebook cache cell if they want custom cache behavior.
 - When docs are previewed from a non-`main` branch, the Colab launch button may therefore open an older `main` branch notebook rather than the previewed content.
  
 

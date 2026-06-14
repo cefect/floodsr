@@ -18,8 +18,12 @@ See `ADR-0017` for CI/CD workflow policy.
 
 
 ### regression tests
-- `tests/test_tohr_regression.py` should contain one parameterized regression test over all `case_spec.json` cases.
+- `tests/test_tohr_regression.py` should contain one parameterized regression test over the `case_spec.json` runs that ship truth-backed regression metrics.
 - Parameterize ToHR regression by the human-readable run labels under `expected`; each run label defines CLI-style `params` and expected `metrics`.
+- For each supported model in a regression case, include exactly one default run label named `<model_version>_default`.
+- Additional non-default runs for the same model should use a suffixed label such as `<model_version>_hard_tiles` or `<model_version>_strict_crs` so parameterized variants remain distinct from the canonical default.
+- Model-specific regression expectations should follow the corresponding model ADR in `docs/dev/adr/models/` rather than duplicating model behavior decisions here.
+- Cases without `inputs.truth_fp` or with `flags.supports_regression_metrics = false` should be covered by a separate non-metric contract test, not by the metrics regression test.
 - Each ToHR regression case should assert output dtype, non-empty output, and expected metrics, then print a simple completion message.
 
 
@@ -32,11 +36,15 @@ See `ADR-0017` for CI/CD workflow policy.
 - `sphinx`: tests that require the documentation environment.
 - `local`: local-only tests that depend on local fixture data.
 - Do not use a `dev` mark; classify those tests as `local`.
+- Do not use module-level `pytestmark` for tier marks; apply marks explicitly to each test or parameterized case so scope stays visible at the test definition.
 - Register these marks in `pytest.ini`.
-- Keep test module imports collection-safe across supported environments. If a module needs optional runtime dependencies that are absent from the docs environment, guard them with `pytest.importorskip(...)` or move the imports inside the tests/fixtures that need them so discovery can skip cleanly instead of erroring during collection.
+- Keep test module imports collection-safe across supported environments. If a module needs optional runtime dependencies that are absent from the docs environment, guard them with `pytest.importorskip(...)` or move the imports inside the tests or fixtures that need them so discovery can skip cleanly instead of erroring during collection.
 
 ### data-driven tests
 - Keep compatibility or applicability switches under `flags` in `case_spec.json`, including `flags.in_hrdem` when a case depends on HRDEM-specific behavior.
+- Keep `expected` only on cases that participate in truth-backed regression metrics. Non-regression cases should omit `expected` entirely.
+- Within `expected`, each model should contribute one canonical `<model_version>_default` entry that captures the baseline parameterization for that model on the case.
+- Additional entries for the same model are allowed and encouraged when they capture meaningful non-default parameterizations that need separate regression coverage.
 - `case_spec.json` follows this contract:
 
 ```json
@@ -79,3 +87,5 @@ See `ADR-0017` for CI/CD workflow policy.
   }
 }
 ```
+
+For non-regression cases, `inputs.truth_fp` may be `false`, `flags.supports_regression_metrics` may be `false`, and the `expected` block should be omitted.

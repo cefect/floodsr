@@ -1,3 +1,7 @@
+# gen
+- avoid whitespace only changes
+
+
 # sandbox environments in devcontainer
 
 we use two devcontainer environments:
@@ -18,6 +22,8 @@ Before running any command, probe your sandbox to understand which environment y
 
 ## maintenance
 
+### translation
+- only perform translation updates/maintenance when excplitly asked. 
 - refresh the full fr docs translation per ADR-0018: update the existing French .po catalogs directly without gettext regeneration, compile the catalogs.
 - fix any simple/obvious english typos/errors.
 - only touch/review .po files whose english source has changed since the last translation refresh.

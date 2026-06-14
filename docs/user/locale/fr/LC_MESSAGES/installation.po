@@ -1,179 +1,495 @@
+
 msgid ""
 msgstr ""
-"Project-Id-Version: floodsr\n"
-"POT-Creation-Date: 2026-03-19 00:00+0000\n"
+"Project-Id-Version:  floodsr\n"
+"POT-Creation-Date: 2026-06-14 15:27-0600\n"
 "PO-Revision-Date: 2026-03-31 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 
+#. review_status: human_locked
+#. source_hash: c3fc54aa
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Installation"
 msgstr "Installation"
 
+#. review_status: human_locked
+#. source_hash: 351c752d
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "The probably-too-simple moonshot install:"
 msgstr "L'installation express, probablement un peu trop simple :"
 
+#. review_status: human_locked
+#. source_hash: dd9d290e
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "what is going on? Start reading at :ref:`basic_install`"
 msgstr "que se passe-t-il exactement ? Commencez par :ref:`basic_install`"
 
+#. review_status: human_locked
+#. source_hash: caea83d3
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "pipx command not found? Check :ref:`basic_install_cli`"
 msgstr "commande ``pipx`` introuvable ? Consultez :ref:`basic_install_cli`"
 
-msgid "Running in a Notebook? Jump to :ref:`basic_install_google_colab` or :ref:`basic_install_local_notebook`"
-msgstr "Vous travaillez dans un carnet ? Allez à :ref:`basic_install_google_colab` ou :ref:`basic_install_local_notebook`"
+#. review_status: human_locked
+#. source_hash: 44f8dac8
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"Running in a Notebook? Jump to :ref:`basic_install_google_colab` or "
+":ref:`basic_install_local_notebook`"
+msgstr ""
+"Vous travaillez dans un carnet ? Allez à :ref:`basic_install_google_colab` ou "
+":ref:`basic_install_local_notebook`"
 
+#. review_status: human_locked
+#. source_hash: bb5e030d
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Running large rasters? See :ref:`extended_install`"
 msgstr "Vous traitez de grands rasters ? Consultez :ref:`extended_install`"
 
+#. review_status: human_locked
+#. source_hash: a2ec28e1
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Basic Install"
 msgstr "Installation de base"
 
+#. review_status: human_locked
+#. source_hash: 205eaadb
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "``floodsr`` comes in two flavours:"
 msgstr "``floodsr`` existe en deux variantes :"
 
-msgid "**basic install**: for rasters less than ~2 billion pixels or ~25 sq. km. (assuming a 1m target resolution)"
-msgstr "**installation de base** : pour des rasters de moins ~2 milliards de pixels ou ~25 km² (en supposant une résolution cible de 1 m)"
+#. review_status: human_locked
+#. source_hash: 3b6e397f
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"**basic install**: for rasters less than ~2 billion pixels or ~25 sq. km. (assuming a 1m target "
+"resolution)"
+msgstr ""
+"**installation de base** : pour des rasters de moins ~2 milliards de pixels ou ~25 km² (en "
+"supposant une résolution cible de 1 m)"
 
-msgid "**extended install**: for rasters too large for memory. If you think you need this (and are feeling brave), skip ahead to :ref:`extended_install`."
-msgstr "**installation étendue** : pour des rasters trop volumineux pour la mémoire vive. Si vous pensez en avoir besoin, passez directement à :ref:`extended_install`."
+#. review_status: human_locked
+#. source_hash: 410cbe6b
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"**extended install**: for rasters too large for memory. If you think you need this (and are "
+"feeling brave), skip ahead to :ref:`extended_install`."
+msgstr ""
+"**installation étendue** : pour des rasters trop volumineux pour la mémoire vive. Si vous pensez "
+"en avoir besoin, passez directement à :ref:`extended_install`."
 
-msgid "As ``floodsr`` is a simple `pypi distributed python package <https://pypi.org/project/floodsr/>`_, it can be installed in a variety of contexts."
-msgstr "Comme ``floodsr`` est un simple `paquet Python distribué sur PyPI <https://pypi.org/project/floodsr/>`_, il peut être installé dans plusieurs contextes."
+#. review_status: llm_draft
+#. source_hash: f080e577
+msgid ""
+"As ``floodsr`` is a simple `pypi distributed python package "
+"<https://pypi.org/project/floodsr/>`_, it can be installed in a variety of contexts. Here we "
+"provide instructions for the three most common:"
+msgstr ""
+"Comme ``floodsr`` est un simple `paquet Python distribué sur PyPI "
+"<https://pypi.org/project/floodsr/>`_, il peut être installé dans plusieurs contextes. Nous "
+"fournissons ici des instructions pour les trois plus courants :"
 
-msgid "Here we provide instructions for the three most common:"
-msgstr "Nous donnons ici des instructions pour les trois contextes les plus courants :"
+#. review_status: human_locked
+#. source_hash: 623fb03b
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid ""
+":ref:`basic_install_cli`: best for operations and those comfortable with a command-line interface"
+" (CLI)."
+msgstr ""
+":ref:`basic_install_cli` : le plus adapté à l’exploitation et aux personnes à l’aise avec une "
+"interface de ligne de commande (CLI)."
 
-msgid ":ref:`basic_install_cli`: best for operations and those comfortable with a command-line interface (CLI)."
-msgstr ":ref:`basic_install_cli` : recommandé pour l'exploitation et pour les utilisateurs à l'aise avec une interface de ligne de commande (CLI)."
-
+#. review_status: human_locked
+#. source_hash: cb0b88fe
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid ":ref:`basic_install_local_notebook`:  interactive use and visualization."
 msgstr ":ref:`basic_install_local_notebook` : pour un usage interactif et la visualisation."
 
+#. review_status: human_locked
+#. source_hash: 0495b239
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid ":ref:`basic_install_google_colab`: simplest setup, but subject to cloud limits."
-msgstr ":ref:`basic_install_google_colab` : configuration la plus simple, mais assujettie aux limites de l'infonuagique."
+msgstr ""
+":ref:`basic_install_google_colab` : configuration la plus simple, mais assujettie aux limites de "
+"l'infonuagique."
 
+#. review_status: human_locked
+#. source_hash: 1066adef
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Command line (CLI)"
 msgstr "Ligne de commande (CLI)"
 
-msgid "A command-line interface (CLI) means running commands in a terminal instead of clicking through a graphical app."
-msgstr "Une interface de ligne de commande (CLI) consiste à exécuter des commandes dans un terminal plutôt qu'à cliquer dans une application graphique."
+#. review_status: llm_draft
+#. source_hash: cb96ea3d
+msgid ""
+"A command-line interface (CLI) means running commands in a terminal instead of clicking through a"
+" graphical app. ``floodsr`` was designed as a CLI-first Python package, so we recommend "
+"installing with `pipx <https://pipx.pypa.io/stable/>`__ for simple environment isolation. For "
+"this, you need a working `Python 3.12+ <https://realpython.com/installing-python/>`_ and pip "
+"(which usually comes already shipped with Python). After this, installing `pipx "
+"<https://pipx.pypa.io/stable/>`__ is easy:"
+msgstr ""
+"Une interface de ligne de commande (CLI) consiste à exécuter des commandes dans un terminal "
+"plutôt que de cliquer dans une application graphique. ``floodsr`` a été conçu comme un paquet "
+"Python d’abord pensé pour la CLI, nous recommandons donc une installation avec `pipx "
+"<https://pipx.pypa.io/stable/>`__ pour une isolation simple de l’environnement. Pour cela, il "
+"vous faut un `Python 3.12+ <https://realpython.com/installing-python/>`_ fonctionnel et `pip` "
+"(généralement déjà fourni avec Python). Ensuite, installer `pipx "
+"<https://pipx.pypa.io/stable/>`__ est simple :"
 
-msgid "``floodsr`` was designed as a CLI-first Python package, so we recommend installing with `pipx <https://pipx.pypa.io/stable/>`__ for simple environment isolation."
-msgstr "``floodsr`` a été conçu comme un paquet Python orienté CLI (ligne de commande) ; nous recommandons donc une installation avec `pipx <https://pipx.pypa.io/stable/>`__ pour obtenir une isolation simple de l'environnement."
+#. review_status: human_locked
+#. source_hash: 65dc75a9
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"If you see a warning about needing to do something for *PATH changes to take effect*, follow the "
+"instructions from the warning."
+msgstr ""
+"Si un avertissement indique qu'il faut faire quelque chose pour que les modifications du chemin "
+"d'accès entrent en vigueur : *PATH changes to take effect*, suivez les instructions. "
 
-msgid "For this, you need a working `Python 3.12+ <https://realpython.com/installing-python/>`_ and pip (which usually comes already shipped with Python)."
-msgstr "Pour cela, il vous faut un `Python 3.12+ <https://realpython.com/installing-python/>`_ fonctionnel ainsi que pip (généralement déjà fourni avec Python)."
-
-msgid "After this, installing `pipx <https://pipx.pypa.io/stable/installation/>`__ is easy:"
-msgstr "Ensuite, l'installation de `pipx <https://pipx.pypa.io/stable/installation/>`__ est simple :"
-
-msgid "If you see a warning about needing to do something for *PATH changes to take effect*, follow the instructions from the warning."
-msgstr "Si un avertissement indique qu'il faut faire quelque chose pour que les modifications du chemin d'accès entrent en vigueur : *PATH changes to take effect*, suivez les instructions. "
-
+#. review_status: human_locked
+#. source_hash: 9c301d59
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Then install ``floodsr`` with pipx:"
 msgstr "Installez ensuite ``floodsr`` avec pipx:"
 
-msgid "If you see a message like *installed package floodsr*, you're g2g and should have access to the ``floodsr`` command line (CLI), which you can use to validate the install."
-msgstr "Si vous voyez un message du type *installed package floodsr*, tout est en ordre, et vous devriez avoir accès à la ligne de commande (CLI) ``floodsr`` que vous pouvez utiliser pour valider l'installation."
+#. review_status: llm_draft
+#. source_hash: 383a18a0
+msgid ""
+"If you see a message like *installed package floodsr*, you're g2g and should have access to the "
+"``floodsr`` command line (CLI), which you can use to validate the install. Start with the help "
+"command to confirm the command line (CLI) is working:"
+msgstr ""
+"Si vous voyez un message du type *installed package floodsr*, tout est prêt et vous devriez avoir"
+" accès à la ligne de commande ``floodsr``, que vous pouvez utiliser pour valider l’installation. "
+"Commencez par la commande d’aide pour confirmer que la CLI fonctionne :"
 
-msgid "Start with the help command to confirm the command line (CLI) is working:"
-msgstr "Commencez par la commande d'aide afin de confirmer que la ligne de commande (CLI) fonctionne :"
+#. review_status: human_locked
+#. source_hash: 00393b2c
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"You can also try the ``doctor`` command to echo the current environment and ``floodsr`` "
+"configuration:"
+msgstr ""
+"Vous pouvez aussi essayer la commande ``doctor`` pour afficher l'environnement actuel et la "
+"configuration de ``floodsr`` :"
 
-msgid "You can also try the ``doctor`` command to echo the current environment and ``floodsr`` configuration:"
-msgstr "Vous pouvez aussi essayer la commande ``doctor`` pour afficher l'environnement actuel et la configuration de ``floodsr`` :"
-
+#. review_status: human_locked
+#. source_hash: 0dd326aa
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "This should show the version and status of the backends used by ``floodsr``."
 msgstr "Cela devrait montrer la version et l'état des moteurs utilisés par ``floodsr``."
 
+#. review_status: human_locked
+#. source_hash: 36aba025
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Local notebook (Jupyter)"
 msgstr "Carnet local (Jupyter)"
 
-msgid "Running ``floodsr`` in a local notebook environment is a nice way to process individual rasters interactively and visualize the results."
-msgstr "Exécuter ``floodsr`` dans un environnement de carnet local est une excellente solution pour traiter des rasters individuels de manière interactive et visualiser les résultats."
+#. review_status: llm_draft
+#. source_hash: afc9a4bd
+msgid ""
+"Running ``floodsr`` in a local notebook environment is a nice way to process individual rasters "
+"interactively and visualize the results. To do this, you need to have `Jupyter "
+"<https://jupyter.org/install>`_ installed in a `Python 3.12+ <https://realpython.com/installing-"
+"python/>`_ environment."
+msgstr ""
+"Exécuter ``floodsr`` dans un environnement de carnet local est une bonne façon de traiter des "
+"rasters individuels de manière interactive et de visualiser les résultats. Pour cela, il faut "
+"disposer de `Jupyter <https://jupyter.org/install>`_ dans un environnement `Python 3.12+ "
+"<https://realpython.com/installing-python/>`_."
 
-msgid "To do this, you need to have `Jupyter <https://jupyter.org/install>`_ installed in a `Python 3.12+ <https://realpython.com/installing-python/>`_ environment."
-msgstr "Pour cela, vous devez disposer de `Jupyter <https://jupyter.org/install>`_ installé dans un environnement `Python 3.12+ <https://realpython.com/installing-python/>`_."
-
+#. review_status: human_locked
+#. source_hash: 0d4e1310
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Check your Python and Jupyter setup by running the following in a terminal:"
 msgstr "Vérifiez votre installation Python et Jupyter en exécutant ce qui suit dans un terminal :"
 
+#. review_status: human_locked
+#. source_hash: fc7fcfd0
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Then, you can install ``floodsr`` with ``pip`` and register a dedicated Jupyter kernel for it:"
 msgstr "Vous pouvez ensuite installer ``floodsr`` avec ``pip`` et lui associer un noyau Jupyter dédié :"
 
+#. review_status: human_locked
+#. source_hash: ce410732
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Then launch Jupyter from that environment:"
 msgstr "Lancez ensuite Jupyter depuis cet environnement :"
 
-msgid "Alternatively, for a quick and lazy one-time use install (nice for tutorials), you can run the following from **inside** a running kernel (i.e., notebook cell):"
-msgstr "Sinon, pour une installation rapide et simplifiée dans le cadre d'un usage ponctuel (pratique pour les tutoriels), vous pouvez exécuter ce qui suit **depuis** un noyau actif (c.-à-d. dans une cellule de carnet) :"
+#. review_status: human_locked
+#. source_hash: e0199c93
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"Alternatively, for a quick and lazy one-time use install (nice for tutorials), you can run the "
+"following from **inside** a running kernel (i.e., notebook cell):"
+msgstr ""
+"Sinon, pour une installation rapide et simplifiée dans le cadre d'un usage ponctuel (pratique "
+"pour les tutoriels), vous pouvez exécuter ce qui suit **depuis** un noyau actif (c.-à-d. dans une"
+" cellule de carnet) :"
 
+#. review_status: human_locked
+#. source_hash: 6b80dce4
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "But this can lead to messy environments and is not recommended for regular use."
-msgstr "Mais cela peut produire des environnements incohérents et ce n'est pas recommandé pour un usage régulier."
+msgstr ""
+"Mais cela peut produire des environnements incohérents et ce n'est pas recommandé pour un usage "
+"régulier."
 
+#. review_status: human_locked
+#. source_hash: ff537cad
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Finally, confirm the CLI is available from the notebook:"
 msgstr "Enfin, confirmez que la CLI est accessible depuis le carnet :"
 
+#. review_status: human_locked
+#. source_hash: f6c4473c
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Hosted notebook (Colab)"
 msgstr "Carnet hébergé (Colab)"
 
-msgid "`Google Colab <https://colab.research.google.com/>`__  is a popular hosted notebook environment that provides a nice web-based interface with common libraries pre-installed, which makes it great for quick experiments or interactive tutorials."
-msgstr "`Google Colab <https://colab.research.google.com/>`__ est un environnement de carnets hébergés populaire qui fournit une interface web agréable avec plusieurs bibliothèques déjà installées, ce qui le rend pratique pour des essais rapides ou des tutoriels interactifs."
+#. review_status: llm_draft
+#. source_hash: 4cca0678
+msgid ""
+"`Google Colab <https://colab.research.google.com/>`__  is a popular hosted notebook environment "
+"that provides a nice web-based interface with common libraries pre-installed, which makes it "
+"great for quick experiments or interactive tutorials. However, patching in new packages (like "
+"``floodsr``) can be a bit tricky, so we don't recommend this for regular use."
+msgstr ""
+"`Google Colab <https://colab.research.google.com/>`__ est un environnement de carnets hébergés "
+"populaire qui fournit une interface web pratique avec des bibliothèques courantes déjà "
+"installées, ce qui le rend bien adapté aux expériences rapides ou aux tutoriels interactifs. En "
+"revanche, ajouter de nouveaux paquets (comme ``floodsr``) peut être un peu délicat, donc ce n’est"
+" pas recommandé pour un usage régulier."
 
-msgid "However, patching in new packages (like ``floodsr``) can be a bit tricky, so we don't recommend this for regular use."
-msgstr "En revanche, l'ajout de nouveaux paquets (comme ``floodsr``) peut être un peu délicat ; nous ne le recommandons donc pas pour un usage régulier."
+#. review_status: llm_draft
+#. source_hash: 7987a4b3
+msgid ""
+"To setup a Colab notebook for ``floodsr``, launch `Google Colab "
+"<https://colab.research.google.com/>`__  in your browser and login with your Google account. "
+"Then, create a new notebook and add the following to the first cell:"
+msgstr ""
+"Pour configurer un carnet Colab pour ``floodsr``, ouvrez `Google Colab "
+"<https://colab.research.google.com/>`__ dans votre navigateur et connectez-vous avec votre compte"
+" Google. Créez ensuite un nouveau carnet et ajoutez ce qui suit dans la première cellule :"
 
-msgid "To setup a Colab notebook for ``floodsr``, launch `Google Colab <https://colab.research.google.com/>`__  in your browser and login with your Google account."
-msgstr "Pour configurer un carnet Colab pour ``floodsr``, ouvrez `Google Colab <https://colab.research.google.com/>`__ dans votre navigateur et connectez-vous avec votre compte Google."
-
-msgid "Then, create a new notebook and add the following to the first cell:"
-msgstr "Créez ensuite un nouveau carnet et ajoutez ce qui suit dans la première cellule :"
-
+#. review_status: human_locked
+#. source_hash: 9cb0dd42
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Extended Install"
 msgstr "Installation étendue"
 
-msgid "For handling rasters too large for memory, floodsr uses GDAL backends."
-msgstr "Pour traiter des rasters dont la taille excède la mémoire disponible, ``floodsr`` utilise des moteurs GDAL."
+#. review_status: llm_draft
+#. source_hash: d9e3bc07
+msgid ""
+"For handling rasters too large for memory, floodsr uses GDAL backends. To enable these features, "
+"install `floodsr` into an environment with `GDAL <https://gdal.org/en/stable/>`_. The downloaded "
+"``ResUNet_16x_DEM`` model works in this environment, and the built-in ``CostGrow_Terrain`` model "
+"additionally requires `PCRaster <https://pcraster.geo.uu.nl/>`_ in that same environment."
+msgstr ""
+"Pour traiter des rasters trop volumineux pour la mémoire, ``floodsr`` utilise des moteurs GDAL. "
+"Pour activer ces fonctionnalités, installez `floodsr` dans un environnement avec `GDAL "
+"<https://gdal.org/en/stable/>`_. Le modèle téléchargé ``ResUNet_16x_DEM`` fonctionne dans cet "
+"environnement, et le modèle intégré ``CostGrow_Terrain`` nécessite en plus `PCRaster "
+"<https://pcraster.geo.uu.nl/>`_ dans ce même environnement."
 
-msgid "To enable these features, install `floodsr` into an environment with `GDAL <https://gdal.org/en/stable/>`_."
-msgstr "Pour activer ces fonctionnalités, installez `floodsr` dans un environnement avec `GDAL <https://gdal.org/en/stable/>`_."
-
+#. review_status: human_locked
+#. source_hash: 38064ff1
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Command line (CLI) - Extended"
 msgstr "Ligne de commande (CLI) - étendue"
 
-msgid "The popular `conda <https://docs.conda.io/en/latest/>`_ package manager is the easiest way to build an isolated environment with GDAL."
-msgstr "Le gestionnaire de paquets `conda <https://docs.conda.io/en/latest/>`_ est le moyen le plus simple de créer un environnement isolé avec GDAL."
+#. review_status: llm_draft
+#. source_hash: 00745bf2
+msgid ""
+"The popular `conda <https://docs.conda.io/en/latest/>`_ package manager is the easiest way to "
+"build an isolated environment with GDAL. The best way to install conda is via the open-source "
+"`Miniforge <https://github.com/conda-forge/miniforge>`_ project, NOT the `proprietary Anaconda "
+"distribution <https://www.theregister.com/2024/08/08/anaconda_puts_the_squeeze_on/>`_. Once you "
+"have conda installed, use it to create a dedicated environment with GDAL, activate it, then "
+"install ``floodsr`` with ``pip`` into that same environment:"
+msgstr ""
+"Le gestionnaire de paquets `conda <https://docs.conda.io/en/latest/>`_ est le moyen le plus "
+"simple de créer un environnement isolé avec GDAL. La meilleure façon d’installer conda est de "
+"passer par le projet open source `Miniforge <https://github.com/conda-forge/miniforge>`_, et non "
+"par la `distribution propriétaire Anaconda "
+"<https://www.theregister.com/2024/08/08/anaconda_puts_the_squeeze_on/>`_. Une fois conda "
+"installé, servez-vous-en pour créer un environnement dédié avec GDAL, l’activer, puis installer "
+"``floodsr`` avec ``pip`` dans ce même environnement :"
 
-msgid "The best way to install conda is via the open-source `Miniforge <https://github.com/conda-forge/miniforge>`_ project, NOT the `proprietary Anaconda distribution <https://www.theregister.com/2024/08/08/anaconda_puts_the_squeeze_on/>`_."
-msgstr "La meilleure façon d'installer conda est de passer par le projet libre `Miniforge <https://github.com/conda-forge/miniforge>`_, et NON par la `distribution propriétaire Anaconda <https://www.theregister.com/2024/08/08/anaconda_puts_the_squeeze_on/>`_."
+#. review_status: llm_draft
+#. source_hash: 91facd2b
+msgid "If you want the ``CostGrow_Terrain`` model, install PCRaster into that same environment:"
+msgstr "Si vous voulez le modèle ``CostGrow_Terrain``, installez PCRaster dans ce même environnement :"
 
-msgid "Once you have conda installed, use it to create a dedicated environment with GDAL, activate it, then install ``floodsr`` with ``pip`` into that same environment:"
-msgstr "Une fois conda installé, utilisez-le pour créer un environnement dédié avec GDAL, activez-le, puis installez ``floodsr`` avec ``pip`` dans ce même environnement :"
-
+#. review_status: human_locked
+#. source_hash: 196738ba
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Then confirm the GDAL-backed environment is active:"
 msgstr "Confirmez ensuite que l'environnement avec GDAL est bien actif :"
 
-msgid "You should see something like *gdal_config_installed=True*."
-msgstr "Vous devriez voir quelque chose comme *gdal_config_installed=True*."
+#. review_status: llm_draft
+#. source_hash: 7e1df788
+msgid ""
+"You should see something like *gdal_config_installed=True*. If PCRaster is installed, ``floodsr "
+"doctor`` should also report *pcraster_installed=True*. At that point you can run either "
+"``ResUNet_16x_DEM`` or ``CostGrow_Terrain`` through ``floodsr tohr``."
+msgstr ""
+"Vous devriez voir quelque chose comme *gdal_config_installed=True*. Si PCRaster est installé, "
+"``floodsr doctor`` devrait aussi indiquer *pcraster_installed=True*. À ce stade, vous pouvez "
+"exécuter ``ResUNet_16x_DEM`` ou ``CostGrow_Terrain`` avec ``floodsr tohr``."
 
+#. review_status: human_locked
+#. source_hash: 9496dc4f
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Local notebook (Jupyter) - Extended"
 msgstr "Carnet local (Jupyter) - étendu"
 
-msgid "Follow the same :ref:`extended_install_cli` instructions to set up your GDAL-backed ``floodsr`` environment, then install Jupyter into that same environment and register a dedicated kernel:"
-msgstr "Suivez les mêmes instructions que :ref:`extended_install_cli` pour préparer votre environnement ``floodsr`` avec GDAL, puis installez Jupyter dans ce même environnement et enregistrez un noyau dédié :"
+#. review_status: human_locked
+#. source_hash: 98eb99a2
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"Follow the same :ref:`extended_install_cli` instructions to set up your GDAL-backed ``floodsr`` "
+"environment, then install Jupyter into that same environment and register a dedicated kernel:"
+msgstr ""
+"Suivez les mêmes instructions que :ref:`extended_install_cli` pour préparer votre environnement "
+"``floodsr`` avec GDAL, puis installez Jupyter dans ce même environnement et enregistrez un noyau "
+"dédié :"
 
+#. review_status: human_locked
+#. source_hash: ec1aa71a
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Then launch Jupyter from that environment and select the \"Python (floodsr-gdal)\" kernel:"
-msgstr "Lancez ensuite Jupyter depuis cet environnement et sélectionnez le noyau \"Python (floodsr-gdal)\" :"
+msgstr ""
+"Lancez ensuite Jupyter depuis cet environnement et sélectionnez le noyau \"Python (floodsr-"
+"gdal)\" :"
 
+#. review_status: human_locked
+#. source_hash: a5ebbfe7
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Finally, confirm the GDAL-backed environment is active from the notebook:"
 msgstr "Enfin, confirmez depuis le carnet que l'environnement avec GDAL est actif :"
 
+#. review_status: human_locked
+#. source_hash: 2a371da6
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Hosted notebook (Colab) - Extended"
 msgstr "Carnet hébergé (Colab) - étendu"
 
-msgid "While Colab is nice for standard environments, GDAL is not standard... so the extended ``floodsr`` with GDAL install is finnicky and probably won't work."
-msgstr "Colab est pratique pour les environnements standards, mais GDAL ne l'est pas ; l'installation étendue de ``floodsr`` avec GDAL reste donc capricieuse et risque de ne pas fonctionner."
+#. review_status: llm_draft
+#. source_hash: 2e2e9f55
+msgid ""
+"While Colab is nice for standard environments, GDAL is not standard... so the extended "
+"``floodsr`` with GDAL install is finnicky and probably won't work. For the foolhardy, the below "
+"seems to be working as of March 2026, but this will probably break when Colab updates their base "
+"images so maybe don't waste your time:"
+msgstr ""
+"Même si Colab est agréable pour les environnements standard, GDAL n’y est pas standard... donc la"
+" version étendue de ``floodsr`` avec GDAL est capricieuse et risque fort de ne pas fonctionner. "
+"Pour les plus téméraires, ce qui suit semble fonctionner en mars 2026, mais cela cassera "
+"probablement lorsque Colab mettra à jour ses images de base, donc ne perdez peut-être pas votre "
+"temps :"
 
-msgid "For the foolhardy, the below seems to be working as of March 2026, but this will probably break when Colab updates their base images so maybe don't waste your time:"
-msgstr "Pour les plus téméraires, ce qui suit semble fonctionner en date de mars 2026, mais cessera probablement quand Colab mettra à jour ses images de base, donc à vos risques et périls :"
+#. review_status: human_locked
+#. source_hash: fe199528
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "Uninstall"
+msgstr "Désinstallation"
+
+#. review_status: llm_draft
+#. source_hash: 79562727
+msgid "Use the uninstall command that matches both your install mode and execution context."
+msgstr ""
+"Utilisez la commande de désinstallation qui correspond à la fois à votre mode d'installation et à"
+" votre contexte d'exécution."
+
+#. review_status: human_locked
+#. source_hash: 57d5036d
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "Basic uninstall"
+msgstr "Désinstallation de base"
+
+#. review_status: human_locked
+#. source_hash: 14e5e079
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "**Command line (CLI)** with ``pipx``:"
+msgstr "**Ligne de commande (CLI)** avec ``pipx`` :"
+
+#. review_status: human_locked
+#. source_hash: 01e2e3d3
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "**Local notebook (Jupyter)** with ``pip`` in the kernel environment:"
+msgstr "**Carnet local (Jupyter)** avec ``pip`` dans l’environnement du noyau :"
+
+#. review_status: human_locked
+#. source_hash: 72dcdc70
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "**Hosted notebook (Colab)** with ``pip`` in the runtime:"
+msgstr "**Carnet hébergé (Colab)** avec ``pip`` dans l’environnement d’exécution :"
+
+#. review_status: human_locked
+#. source_hash: c7633fa7
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "Extended uninstall"
+msgstr "Désinstallation étendue"
+
+#. review_status: human_locked
+#. source_hash: 0a110220
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "**Command line (CLI)** or **local notebook (Jupyter)** in the ``floodsr-gdal`` conda environment:"
+msgstr ""
+"**Ligne de commande (CLI)** ou **carnet local (Jupyter)** dans l’environnement conda ``floodsr-"
+"gdal`` :"
+
+#. review_status: human_locked
+#. source_hash: 7cde18cd
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "**Hosted notebook (Colab)** experimental GDAL setup:"
+msgstr "**Carnet hébergé (Colab)** : configuration expérimentale de GDAL :"

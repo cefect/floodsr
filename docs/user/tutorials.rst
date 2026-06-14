@@ -25,3 +25,4 @@ Select Tutorial 1 from the list below to get started.
    notebooks/tutorial_1
    notebooks/tutorial_2
    notebooks/tutorial_3
+   notebooks/tutorial_4

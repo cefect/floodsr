@@ -39,46 +39,7 @@ floodsr/constants.py
 
 ---
 
-### 2. User-Configurable Defaults [future]
-
-**Definition**  
-Defaults that users may override via CLI flags, environment variables, or config files.
-
-**Examples**
-- Default model ID
-- Default ONNX provider (CPUExecutionProvider)
-- Logging verbosity
-- Parallel worker count
-- Cache directory override
-
-Rule of thumb:
-- If a “default” is a user preference that plausibly varies by machine/user/workflow, put it in User-Configurable Defaults (config) and let CLI read it.
-- If a “default” is a command UX convention (e.g., output naming, required args, help text) or is tightly bound to argument semantics, keep it hard-coded in the CLI.
-- If a “default” must be consistent for correctness/reproducibility across environments, keep it as an immutable runtime constant (or model manifest param), not user config.
-
-**Location**
-```
-
-floodsr/config.py
-
-```
-
-**Implementation**
-- Define a typed `Config` dataclass.
-- Provide `load_config()` that merges configuration sources with precedence:
-
-```
-
-CLI args > environment variables > user config file > package defaults
-
-```
-
-- No implicit global config state.
-- Config object must be passed explicitly into runtime functions.
-
----
-
-### 3. Library-Specific Defaults
+### 2. Library-Specific Defaults
 
 **Definition**  
 Driver or engine options tied to specific I/O libraries (GDAL, rasterio, pyogrio, etc.).
@@ -135,4 +96,3 @@ Rejected for runtime use in installed packages:
 * Improved testability (no hidden global state).
 * Safe pip installation behavior.
 * Predictable override semantics.
-* Cleaner future extension to GPU backends and plugin integration.

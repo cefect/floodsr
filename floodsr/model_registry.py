@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import unquote, urlparse
-from urllib.request import Request, urlopen
+from urllib.request import Request, url2pathname, urlopen
 
 from floodsr.cache_paths import get_model_cache_path
 from floodsr.checksums import assert_sha256, verify_sha256
@@ -104,6 +104,7 @@ class ModelRecord:
     url: str
     sha256: str
     description: str = ""
+    requires_model_artifact: bool = True
 
 
 @dataclass(frozen=True)
@@ -236,15 +237,7 @@ class FileRetrievalBackend(WeightsRetrievalBackend):
 
     def retrieve(self, source: str, destination: Path, show_progress: bool = True) -> Path:
         """Copy model bytes from a local path into destination."""
-        parsed = urlparse(source)
-        if parsed.scheme.lower() in {"", "file"}:
-            source_fp = (
-                Path(f"//{parsed.netloc}{unquote(parsed.path)}")
-                if parsed.netloc
-                else Path(unquote(parsed.path) or source)
-            )
-        else:
-            raise ValueError(f"unsupported scheme for file backend: {parsed.scheme}")
+        source_fp = _resolve_file_source_path(source)
         source_fp = source_fp.expanduser().resolve()
         if not source_fp.exists():
             raise FileNotFoundError(f"source model not found: {source_fp}")
@@ -253,6 +246,23 @@ class FileRetrievalBackend(WeightsRetrievalBackend):
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source_fp, destination)
         return destination
+
+
+def _resolve_file_source_path(source: str) -> Path:
+    """Normalize a local path or file URI into a platform-native `Path`."""
+    parsed = urlparse(source)
+    scheme = parsed.scheme.lower()
+    if scheme == "":
+        return Path(unquote(source))
+    if scheme != "file":
+        raise ValueError(f"unsupported scheme for file backend: {parsed.scheme}")
+
+    # Use URL-to-path normalization so Windows file URIs like `file:///C:/...`
+    # become `C:\\...` rather than `\\C:\\...`, which resolves incorrectly.
+    normalized_path = url2pathname(unquote(parsed.path))
+    if parsed.netloc:
+        return Path(f"\\\\{parsed.netloc}{normalized_path}")
+    return Path(normalized_path)
 
 
 def load_models_manifest(manifest_fp: str | Path | None = None) -> dict:
@@ -273,6 +283,9 @@ def list_models(manifest_fp: str | Path | None = None) -> list[ModelRecord]:
     """Return all models defined in the manifest."""
     records = []
     for version, payload in sorted(load_models_manifest(manifest_fp).items()):
+        requires_model_artifact = True
+        if model_worker_exists(version):
+            requires_model_artifact = model_version_requires_artifact(version)
         records.append(
             ModelRecord(
                 version=version,
@@ -280,6 +293,7 @@ def list_models(manifest_fp: str | Path | None = None) -> list[ModelRecord]:
                 url=payload["url"],
                 sha256=payload["sha256"],
                 description=payload.get("description", ""),
+                requires_model_artifact=requires_model_artifact,
             )
         )
     return records
@@ -301,6 +315,7 @@ def resolve_model(model_version: str, manifest_fp: str | Path | None = None) -> 
         url=payload["url"],
         sha256=payload["sha256"],
         description=payload.get("description", ""),
+        requires_model_artifact=model_version_requires_artifact(model_version) if model_worker_exists(model_version) else True,
     )
 
 
@@ -352,6 +367,8 @@ def fetch_model_result(
     """Fetch one model to cache and report whether it came from cache or retrieval."""
     assert isinstance(show_progress, bool), f"show_progress must be bool, got {type(show_progress)!r}"
     model = resolve_model(model_version, manifest_fp=manifest_fp)
+    if not model.requires_model_artifact:
+        raise ValueError(f"model '{model_version}' is built-in and does not support fetch")
     model_fp = get_model_cache_path(model.version, model.file_name, cache_dir=cache_dir)
     part_fp = model_fp.with_suffix(f"{model_fp.suffix}.part")
 
@@ -398,13 +415,23 @@ def model_worker_exists(model_version: str) -> bool:
     return get_model_worker_path(model_version).exists()
 
 
+def model_version_requires_artifact(model_version: str) -> bool:
+    """Return whether a worker requires a downloaded model artifact."""
+    worker_class = resolve_model_worker_class(model_version)
+    return bool(getattr(worker_class, "requires_model_artifact", True))
+
+
 def list_runnable_model_versions(manifest_fp: str | Path | None = None) -> list[str]:
     """Return manifest model versions that have matching worker modules."""
-    runnable_versions: list[str] = []
+    artifact_versions: list[str] = []
+    builtin_versions: list[str] = []
     for version in load_models_manifest(manifest_fp):
         if model_worker_exists(version):
-            runnable_versions.append(version)
-    return runnable_versions
+            if model_version_requires_artifact(version):
+                artifact_versions.append(version)
+            else:
+                builtin_versions.append(version)
+    return artifact_versions + builtin_versions
 
 
 def resolve_model_worker_class(model_version: str):

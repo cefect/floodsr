@@ -26,6 +26,7 @@ see also:
   - `models/base.py` (`class Model`)
   - `models/<normalized_model_version>.py` (e.g., `models/ResUNet_16x_DEM.py`)
   - model contracts per `0005-model-registry.md`
+  - model-specific decisions per `docs/dev/adr/models/`
 - Pre-processing subsystem:
   - `preprocessing.py` (shared helpers)
   - pre-processing is internal to `tohr` and is not exposed as a standalone CLI entrypoint
@@ -90,6 +91,7 @@ Under the hood, should implement a workflow like:
     - a raster-backed windowed path for memory-constrained large extents
 - 4. instantiate model worker from the resolved version (subclass of `Model`) and execute model-specific super-resolution via `with ...: worker.run(...)` on the pre-processed platform-model boundary artifacts (not raw user rasters).
   - select engine runtime/provider policy per `0015-engine-runtime.md` (owned by model worker internals)
+  - see `docs/dev/adr/models/` for model-specific boundary and execution details
   - model workers must call shared tiling utilities from `tiling.py`.
   - the raster-backed windowed pipeline is restricted to hard-window inference in this phase; feathered blending remains on the simple path
 - 5. final model post-processing and output materialization.

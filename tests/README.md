@@ -28,7 +28,7 @@ conda activate deploy
 # move to the repository root
 cd /workspace
 
-# all tests (probably skips sphinx tests. this is the VS Code UI default)
+# all tests (this is the VS Code UI default)
 pytest -q -m "not sphinx" 2>&1 | tee "tests/log/pytest_$(date -u +%Y%m%d_%H%M%S)_all.log"
 
 
@@ -39,7 +39,7 @@ pytest -q -m "fast and not sphinx" 2>&1 | tee "tests/log/pytest_$(date -u +%Y%m%
 pytest -q -m "fast and not local and not sphinx" 2>&1 | tee "tests/log/pytest_$(date -u +%Y%m%d_%H%M%S)_ci.log"
 
 # specific module
-pytest -q tests/test_cli_models.py
+pytest -q tests/test_cli_models.py 2>&1 | tee "tests/log/pytest_$(date -u +%Y%m%d_%H%M%S)_test_cli_models.log"
 
  
  
@@ -96,7 +96,7 @@ conda run -n dev pytest -q -m "notebook"
 | `test_engine_contracts.py::test_engine_provider_diagnostics_shape` | X |  |  |  |  |
 | `test_engine_contracts.py::test_engine_base_is_abstract` | X |  |  |  |  |
 | `test_engine_contracts.py::test_engine_base_contract_with_dummy_subclass` | X |  |  |  |  |
-| `test_engine_contracts.py::test_engine_ort_run_tile_contract` | X |  |  |  |  |
+| `test_model_resunet.py::test_engine_ort_run_tile_contract` | X |  |  |  |  |
 | `test_hrdem_mosaic.py::test_build_fetch_tile_grid_gdf_and_selection_mask_writes_geojson` | X |  |  |  | X |
 | `test_hrdem_mosaic.py::test_download_hrdem_project_extent_for_data_case` | X |  | X |  | X |
 | `test_hrdem_mosaic.py::test_fetch_hrdem_synthetic_cases` |  |  | X |  |  |
@@ -118,7 +118,9 @@ conda run -n dev pytest -q -m "notebook"
 | `test_preprocessing.py::test_write_platform_prepared_rasters_honors_crs_policy` | X |  |  |  |  |
 | `test_preprocessing.py::test_write_dem_from_asset_hrefs_outputs_float32_non_empty` | X |  |  |  |  |
 | `test_tohr_regression.py::test_tohr_regression_matches_case_spec_metrics` |  |  | X |  | X |
-| `test_tohr_regression.py::test_tohr_on_the_fly_synthetic_tiles` |  |  | X |  |  |
+| `test_model_resunet.py::test_resunet_tohr_on_the_fly_synthetic_tiles` |  |  | X |  |  |
+| `test_model_resunet.py::test_resunet_tohr_hard_windowed_tiles` |  |  | X |  |  |
+| `test_model_costgrow.py::test_costgrow_tohr_uses_windowed_path_for_large_hard_rasters` | X |  |  |  |  |
 
 
 # simple container tests

@@ -1,0 +1,232 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, floodsr developers
+# This file is distributed under the same license as the floodsr package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: floodsr 0.1.5.dev21+ge99323af7\n"
+"POT-Creation-Date: 2026-06-14 08:26-0600\n"
+"PO-Revision-Date: 2026-06-14 08:16-0600\n"
+"Language: fr\n"
+"Language-Team: fr <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. review_status: llm_draft
+#. source_hash: e7326def
+msgid "Tutorial 4: CostGrow and Model Comparison"
+msgstr "Tutoriel 4 : CostGrow et comparaison de modèles"
+
+#. review_status: llm_draft
+#. source_hash: dac2a3f9
+msgid ""
+"This tutorial builds on Tutorial 2 by running the same sample data through both the built-in "
+"``CostGrow_Terrain`` model and the downloaded ``ResUNet_16x_DEM`` model."
+msgstr ""
+"Ce tutoriel prolonge le tutoriel 2 en exécutant les mêmes données d'exemple avec le modèle "
+"intégré ``CostGrow_Terrain`` et le modèle téléchargé ``ResUNet_16x_DEM``."
+
+#. review_status: llm_draft
+#. source_hash: 655e0012
+msgid "By the end, you will have:"
+msgstr "À la fin, vous aurez :"
+
+#. review_status: human_locked
+#. source_hash: b68f6bf2
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "a CostGrow output raster"
+msgstr "un raster de sortie CostGrow"
+
+#. review_status: human_locked
+#. source_hash: ad6eba23
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "a ResUNet output raster"
+msgstr "un raster de sortie ResUNet"
+
+#. review_status: llm_draft
+#. source_hash: 58138926
+msgid "a comparison raster storing ``CostGrow - ResUNet``"
+msgstr "un raster de comparaison contenant ``CostGrow - ResUNet``"
+
+#. review_status: llm_draft
+#. source_hash: 4ba76471
+msgid "a side-by-side plot of the two model outputs"
+msgstr "un graphique côte à côte des deux sorties de modèle"
+
+#. review_status: human_locked
+#. source_hash: 74e492d5
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "Before you start"
+msgstr "Avant de commencer"
+
+#. review_status: llm_draft
+#. source_hash: 33cd6e1e
+msgid "This tutorial requires the extended install because ``CostGrow_Terrain`` depends on PCRaster."
+msgstr "Ce tutoriel nécessite l'installation étendue, car ``CostGrow_Terrain`` dépend de PCRaster."
+
+#. review_status: llm_draft
+#. source_hash: 87e26f89
+#, python-brace-format
+msgid "**CLI (`pipx`)**: use the extended environment from {ref}`extended_install_cli`."
+msgstr "**CLI (`pipx`)** : utilisez l'environnement étendu de {ref}`extended_install_cli`."
+
+#. review_status: llm_draft
+#. source_hash: 77c60a50
+#, python-brace-format
+msgid "**Local notebook (Jupyter)**: use the extended environment from {ref}`extended_install_notebook`."
+msgstr "**carnet local (Jupyter)** : utilisez l'environnement étendu de {ref}`extended_install_notebook`."
+
+#. review_status: llm_draft
+#. source_hash: b3e822f0
+msgid ""
+"**Hosted notebook (Colab)**: not recommended for this tutorial because the extended stack is "
+"heavier and less reliable."
+msgstr ""
+"**carnet hébergé (Colab)** : non recommandé pour ce tutoriel, car la pile étendue est plus lourde"
+" et moins fiable."
+
+#. review_status: human_locked
+#. source_hash: 5e0740b6
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "Install additional packages"
+msgstr "Installer des paquets supplémentaires"
+
+#. review_status: human_locked
+#. source_hash: f494e4b4
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "Prove the install"
+msgstr "Vérifier l'installation"
+
+#. review_status: llm_draft
+#. source_hash: 5e5a0d0a
+msgid "Let's check the versions now:"
+msgstr "Vérifions maintenant les versions :"
+
+#. review_status: human_locked
+#. source_hash: 7df60b64
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "Imports"
+msgstr "Importations"
+
+#. review_status: llm_draft
+#. source_hash: 95b5fba7
+msgid "Download the same test data as Tutorial 2"
+msgstr "Télécharger les mêmes données de test que dans le tutoriel 2"
+
+#. review_status: llm_draft
+#. source_hash: 3b45a793
+msgid ""
+"We reuse the small sample rasters from the earlier tutorials so the comparison stays quick to run"
+" and easy to inspect."
+msgstr ""
+"Nous réutilisons les petits rasters d'exemple des tutoriels précédents afin que la comparaison "
+"reste rapide à exécuter et facile à examiner."
+
+#. review_status: human_locked
+#. source_hash: ab953a64
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "Resolve the input paths"
+msgstr "Résoudre les chemins d'entrée"
+
+#. review_status: human_locked
+#. source_hash: cb9ff6e8
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "Fetch ResUNet weights"
+msgstr "Récupérer les poids ResUNet"
+
+#. review_status: llm_draft
+#. source_hash: a12884d8
+msgid ""
+"``CostGrow_Terrain`` is built in, so it does not need a weights download. ``ResUNet_16x_DEM`` "
+"does, so we fetch it once here before running the comparison."
+msgstr ""
+"``CostGrow_Terrain`` est intégré, il n'a donc pas besoin de téléchargement de poids. "
+"``ResUNet_16x_DEM`` en a besoin, donc nous les récupérons une fois ici avant de lancer la "
+"comparaison."
+
+#. review_status: human_locked
+#. source_hash: 153272e5
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "Plot the tutorial inputs"
+msgstr "Tracer les entrées du tutoriel"
+
+#. review_status: human_locked
+#. source_hash: c412a340
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "Run CostGrow"
+msgstr "Exécuter CostGrow"
+
+#. review_status: llm_draft
+#. source_hash: 1539854c
+msgid ""
+"Now run ``tohr`` with the built-in ``CostGrow_Terrain`` model. We set ``--window-method hard`` "
+"explicitly so the tutorial reflects the current large-raster-safe CostGrow path."
+msgstr ""
+"Exécutez maintenant ``tohr`` avec le modèle intégré ``CostGrow_Terrain``. Nous définissons "
+"explicitement ``--window-method hard`` afin que le tutoriel reflète le chemin CostGrow actuel "
+"adapté aux grands rasters."
+
+#. review_status: human_locked
+#. source_hash: f5cb01e4
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "Run the ResUNet baseline"
+msgstr "Exécuter la référence ResUNet"
+
+#. review_status: llm_draft
+#. source_hash: 00aea0bb
+msgid ""
+"Next run the learned ``ResUNet_16x_DEM`` model on the same inputs so we can compare the two "
+"outputs directly."
+msgstr ""
+"Exécutez ensuite le modèle appris ``ResUNet_16x_DEM`` sur les mêmes entrées afin de comparer "
+"directement les deux sorties."
+
+#. review_status: human_locked
+#. source_hash: fd0d79ef
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "Write a comparison raster"
+msgstr "Écrire un raster de comparaison"
+
+#. review_status: llm_draft
+#. source_hash: 47a66141
+msgid ""
+"For a quick numeric comparison, we save a raster of ``CostGrow - ResUNet`` on the same grid as "
+"the model outputs. Positive values indicate deeper predictions from CostGrow, and negative values"
+" indicate deeper predictions from ResUNet."
+msgstr ""
+"Pour une comparaison numérique rapide, nous enregistrons un raster de ``CostGrow - ResUNet`` sur "
+"la même grille que les sorties de modèle. Les valeurs positives indiquent des prédictions plus "
+"profondes avec CostGrow, et les valeurs négatives indiquent des prédictions plus profondes avec "
+"ResUNet."
+
+#. review_status: human_locked
+#. source_hash: 919a7f66
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "Plot the results side by side"
+msgstr "Tracer les résultats côte à côte"
+
+#. review_status: llm_draft
+#. source_hash: 8ad9744b
+msgid ""
+"The first three panels compare the input and the two high-resolution outputs. The fourth panel "
+"shows the signed difference raster so you can quickly spot where the model outputs diverge."
+msgstr ""
+"Les trois premiers panneaux comparent l'entrée et les deux sorties haute résolution. Le quatrième"
+" panneau montre le raster de différence signée afin que vous puissiez repérer rapidement les "
+"zones où les sorties des modèles divergent."
