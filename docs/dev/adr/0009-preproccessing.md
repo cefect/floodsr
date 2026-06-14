@@ -11,6 +11,7 @@ Implementation note:
 - shared preprocessing logic should live in `floodsr/preprocessing.py`.
 - model workers consume platform-preprocessed artifacts, assert platform-model boundary conformance, then run model-specific preprocessing/transforms per `0005-model-registry.md`.
 - platform/model boundary implementations must avoid full in-memory reads/writes of large HRDEM-sized rasters when a raster-backed windowed path is available.
+- preprocessing owns its own tiling/materialization implementation for large rasters, using shared helpers from `floodsr/tiling.py` per `0008-tiling.md`.
 
 
 ## platform-model boundary
@@ -25,6 +26,9 @@ the boundary is defined as:
 - square pixels
 - all masked pixels are also nodata (and raster has a defined nodata value)
   - nodata value (e.g., -9999) is the same between dem and depths
+- platform preprocessing owns normalization of source invalid-data signals into that strict contract
+  - source rasters may arrive with a mix of nodata values and raster masks
+  - prepared rasters must not preserve an additional mask-only signal that is distinct from nodata
 - exact spatial agreement should be enforced on the prepared rasters, not approximated with downstream tolerance checks
 
 
@@ -52,7 +56,7 @@ raise a verbose assertion error telling the user to fix if the following are not
 raise a warning and correct if the following are not met:
 - square pixels: resample to square
 - identical bbox: take lores depth bbox as ground truth and crop/resample dem to match
-- nodata signal/mask differs between dem and depth: take 'invalid data signal' of DEM as ground truth, and convert to a mask layer.
+- nodata signal/mask differs between dem and depth: normalize these during preprocessing so the prepared rasters satisfy the strict nodata-only contract.
 
 
 #### validating input value ranges
@@ -70,9 +74,10 @@ input dem:
 - warn if min< -100 (unlikely to be a terrestrial DEM)
 
 
-## nodata normalization/handling
-Requirements:
-- models can differ on how they treat/handle nodata.
+## nodata normalization/handling 
+- Final HR outputs must be masked to the prepared DEM valid-data domain; depth validity may restrict source information upstream, but DEM validity is the source of truth for where final output may exist.
+- Prepared low-resolution depth rasters should carry no surviving mask semantics at the worker boundary: they should be real-valued rasters with invalid cells normalized to `0.0`, a defined nodata value in metadata, and no separate mask layer/file passed downstream.
+- The prepared DEM raster remains the source of truth for final valid-data support. Model workers may use low-resolution depth values to define wet/source cells upstream, but final output support must follow the prepared DEM valid domain.
 
 
 ## pre-processing to obtain the platform-model boundary contract
@@ -87,7 +92,10 @@ Requirements:
 - Keep two preprocessing/materialization paths:
   - a simple path that may materialize full prepared rasters in memory
   - a raster-backed windowed path that reads and writes windows on demand to avoid materializing the full HRDEM-sized raster
-- In this phase, the raster-backed windowed path only needs to support hard-window inference. Feathered mosaicking can continue to require the simple path.
+- preprocessing must implement the shared mosaicking vocabulary from `ADR-0008`:
+  - `hard`
+  - `feather`
+- preprocessing may use different internal mechanics than DEM fetch or model execution, but it must use shared helpers from `floodsr/tiling.py` for window generation and mosaicking/blending where possible.
 - DEM clipping/windowing should be treated as a source-read coverage step only. source window rounding must not define the final prepared raster bounds.
 - both preprocessing/materialization paths should write prepared rasters onto the same canonical target grid so the platform-model boundary contract remains exact regardless of `crs_policy`.
 
@@ -122,3 +130,4 @@ post-inference, assert:
 - the raster-backed windowed path should preserve the same CRS/bounds/output contract as the simple path
 - `crs_policy` behavior is unchanged across both paths; only the materialization strategy differs
 - if a DEM source window must be padded or rounded to ensure source coverage, that should happen before reprojection and should not change the final prepared raster profile
+- preprocessing capability should be reported against the shared matrix from `ADR-0008`, not with preprocessing-specific method names

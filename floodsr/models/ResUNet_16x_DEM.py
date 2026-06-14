@@ -81,7 +81,7 @@ from tqdm import tqdm
 
 from floodsr.engine import EngineORT
 from floodsr.models.base import Model
-from floodsr.preprocessing import _build_single_band_profile, _read_single_band_raster, _write_single_band_raster, _zero_nodata_in_place, replace_nodata_with_zero, resolve_preprocess_config
+from floodsr.preprocessing import _build_single_band_profile, _read_single_band_raster, _write_single_band_raster, _zero_nodata_in_place, replace_nodata_with_zero, resolve_preprocess_config, valid_mask_from_array
 from floodsr.tiling import build_feather_ramp, build_tile_starts, iter_block_windows, iter_window_origins
 
 from rasterio.transform import from_bounds as bounds_to_transform
@@ -225,6 +225,8 @@ class ModelWorker(Model):
         output_fp: str | Path,
         max_depth: float,
         min_depth_threshold: float,
+        dem_valid_mask: np.ndarray,
+        out_nodata: float,
     ) -> None:
         """Apply clipping and low-depth masking to an on-disk raster."""
         out_path = Path(output_fp).expanduser().resolve()
@@ -233,6 +235,11 @@ class ModelWorker(Model):
                 arr = ds.read(1, window=window).astype(np.float32, copy=False)
                 arr = np.clip(arr, 0.0, float(max_depth)).astype(np.float32, copy=False)
                 arr = np.where(arr < float(min_depth_threshold), 0.0, arr).astype(np.float32, copy=False)
+                valid = dem_valid_mask[
+                    int(window.row_off) : int(window.row_off + window.height),
+                    int(window.col_off) : int(window.col_off + window.width),
+                ]
+                arr = np.where(valid, arr, float(out_nodata)).astype(np.float32, copy=False)
                 ds.write(arr, 1, window=window)
 
     def _gdal_is_available(self) -> bool:
@@ -261,6 +268,8 @@ class ModelWorker(Model):
         output_profile: dict,
         max_depth: float,
         min_depth_threshold: float,
+        dem_valid_mask: np.ndarray,
+        out_nodata: float,
         show_progress: bool,
     ) -> Path:
         """Clip, mask, and write an in-memory prediction array blockwise."""
@@ -281,6 +290,8 @@ class ModelWorker(Model):
                 )
                 arr = np.clip(arr, 0.0, float(max_depth)).astype(np.float32, copy=False)
                 arr = np.where(arr < float(min_depth_threshold), 0.0, arr).astype(np.float32, copy=False)
+                valid = dem_valid_mask[row_off : row_off + height, col_off : col_off + width]
+                arr = np.where(valid, arr, float(out_nodata)).astype(np.float32, copy=False)
                 dst_ds.write(arr, 1, window=window)
         return out_path
 
@@ -663,6 +674,14 @@ class ModelWorker(Model):
             depth_lr_shape = (int(depth_meta_ds.height), int(depth_meta_ds.width))
             dem_raw_shape = (int(dem_meta_ds.height), int(dem_meta_ds.width))
             dem_platform_nodata = dem_meta_ds.nodata
+            dem_raw_valid_mask = valid_mask_from_array(
+                dem_meta_ds.read(1).astype(np.float32, copy=False),
+                dem_platform_nodata,
+            )
+        if dem_platform_nodata is None:
+            dem_platform_nodata = -9999.0
+            dem_platform_profile["nodata"] = float(dem_platform_nodata)
+            log.warning(f"prepared DEM nodata missing; defaulting to {dem_platform_nodata}")
         depth_crs = depth_lr_profile.get("crs")
         dem_crs = dem_platform_profile.get("crs")
         assert depth_crs is not None and dem_crs is not None, "platform-preprocessed rasters must define CRS"
@@ -790,8 +809,11 @@ class ModelWorker(Model):
         tile_dem_stats = None
         post_resampled = tuple(prepped["dem_raw_shape"]) != tuple(prepped["dem_hr_shape"])
         if execution_path == "simple":
-            depth_lr_raw, _, _ = _read_single_band_raster(depth_lr_path)
+            depth_lr_raw, depth_lr_nodata, _ = _read_single_band_raster(depth_lr_path)
             dem_platform_raw, _, _ = _read_single_band_raster(dem_hr_path)
+            assert depth_lr_nodata is None, f"prepared depth_lr nodata must be None; got {depth_lr_nodata}"
+            assert np.isfinite(depth_lr_raw).all(), "prepared depth_lr must contain only finite values"
+            assert float(depth_lr_raw.min()) >= 0.0, f"prepared depth_lr must be >= 0; got min={float(depth_lr_raw.min())}"
             dem_model = np.empty((target_hr_h, target_hr_w), dtype=np.float32)
             reproject(
                 source=dem_platform_raw,
@@ -825,6 +847,7 @@ class ModelWorker(Model):
             )
             output_profile = prepped["dem_raw_profile"].copy()
             output_profile.update(dtype="float32", count=1)
+            output_profile["nodata"] = float(dem_platform_nodata)
             output_profile.pop("blockxsize", None)
             output_profile.pop("blockysize", None)
             prediction_out_m = prediction_model_m.astype(np.float32, copy=False)
@@ -865,6 +888,8 @@ class ModelWorker(Model):
                 output_profile=output_profile,
                 max_depth=float(preprocess_cfg["max_depth"]),
                 min_depth_threshold=min_depth_threshold,
+                dem_valid_mask=dem_raw_valid_mask,
+                out_nodata=float(dem_platform_nodata),
                 show_progress=show_progress,
             )
         else:
@@ -915,6 +940,7 @@ class ModelWorker(Model):
                     prepped["dem_raw_shape"][1],
                     prepped["dem_raw_profile"]["transform"],
                 )
+                output_profile["nodata"] = float(dem_platform_nodata)
                 if post_resampled:
                     log.info(
                         f"post-resampling model output from {tuple(prepped['dem_hr_shape'])} "
@@ -935,6 +961,8 @@ class ModelWorker(Model):
                     output_tile_fp,
                     float(preprocess_cfg["max_depth"]),
                     min_depth_threshold,
+                    dem_raw_valid_mask,
+                    float(dem_platform_nodata),
                 )
                 out_written_fp = (
                     self._build_windowed_output_vrt(out_path, [output_tile_fp], output_profile.get("nodata"))

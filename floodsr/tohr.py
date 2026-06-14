@@ -10,7 +10,7 @@ from floodsr.preprocessing import estimate_raster_float32_nbytes, write_platform
 
 def tohr(
     model_version: str,
-    model_fp: str | Path,
+    model_fp: str | Path | None,
     depth_lr_fp: str | Path,
     dem_hr_fp: str | Path,
     output_fp: str | Path,
@@ -27,8 +27,10 @@ def tohr(
     """Run one ToHR pass through the model worker lifecycle."""
     log = logger or logging.getLogger(__name__)
     assert model_version, "model_version cannot be empty"
-    model_path = Path(model_fp).expanduser().resolve()
-    assert model_path.exists(), f"model file does not exist: {model_path}"
+    model_path = None
+    if model_fp is not None:
+        model_path = Path(model_fp).expanduser().resolve()
+        assert model_path.exists(), f"model file does not exist: {model_path}"
 
     # Resolve worker and run inside context-managed lifecycle.
     worker_class = resolve_model_worker_class(model_version)
@@ -55,6 +57,7 @@ def tohr(
                 use_windowed=use_windowed,
                 logger=log,
             )
+            # TODO(issue #47): split shared ToHR args from model-specific worker kwargs before dispatch.
             result = ready_worker.run(
                 depth_lr_fp=platform["depth_lr_prepared_fp"],
                 dem_hr_fp=platform["dem_hr_prepared_fp"],

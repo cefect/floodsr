@@ -1,6 +1,6 @@
 """Pytest fixtures for FloodSR tests."""
 
-import hashlib, json, logging, pathlib
+import hashlib, json, logging, pathlib, sys
 
 import pytest
 
@@ -27,7 +27,7 @@ def _read_tile_case(case_name: str) -> dict:
     assert tile_dir.exists(), f"missing tile directory: {tile_dir}"
     assert case_spec_fp.exists(), f"missing case spec artifact: {case_spec_fp}"
     case_spec = json.loads(case_spec_fp.read_text(encoding="utf-8"))
-    assert "inputs" in case_spec and "expected" in case_spec and "flags" in case_spec, (
+    assert "inputs" in case_spec and "flags" in case_spec, (
         f"invalid case spec shape for {case_name}: missing top-level keys"
     )
     assert (
@@ -46,20 +46,26 @@ def _read_tile_case(case_name: str) -> dict:
         assert (tile_dir / input_value).exists(), (
             f"missing case input file for {case_name}/{input_key}:\n    {tile_dir / input_value}"
         )
-    assert isinstance(case_spec["expected"], dict) and case_spec["expected"], f"invalid expected block for {case_name}"
-    for run_label, run_spec in case_spec["expected"].items():
-        assert "params" in run_spec and "metrics" in run_spec, f"invalid expected run block for {case_name}/{run_label}"
-        assert isinstance(run_spec["params"], dict), f"invalid params block for {case_name}/{run_label}"
-        assert "model_version" in run_spec["params"], f"missing params.model_version for {case_name}/{run_label}"
-        assert isinstance(run_spec["metrics"], dict), f"invalid metrics block for {case_name}/{run_label}"
-        assert (
-            "mase_m" in run_spec["metrics"] and "rmse_m" in run_spec["metrics"] and "ssim" in run_spec["metrics"]
-        ), f"missing expected metrics keys for {case_name}/{run_label}"
     assert "in_hrdem" in case_spec["flags"], f"missing required flags.in_hrdem for {case_name}"
     if "supports_regression_metrics" in case_spec["flags"]:
         assert isinstance(case_spec["flags"]["supports_regression_metrics"], bool), (
             f"invalid flags.supports_regression_metrics for {case_name}"
         )
+    requires_regression_metrics = (
+        case_spec["inputs"]["truth_fp"] is not False
+        and bool(case_spec["flags"].get("supports_regression_metrics", True))
+    )
+    if requires_regression_metrics:
+        assert "expected" in case_spec, f"missing expected block for regression case {case_name}"
+        assert isinstance(case_spec["expected"], dict) and case_spec["expected"], f"invalid expected block for {case_name}"
+        for run_label, run_spec in case_spec["expected"].items():
+            assert "params" in run_spec and "metrics" in run_spec, f"invalid expected run block for {case_name}/{run_label}"
+            assert isinstance(run_spec["params"], dict), f"invalid params block for {case_name}/{run_label}"
+            assert "model_version" in run_spec["params"], f"missing params.model_version for {case_name}/{run_label}"
+            assert isinstance(run_spec["metrics"], dict), f"invalid metrics block for {case_name}/{run_label}"
+            assert (
+                "mase_m" in run_spec["metrics"] and "rmse_m" in run_spec["metrics"] and "ssim" in run_spec["metrics"]
+            ), f"missing expected metrics keys for {case_name}/{run_label}"
     return {
         "case_name": case_name,
         "tile_dir": tile_dir,
@@ -87,6 +93,28 @@ def _write_single_band_geotiff(fp: pathlib.Path, array, transform, crs: str, nod
     }
     with rasterio.open(fp, "w", **profile) as ds:
         ds.write(array.astype(np.float32), 1)
+
+
+def assert_hard_only_windowed_selection(worker, small_shape=(2048, 2048), large_shape=(4096, 4096)):
+    """Assert the shared hard-only large-raster execution selector contract."""
+    assert worker._resolve_execution_path("hard", small_shape) == "simple"
+    assert worker._resolve_execution_path("feather", small_shape) == "simple"
+    assert worker._resolve_execution_path("hard", large_shape) == "windowed"
+    assert worker._resolve_execution_path("feather", large_shape) == "simple"
+
+
+def assert_result_raster_contract(result: dict, expected_shape=None):
+    """Assert a FloodSR raster result exists, is float32, and is non-empty."""
+    import rasterio
+
+    np = _get_numpy()
+    with rasterio.open(result["output_fp"]) as ds:
+        pred = ds.read(1)
+    if expected_shape is not None:
+        assert pred.shape == expected_shape
+    assert pred.dtype == np.float32
+    assert pred.size > 0
+    return pred
 
 
 #===============================================================================
@@ -119,7 +147,7 @@ def logger(tmp_path_factory):
     formatter = logging.Formatter("%(levelname)s:%(name)s:%(message)s")
     # keep handlers minimal to avoid duplicate logs across runs
     if not any(isinstance(handler, logging.StreamHandler) and not isinstance(handler, logging.FileHandler) for handler in log.handlers):
-        stream_handler = logging.StreamHandler()
+        stream_handler = logging.StreamHandler(sys.stdout)
         stream_handler.setLevel(logging.DEBUG)
         stream_handler.setFormatter(formatter)
         log.addHandler(stream_handler)

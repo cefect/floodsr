@@ -1,6 +1,6 @@
 # ADR-0007: Platform and Execution Context Support
 
-CPU-first is officially supported. GPU may be considered in the future. 
+CPU-first is officially supported.
 
 ## Context
 
@@ -38,7 +38,7 @@ We track support across three dimensions:
 
 ### macOS
 
-not implemented yet
+unsupported
 
 ## Notes
 

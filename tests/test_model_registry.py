@@ -1,18 +1,20 @@
 """Tests for model registry and fetch workflow."""
 
-import json, logging
+import json, logging, os
 from pathlib import Path
 
 import pytest
 
 from conftest import default_model_version, models_manifest_fp
 from floodsr.model_registry import (
+    FileRetrievalBackend,
+    _resolve_file_source_path,
     fetch_model,
-    fetch_model_result,
     get_retrieval_backend,
     list_models,
     list_runnable_model_versions,
     model_worker_exists,
+    model_version_requires_artifact,
     resolve_model_worker_class,
 )
 
@@ -46,23 +48,31 @@ def test_fetch_model_returns_cached_path(tmp_path: Path, models_manifest_fp: Pat
 
 
 @pytest.mark.fast
-def test_fetch_model_result_reports_cache_hit(tmp_path: Path, models_manifest_fp: Path):
-    """Ensure fetch metadata reports cache reuse on a second identical request."""
-    first = fetch_model_result(
-        "v-cli",
-        cache_dir=tmp_path / "cache",
-        manifest_fp=models_manifest_fp,
-        show_progress=False,
-    )
-    second = fetch_model_result(
-        "v-cli",
-        cache_dir=tmp_path / "cache",
-        manifest_fp=models_manifest_fp,
-        show_progress=False,
-    )
-    assert first.model_fp.exists()
-    assert first.retrieved_from == "fetch:file"
-    assert second.retrieved_from == "cache"
+@pytest.mark.skipif(os.name != "nt", reason="Windows file-URI normalization only applies on Windows")
+def test_resolve_file_source_path_handles_windows_drive_file_uri(tmp_path: Path):
+    """Ensure Windows file URIs normalize to a valid drive-letter path."""
+    source_fp = tmp_path / "source_model.onnx"
+    source_fp.write_bytes(b"cli-test-model")
+
+    resolved = _resolve_file_source_path(source_fp.as_uri())
+
+    assert isinstance(resolved, Path)
+    assert resolved == source_fp
+
+
+@pytest.mark.fast
+@pytest.mark.skipif(os.name != "nt", reason="Windows file-URI normalization only applies on Windows")
+def test_file_backend_retrieve_accepts_windows_drive_file_uri(tmp_path: Path):
+    """Ensure file retrieval works for Windows `file:///C:/...` manifest URLs."""
+    source_fp = tmp_path / "source_model.onnx"
+    source_fp.write_bytes(b"cli-test-model")
+    destination = tmp_path / "cache" / "model.onnx.part"
+
+    retrieved_fp = FileRetrievalBackend().retrieve(source_fp.as_uri(), destination)
+
+    assert retrieved_fp == destination
+    assert retrieved_fp.exists()
+    assert retrieved_fp.read_bytes() == source_fp.read_bytes()
 
 
 @pytest.mark.fast
@@ -104,10 +114,38 @@ def test_default_manifest_records_include_required_fields():
 
 
 @pytest.mark.fast
+def test_default_manifest_includes_costgrow_builtin():
+    """Ensure the packaged manifest exposes CostGrow as a built-in worker."""
+    records = {record.version: record for record in list_models()}
+    assert "CostGrow_Terrain" in records
+    assert records["CostGrow_Terrain"].requires_model_artifact is False
+    assert model_worker_exists("CostGrow_Terrain") is True
+    assert model_version_requires_artifact("CostGrow_Terrain") is False
+
+
+@pytest.mark.fast
+def test_fetch_model_rejects_builtin_model():
+    """Ensure built-in models are not routed through fetch/download flow."""
+    with pytest.raises(ValueError, match="built-in"):
+        fetch_model("CostGrow_Terrain")
+
+
+@pytest.mark.fast
 def test_list_runnable_model_versions_match_worker_backed_manifest():
-    """Ensure runnable versions are exactly manifest entries with worker modules."""
+    """Ensure runnable versions keep artifact-backed models ahead of built-ins."""
     runnable_versions = list_runnable_model_versions()
-    expected_versions = [record.version for record in list_models() if model_worker_exists(record.version)]
+    expected_versions = [
+        *[
+            record.version
+            for record in list_models()
+            if model_worker_exists(record.version) and record.requires_model_artifact
+        ],
+        *[
+            record.version
+            for record in list_models()
+            if model_worker_exists(record.version) and not record.requires_model_artifact
+        ],
+    ]
     assert isinstance(runnable_versions, list)
     assert runnable_versions == expected_versions
 
@@ -118,6 +156,15 @@ def test_resolve_model_worker_class_returns_model_worker_type(default_model_vers
     worker_class = resolve_model_worker_class(default_model_version)
     assert model_worker_exists(default_model_version) is True
     assert worker_class.__name__ == "ModelWorker"
+
+
+@pytest.mark.fast
+def test_resolve_model_worker_class_supports_costgrow_builtin():
+    """Ensure the CostGrow built-in worker resolves without an artifact."""
+    worker_class = resolve_model_worker_class("CostGrow_Terrain")
+    worker = worker_class(model_fp=None)
+    assert worker.requires_model_artifact is False
+    assert worker.is_valid(None) is True
 
 
 @pytest.mark.parametrize(
@@ -169,7 +216,6 @@ def test_manifest_injected_bad_values_fail_fetch(
     assert expected_message in str(exc_info.value)
 
 
-@pytest.mark.fast
 @pytest.mark.network
 def test_default_manifest_http_links_resolve(tmp_path: Path):
     """Ensure HTTP model URLs in the default manifest resolve with project fetch logic."""

@@ -8,34 +8,11 @@ See `docs/dev/adr/0013-publishing.md` and `docs/dev/adr/0017-cicd-workflow-polic
 ----------------------------
 
 ## setup (one time)
+see below
 
-### local packaging tools
 
-Use the .devcontainer `dev` image. 
 
-### GitHub repository
 
-Configure the repository once on GitHub:
-
-1. Ensure GitHub Actions is enabled for the repository.
-2. Keep `.github/workflows/release.yml` at that exact filename because PyPI Trusted Publishing binds to the workflow filename.
-3. Create the GitHub environment `testpypi`.
-4. Create the GitHub environment `pypi`.
-5. Optionally add required reviewers or wait timers to the `pypi` environment before stable releases.
-
-No PyPI API tokens or `~/.pypirc` entries are required for the CI/CD release path.
-
-### Trusted Publishers
-
-Configure GitHub Actions Trusted Publishing in both TestPyPI and PyPI for the `floodsr` project:
-
-1. Sign in to each index and open the project settings for `floodsr`.
-2. Add a Trusted Publisher for GitHub Actions with:
-   - GitHub owner: the repository owner/org
-   - Repository name: `floodsr`
-   - Workflow filename: `release.yml`
-   - Environment name: `testpypi` on TestPyPI, `pypi` on PyPI
-3. If the project does not yet exist on an index, create a pending publisher first and let the first trusted publish create the project.
 
 
 
@@ -158,3 +135,35 @@ docker run --rm --init condaforge/miniforge3:25.3.1-0 bash -lc "
   floodsr models list
 "
 ```
+
+
+
+## setup (one time)
+
+### local packaging tools
+
+Use the .devcontainer `dev` image. 
+
+### GitHub repository
+
+Configure the repository once on GitHub:
+
+1. Ensure GitHub Actions is enabled for the repository.
+2. Keep `.github/workflows/release.yml` at that exact filename because PyPI Trusted Publishing binds to the workflow filename.
+3. Create the GitHub environment `testpypi`.
+4. Create the GitHub environment `pypi`.
+5. Optionally add required reviewers or wait timers to the `pypi` environment before stable releases.
+
+No PyPI API tokens or `~/.pypirc` entries are required for the CI/CD release path.
+
+### Trusted Publishers
+
+Configure GitHub Actions Trusted Publishing in both TestPyPI and PyPI for the `floodsr` project:
+
+1. Sign in to each index and open the project settings for `floodsr`.
+2. Add a Trusted Publisher for GitHub Actions with:
+   - GitHub owner: the repository owner/org
+   - Repository name: `floodsr`
+   - Workflow filename: `release.yml`
+   - Environment name: `testpypi` on TestPyPI, `pypi` on PyPI
+3. If the project does not yet exist on an index, create a pending publisher first and let the first trusted publish create the project.

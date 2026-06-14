@@ -4,15 +4,20 @@ import hashlib, json, os
 from pathlib import Path
 
 import pytest
+np = pytest.importorskip("numpy")
 
-# Do not restore `import numpy as np` at module scope here.
-# Use `pytest.importorskip(...)` instead so docs-environment discovery stays collection-safe; see docs/dev/adr/0006-tests.md.
-np = pytest.importorskip("numpy", reason="ToHR CLI tests require numpy.")
-
+import floodsr.models.CostGrow_Terrain as costgrow_module
+import floodsr.tohr
 from conftest import default_model_version, tile_case_d, tohr_model_fp
 from floodsr.cli import _parse_arguments, _resolve_default_output_path, _resolve_tohr_model_spec, main
 
 pytestmark = pytest.mark.local
+
+
+def _main_cli_verbose(argv: list[str]) -> int:
+    """Run the CLI test entrypoint with one verbose flag enabled."""
+    return main(["-v", *argv])
+
 
 @pytest.mark.parametrize(
     "case_id",
@@ -36,7 +41,7 @@ def test_main_tohr_runs_data_driven_baseline_case(
     output_fp = tmp_path / f"{tile_case_d['case_name']}_pred_cli.tif"
 
     assert not case_spec["flags"]["in_hrdem"]
-    exit_code = main(
+    exit_code = _main_cli_verbose(
         [
             "tohr",
             "--in",
@@ -97,11 +102,64 @@ def test_main_tohr_runs_in_hrdem_flagged_case(
         cli_args.extend(["--fetch-hrdem", "--crs-policy", "use-dem"])
     else:
         cli_args.extend(["--dem", str(tile_dir / case_spec["inputs"]["dem_fp"])])
-    exit_code = main(cli_args)
+    exit_code = _main_cli_verbose(cli_args)
     with rasterio.open(output_fp) as ds:
         pred = ds.read(1)
 
     assert exit_code == 0
+    assert pred.dtype == np.float32
+    assert pred.size > 0
+
+
+@pytest.mark.parametrize("case_id", [pytest.param("fathom_clip", id="tutorial_3_like_fetch_force_tiling_case", marks=pytest.mark.local)])
+@pytest.mark.e2e
+@pytest.mark.network
+def test_main_tohr_runs_tutorial_3_like_fetch_force_tiling_case(
+    tohr_model_fp: Path,
+    tmp_path: Path,
+    tile_case_d: dict,
+):
+    """Ensure the Tutorial 3-style CLI command shape runs on the small fetched-HRDEM fixture."""
+    pytest.importorskip("onnxruntime")
+    rasterio = pytest.importorskip("rasterio")
+    case_spec = tile_case_d["case_spec"]
+    tile_dir = tile_case_d["tile_dir"]
+    output_fp = tmp_path / f"{tile_case_d['case_name']}_tutorial_3_like_pred.tif"
+    fetched_dem_fp = tmp_path / f"{tile_case_d['case_name']}_tutorial_3_like_fetch_dem.vrt"
+    cache_dir = tmp_path / "tutorial_3_like_cache"
+
+    assert case_spec["flags"]["in_hrdem"]
+    assert case_spec["inputs"]["dem_fp"] is False
+    exit_code = _main_cli_verbose(
+        [
+            "tohr",
+            "--in",
+            str(tile_dir / case_spec["inputs"]["lowres_fp"]),
+            "--fetch-hrdem",
+            "--fetch-out",
+            str(fetched_dem_fp),
+            "--fetch-force-tiling",
+            "--cache-dir",
+            str(cache_dir),
+            "--crs-policy",
+            "use-dem",
+            "--model-path",
+            str(tohr_model_fp),
+            "--window-method",
+            "hard",
+            "--tile-overlap",
+            "0",
+            "--out",
+            str(output_fp),
+            "--min-depth-threshold",
+            "0.1",
+        ]
+    )
+    with rasterio.open(output_fp) as ds:
+        pred = ds.read(1)
+
+    assert exit_code == 0
+    assert fetched_dem_fp.exists()
     assert pred.dtype == np.float32
     assert pred.size > 0
 
@@ -158,7 +216,7 @@ def test_resolve_tohr_model_spec_uses_cached_manifest_default(
     manifest_fp.write_text(json.dumps(manifest_payload), encoding="utf-8")
 
     cache_dir = tmp_path / "cache"
-    fetch_exit = main(
+    fetch_exit = _main_cli_verbose(
         [
             "models",
             "fetch",
@@ -187,6 +245,25 @@ def test_resolve_tohr_model_spec_uses_cached_manifest_default(
     assert fetch_exit == 0
     assert resolved_version == model_version
     assert model_fp.exists()
+
+
+@pytest.mark.fast
+def test_resolve_tohr_model_spec_returns_none_for_builtin_model():
+    """Ensure built-in models resolve without downloading artifacts."""
+    args = _parse_arguments(
+        [
+            "tohr",
+            "--in",
+            "tests/data/2407_FHIMP_tile/lowres032.tif",
+            "--dem",
+            "tests/data/2407_FHIMP_tile/hires002_dem.tif",
+            "--model-version",
+            "CostGrow_Terrain",
+        ]
+    )
+    model_version, model_fp = _resolve_tohr_model_spec(args)
+    assert model_version == "CostGrow_Terrain"
+    assert model_fp is None
 
 
 @pytest.mark.parametrize("case_id", [pytest.param("2407_FHIMP_tile", id="data_case_fetch_parse_2407_fhimp_tile")])
@@ -242,6 +319,91 @@ def test_parse_tohr_accepts_min_depth_threshold(tile_case_d: dict):
     )
     assert parsed_args.fetch_hrdem is True
     assert parsed_args.min_depth_threshold == pytest.approx(0.01)
+
+
+@pytest.mark.fast
+def test_main_tohr_costgrow_builtin_runs_without_model_path(
+    monkeypatch: pytest.MonkeyPatch,
+    synthetic_tohr_tiles: dict,
+    capsys: pytest.CaptureFixture[str],
+):
+    """Ensure CLI ToHR can run the built-in CostGrow worker without a model artifact."""
+    def fake_costgrow_core(
+        pcraster_module,
+        depth_lr,
+        depth_lr_profile,
+        dem_lr,
+        dem_lr_valid_mask,
+        dem_fine,
+        dem_fine_valid_mask,
+        fine_profile,
+        min_depth_threshold,
+        dp_coarse_pixel_max,
+        decay_frac,
+        distance_fill_method,
+        distance_fill_kwargs,
+    ):
+        del pcraster_module, depth_lr, depth_lr_profile, dem_lr, dem_lr_valid_mask, fine_profile
+        del min_depth_threshold, dp_coarse_pixel_max, decay_frac, distance_fill_method, distance_fill_kwargs
+        pred = np.where(dem_fine_valid_mask, np.float32(0.25), np.nan).astype(np.float32, copy=False)
+        return pred, {"wet_anchors": 1, "wet_final": int(np.isfinite(pred).sum())}
+
+    monkeypatch.setattr(costgrow_module, "_check_pcraster", lambda: object())
+    monkeypatch.setattr(costgrow_module, "_run_costgrow_core", fake_costgrow_core)
+    monkeypatch.setattr(floodsr.tohr, "resolve_model_worker_class", lambda _: costgrow_module.ModelWorker)
+
+    exit_code = main(
+        [
+            "tohr",
+            "--in",
+            str(synthetic_tohr_tiles["depth_lr_fp"]),
+            "--dem",
+            str(synthetic_tohr_tiles["dem_fp"]),
+            "--out",
+            str(synthetic_tohr_tiles["output_fp"]),
+            "--model-version",
+            "CostGrow_Terrain",
+            "--window-method",
+            "hard",
+            "--tile-overlap",
+            "0",
+            "--no-progress",
+        ]
+    )
+    output_fp = Path(capsys.readouterr().out.strip())
+    assert exit_code == 0
+    assert output_fp.exists()
+
+
+@pytest.mark.fast
+def test_main_tohr_costgrow_reports_missing_pcraster_error(
+    monkeypatch: pytest.MonkeyPatch,
+    synthetic_tohr_tiles: dict,
+    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
+):
+    """Ensure CLI ToHR surfaces a clear error when CostGrow runtime deps are unavailable."""
+    monkeypatch.setattr(costgrow_module, "_check_pcraster", lambda: (_ for _ in ()).throw(ImportError("PCRaster is required for CostGrow_Terrain")))
+    monkeypatch.setattr(floodsr.tohr, "resolve_model_worker_class", lambda _: costgrow_module.ModelWorker)
+    caplog.set_level("ERROR")
+
+    exit_code = main(
+        [
+            "tohr",
+            "--in",
+            str(synthetic_tohr_tiles["depth_lr_fp"]),
+            "--dem",
+            str(synthetic_tohr_tiles["dem_fp"]),
+            "--out",
+            str(synthetic_tohr_tiles["output_fp"]),
+            "--model-version",
+            "CostGrow_Terrain",
+            "--no-progress",
+        ]
+    )
+    stderr = capsys.readouterr().err
+    assert exit_code == 1
+    assert ("PCRaster is required for CostGrow_Terrain" in stderr) or ("PCRaster is required for CostGrow_Terrain" in caplog.text)
 
 
 @pytest.mark.parametrize(

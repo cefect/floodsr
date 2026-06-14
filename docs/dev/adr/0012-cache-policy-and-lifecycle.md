@@ -39,7 +39,7 @@ FloodSR needs a shared cache policy that works across features, not just model w
 
 ## Consequences
 
-- Cache behavior is consistent across the CLI and future subsystems.
+- Cache behavior is consistent across the CLI and other subsystems.
 - Users get clear, centralized controls for cache inspection and cleanup.
 - Cache growth is bounded by default retention.
 - Cache policy and lifecycle are reusable by non-CLI features without redefining behavior.

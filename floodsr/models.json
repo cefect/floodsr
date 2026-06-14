@@ -5,6 +5,12 @@
       "url": "https://github.com/cefect/floodsr/releases/download/v2026.02.19/model_infer.onnx",
       "sha256": "ea907c0f3bd482f436b26b4d28df64a471af51e0779203a50125e773eeda9c4a",
       "description": "16x DEM-conditioned ResUNet"
+    },
+    "CostGrow_Terrain": {
+      "file_name": "__builtin__",
+      "url": "builtin://CostGrow_Terrain",
+      "sha256": "builtin",
+      "description": "Rules-based terrain-penalty CostGrow method (fluvial only)"
     }
   }
 }

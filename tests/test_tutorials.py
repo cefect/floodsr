@@ -10,16 +10,17 @@ import json, os, pathlib, shutil, subprocess
 import pytest
 
 @pytest.mark.parametrize(
-    "notebook_fp",
+    "notebook_fp,timeout_s,shared_cache_dir",
     [
-        pytest.param(pathlib.Path("docs/user/notebooks/tutorial_1.ipynb"), id="tutorial_1"),
-        pytest.param(pathlib.Path("docs/user/notebooks/tutorial_2.ipynb"), id="tutorial_2"),
-        #pytest.param(pathlib.Path("docs/user/notebooks/tutorial_3.ipynb"), id="tutorial_3"),  # way too long
+        pytest.param(pathlib.Path("docs/user/notebooks/tutorial_1.ipynb"), 600, None, id="tutorial_1"),
+        pytest.param(pathlib.Path("docs/user/notebooks/tutorial_2.ipynb"), 600, None, id="tutorial_2"),
+        pytest.param(pathlib.Path("docs/user/notebooks/tutorial_3.ipynb"), 3600, pathlib.Path.cwd() / "_cache", id="tutorial_3"),
+        pytest.param(pathlib.Path("docs/user/notebooks/tutorial_4.ipynb"), 1200, None, id="tutorial_4"),
     ],
 )
 @pytest.mark.network
 @pytest.mark.notebook
-def test_tutorial_notebook_executes(notebook_fp, tmp_path, capsys):
+def test_tutorial_notebook_executes(notebook_fp, timeout_s, shared_cache_dir, tmp_path, capsys):
     """Execute each tutorial notebook from a temporary copy and confirm it produced outputs."""
     nbformat = pytest.importorskip("nbformat", reason="notebook tests require the dev conda environment")
     assert notebook_fp.exists(), f"missing tutorial notebook:\n    {notebook_fp}"
@@ -47,6 +48,10 @@ def test_tutorial_notebook_executes(notebook_fp, tmp_path, capsys):
     env["TMPDIR"] = str(notebook_tmp_dir)
     env["TEMP"] = str(notebook_tmp_dir)
     env["TMP"] = str(notebook_tmp_dir)
+    if shared_cache_dir is not None:
+        shared_cache_dir = pathlib.Path(shared_cache_dir).resolve()
+        shared_cache_dir.mkdir(parents=True, exist_ok=True)
+        env["FLOODSR_SHARED_CACHE_DIR"] = str(shared_cache_dir)
 
     cmd = [
         "jupyter",
@@ -55,7 +60,7 @@ def test_tutorial_notebook_executes(notebook_fp, tmp_path, capsys):
         "notebook",
         "--execute",
         "--inplace",
-        "--ExecutePreprocessor.timeout=600",
+        f"--ExecutePreprocessor.timeout={timeout_s}",
         str(run_fp),
     ]
     with capsys.disabled():
@@ -65,6 +70,7 @@ def test_tutorial_notebook_executes(notebook_fp, tmp_path, capsys):
             f"    run_fp={run_fp}\n"
             f"    tmp_path={tmp_path}\n"
             f"    tmpdir={notebook_tmp_dir}\n"
+            f"    shared_cache_dir={env.get('FLOODSR_SHARED_CACHE_DIR', 'none')}\n"
             f"    cmd={' '.join(cmd)}",
             flush=True,
         )
@@ -91,11 +97,12 @@ def test_tutorial_notebook_executes(notebook_fp, tmp_path, capsys):
         pytest.fail(
             f"notebook execution failed with code={proc.returncode}\n"
             f"    source={notebook_fp}\n"
-            f"    run_fp={run_fp}\n"
-            f"    tmp_path={tmp_path}\n"
-            f"    tmpdir={notebook_tmp_dir}\n"
-            f"    cmd={' '.join(cmd)}\n"
-            f"stdout:\n{stdout}"
+                f"    run_fp={run_fp}\n"
+                f"    tmp_path={tmp_path}\n"
+                f"    tmpdir={notebook_tmp_dir}\n"
+                f"    shared_cache_dir={env.get('FLOODSR_SHARED_CACHE_DIR', 'none')}\n"
+                f"    cmd={' '.join(cmd)}\n"
+                f"stdout:\n{stdout}"
         )
 
     # Re-read the executed copy and confirm the notebook structure and outputs are non-empty.

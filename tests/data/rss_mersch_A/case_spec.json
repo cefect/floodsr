@@ -12,9 +12,42 @@
       },
       "metrics": {
         "precision": 3,
-        "mase_m": 0.04310636354032592,
-        "rmse_m": 0.29035697660162196,
-        "ssim": 0.30749008650026965
+        "mase_m": 0.058701982675823,
+        "rmse_m": 0.340937547910074,
+        "ssim": 0.260731422819457
+      }
+    },
+    "CostGrow_Terrain_default": {
+      "params": {
+        "model_version": "CostGrow_Terrain",
+        "min_depth_threshold": 0.01,
+        "window_method": "hard",
+        "tile_overlap": 0
+      },
+      "metrics": {
+        "precision": 3,
+        "mase_m": 4.035435489667481,
+        "rmse_m": 21.0344949545386,
+        "ssim": -0.0003627094495723182
+      }
+    },
+    "CostGrow_Terrain_large_windowed": {
+      "params": {
+        "model_version": "CostGrow_Terrain",
+        "min_depth_threshold": 0.01,
+        "window_method": "hard",
+        "tile_overlap": 0
+      },
+      "runtime": {
+        "platform_materialization": "windowed",
+        "execution_path": "windowed",
+        "windowed_contract": "tile_halo"
+      },
+      "metrics": {
+        "precision": 3,
+        "mase_m": 4.035435489667481,
+        "rmse_m": 21.0344949545386,
+        "ssim": -0.0003627094495723182
       }
     }
   },
