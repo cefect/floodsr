@@ -49,5 +49,4 @@ Model-specific boundary details live in `docs/dev/adr/models/`.
 ## Consequences
 
 - Runtime backend can evolve independently from model registry and CLI surfaces.
-- Additional engines (GPU ORT, TensorRT, PyTorch runtime adapters) can implement `EngineBase` without changing top-level CLI flow.
 - The model-engine boundary remains explicit and testable across backends.

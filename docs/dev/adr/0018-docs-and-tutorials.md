@@ -14,7 +14,6 @@ The current docs stack uses Sphinx with `myst_nb` for notebook rendering and the
 - Render tutorial notebooks into the docs site with `myst_nb`.
 - Keep notebook execution disabled during docs builds.
 - Treat tutorial notebooks as documentation artifacts first, not as build-time executed tests.
-- Track any future interactive-launch button as a separate implementation issue rather than in this ADR.
 - Keep English as the source language for user docs.
 - Add French (`fr`) as a translated docs target using Sphinx i18n catalogs under `docs/user/locale/`.
 - Keep one shared Sphinx source tree under `docs/user` rather than duplicating content per language.
@@ -122,7 +121,7 @@ As these provide commands for patching the environment, they are a special case.
 - When a notebook cell uses `remove-output`, add one short preceding code cell tagged `remove-input` with a plain editor-facing note such as `# cell below has tag:'remove-output'` so the hidden-output behavior is obvious while editing the notebook in VS Code, without changing what readers see in the rendered docs.
 - Per-notebook shell shims should assume the caller has already activated the correct notebook runtime. In this repo, proofing should be launched from the outside with `conda run -n dev ...` (or an already-active `dev` shell) rather than hard-coding a conda interpreter path inside the shim.
 - Notebook source cells may define a visible, hard-coded `base_cache_dir` when that keeps the tutorial easier to read and rerun.
-- When a tutorial uses a visible `base_cache_dir`, add a hidden follow-up cell that lets docs-proofing or CI override that path from environment variables without changing the user-facing flow.
+- Tutorials that use a visible `base_cache_dir` should include a hidden override cell so docs-proofing or CI can override that path from environment variables without changing the user-facing flow.
 - When a tutorial benefits from cache reuse during docs proofing (for example, repeated HRDEM fetches in Tutorial 3), the per-notebook shell shim may still inject the cache path via environment variables, but the notebook should resolve that through the hidden override cell rather than through ad hoc command-string assembly later in the tutorial.
 - Tutorials that expose cache overrides should tell users to edit the visible notebook cache cell if they want custom cache behavior.
 - When docs are previewed from a non-`main` branch, the Colab launch button may therefore open an older `main` branch notebook rather than the previewed content.

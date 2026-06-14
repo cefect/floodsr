@@ -61,4 +61,3 @@ This ADR owns the model-specific contract for `ResUNet_16x_DEM`.
   - `simple + hard`
   - `simple + feather`
   - `windowed + hard`
-- `windowed + feather` remains the next model-phase extension, not the baseline.

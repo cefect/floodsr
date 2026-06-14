@@ -25,12 +25,11 @@ DEFAULT_ASSET = "dtm"
   - if `--fetch-out` is omitted, the implementation may still choose the default suffix based on fetch mode (`.tif` for rapid/non-windowed, `.vrt` for tiled/windowed).
 
 ### implementation strategy (agnostic internals, explicit CLI)
-- keep CLI explicit and hard-coded to HRDEM for now (`--fetch-hrdem`). maybe we add alternate sources later. 
+- keep CLI explicit and hard-coded to HRDEM (`--fetch-hrdem`).
 - implement HRDEM as one backend under a backend-agnostic namespace:
   - `floodsr/dem_sources/base.py`
   - `floodsr/dem_sources/hrdem_mosaic.py`
-  - `floodsr/dem_sources/catalog.py` (optional registry for future backends)
-- this allows future  alternate backends without restructuring CLI flow.
+  - `floodsr/dem_sources/catalog.py`
 
 ### entry point parameter placement
 - store HRDEM STAC defaults in `floodsr/dem_sources/hrdem_mosaic.py` as module-scoped constants.
@@ -87,7 +86,7 @@ BIGTIFF=IF_SAFER
 ```
  
 ### decision update (memory handling)
-- adopt windowed/on-disk DEM fetch processing as the next implementation step (avoid full in-memory merge for large extents).
+- use windowed/on-disk DEM fetch processing to avoid full in-memory merge for large extents.
 - keep HRDEM fetch at native source resolution in this phase (no fetch-resolution parameter).
 - build and use a VRT to stitch fetched chunks/tiles into one virtual mosaic.
 - add early diagnostics/guards for oversized fetches so failures are explicit (not silent OOM kills).

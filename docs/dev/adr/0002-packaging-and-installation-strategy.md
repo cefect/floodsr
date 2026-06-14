@@ -12,7 +12,7 @@ There are two packaging constraints that drive the install strategy:
 
 2. **Some `floodsr` features have a real GDAL dependency**
 
-* Commands that build or manipulate VRTs, and any future direct-GDAL features, require system GDAL plus matching Python bindings. (rasterio doesnt have vrt functions)
+* Commands that build or manipulate VRTs or otherwise call direct-GDAL features require system GDAL plus matching Python bindings. (rasterio doesnt have vrt functions)
 
 
 Because of that, the package should expose one progressive capability model rather than presenting all commands as equally available in every install.
@@ -38,7 +38,7 @@ Because of that, the package should expose one progressive capability model rath
     - Is a conda-managed environment recipe rather than a PyPI extra.
     - Requires GDAL to be installed in the target conda environment before `pip install floodsr`.
     - Requires matching Python bindings in that same environment.
-    - Enables VRT-dependent commands and any future direct-GDAL features.
+    - Enables VRT-dependent commands and direct-GDAL features.
 - Do not publish a `pyproject.toml` GDAL extra because the Python GDAL binding version must track the environment-provided GDAL version.
 - Keep the tested minimum core stack in a constraints file and validate it in CI.
 - Treat the extended path as a pinned conda stack, not an open-ended dependency range.

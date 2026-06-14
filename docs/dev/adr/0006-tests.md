@@ -21,7 +21,7 @@ See `ADR-0017` for CI/CD workflow policy.
 - `tests/test_tohr_regression.py` should contain one parameterized regression test over the `case_spec.json` runs that ship truth-backed regression metrics.
 - Parameterize ToHR regression by the human-readable run labels under `expected`; each run label defines CLI-style `params` and expected `metrics`.
 - For each supported model in a regression case, include exactly one default run label named `<model_version>_default`.
-- Additional non-default runs for the same model should use a suffixed label such as `<model_version>_hard_tiles` or `<model_version>_strict_crs` so future parameterized variants remain distinct from the canonical default.
+- Additional non-default runs for the same model should use a suffixed label such as `<model_version>_hard_tiles` or `<model_version>_strict_crs` so parameterized variants remain distinct from the canonical default.
 - Model-specific regression expectations should follow the corresponding model ADR in `docs/dev/adr/models/` rather than duplicating model behavior decisions here.
 - Cases without `inputs.truth_fp` or with `flags.supports_regression_metrics = false` should be covered by a separate non-metric contract test, not by the metrics regression test.
 - Each ToHR regression case should assert output dtype, non-empty output, and expected metrics, then print a simple completion message.

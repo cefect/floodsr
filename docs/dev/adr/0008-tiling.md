@@ -45,7 +45,7 @@ We still need one shared vocabulary and helper layer for:
 - Keep one shared mosaicking-method vocabulary across phases:
   - `hard`: direct writes or last-write/no-weight stitching for non-overlap or cropped windows
   - `feather`: overlap-aware weighted blending
-- Feathering is only required for the model-execution phase. (may add more methods later). DEM fetch and preprocessing do not need feather support.
+- Feathering is only required for the model-execution phase. DEM fetch and preprocessing do not need feather support.
 - The user-facing/API-facing tiling method may be exposed by CLI and Python entrypoints, but the implementation for each phase still lives in that phase module and uses shared helpers from `tiling.py`.
 
 ### Windowed Output Packaging
@@ -62,7 +62,7 @@ Current implementation summary:
 - DEM fetch (HRDEM): `windowed` output is VRT-backed tile assembly.
 - preprocessing/materialization: contract is raster-backed prepared rasters on the canonical grid; current implementation writes concrete rasters.
 - `ResUNet_16x_DEM`: `windowed + hard` currently writes one concrete raster tile and may expose a VRT wrapper over that raster when GDAL VRT support is available. I guess its nice to fallback to single raster... makes things more complicated through. 
-- `CostGrow_Terrain`: `windowed + hard` now uses an explicit bounded-region tile-halo contract. The worker stages coarse wet/WSE support once, then runs fine-grid growth/fill/connectivity per padded tile and writes cropped core tiles into one concrete raster. `windowed + feather` remains unimplemented.
+- `CostGrow_Terrain`: `windowed + hard` now uses an explicit bounded-region tile-halo contract. The worker stages coarse wet/WSE support once, then runs fine-grid growth/fill/connectivity per padded tile and writes cropped core tiles into one concrete raster.
 
 
 ## Compatibility Matrix
@@ -71,8 +71,8 @@ Current implementation summary:
 | --- | --- | --- | --- | --- | --- |
 | DEM fetch (HRDEM) | `ADR-0010` / `dem_sources/hrdem_mosaic.py` | implemented | no | implemented | no |
 | preprocessing | `ADR-0009` / `preprocessing.py` | implemented | no | implemented | no |
-| ResUNet_16x_DEM | `ADR-M-0001` / model worker | implemented | implemented | implemented | planned |
-| CostGrow_Terrain | `ADR-M-0002` / model worker | implemented | implemented | implemented | planned |
+| ResUNet_16x_DEM | `ADR-M-0001` / model worker | implemented | implemented | implemented | no |
+| CostGrow_Terrain | `ADR-M-0002` / model worker | implemented | implemented | implemented | no |
 
 Rules:
 - This matrix is the shared capability contract for tiling and mosaicking.

@@ -51,7 +51,6 @@ This ADR owns the model-specific contract for `CostGrow_Terrain`.
   - staged intermediate state: build coarse wet/WSE support once on the low-res grid, keep the filled coarse WSE in memory, then recompute fine-grid WSE/cost/growth/connectivity separately for each padded tile
   - merge rule: `hard_crop_core`, meaning only the cropped core extent of each padded tile is written into the final raster
 - This satisfies the `ADR-0008` requirement that the expensive CostGrow growth/fill/connectivity stages run per tile or bounded region rather than as one global fine-grid solve.
-- Until `windowed + feather` is explicitly implemented and tested for this worker, support for that method should be documented as not yet complete rather than silently treated as equivalent to `hard`.
 - Because the CLI contract is depth-based, `min_depth_threshold` is applied to the low-res depth input for CostGrow before coarse WSE reconstruction, so it controls which coarse cells become wet source anchors. The low-resolution depth input should be interpreted as a real-valued depth raster, with dry cells represented by low/zero depth rather than by a separate runtime mask artifact. This is different from the ResUNet path, where `min_depth_threshold` is applied later as a post-inference mask on predicted output depth. The current CostGrow worker default is `1e-3` when the flag is omitted; the notebook has no equivalent threshold because it starts from coarse WSE rather than coarse depth.
 - Final CostGrow masking should treat the prepared DEM valid domain as the source of truth for where output may exist.
 
@@ -65,8 +64,3 @@ This ADR owns the model-specific contract for `CostGrow_Terrain`.
 - The notebook returns downscaled WSE, and the notebook plot converts that to WSH/depth afterward; the current CLI worker writes the final float32 depth raster directly, with nodata metadata and a structured runtime metadata payload.
 - CostGrow is now a built-in model version (`CostGrow_Terrain`) with no weights artifact; the CLI resolves it through the normal `--model-version` path and separately checks PCRaster availability rather than treating it like a downloadable ONNX model.
 
-
-- The notebook exposes CostGrow-specific knobs directly (`dp_coarse_pixel_max`, `decay_frac`, `distance_fill_method`, `distance_fill_kwargs`); the current CLI only exposes `--min-depth-threshold` for this worker, while the other CostGrow knobs remain internal defaults in `floodsr/models/CostGrow_Terrain.py`. see issue #46. 
-
-
- 

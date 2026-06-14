@@ -1,4 +1,4 @@
-# ADR - 0000: scope of MVP and future
+# ADR - 0000: scope of MVP
 
 features/scope of MVP:
 - CLI focused Super-Resolution for flood hazard rasters
@@ -7,10 +7,6 @@ features/scope of MVP:
 - shared runtime/provider policy lives in `0015-engine-runtime.md`
 - pip installable package with CLI entrypoint
 - let rasterio handle raster driver support. i.e., default to GeoTiff, but allow any rasterio-supported format as input/output.
-
-future features:
-- QGIS plugin GUI (separate project)
-- GPU support
 
 Out of scope:
 - runtime performance/validation against a known tile
