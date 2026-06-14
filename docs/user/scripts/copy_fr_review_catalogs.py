@@ -9,7 +9,7 @@ from sync_fr_translations import copy_review_catalogs
 
 
 def main_copy_fr_review_catalogs(docs_dir: Path) -> dict:
-    """Copy only catalogs with ``llm_draft`` entries into ``_fr_review``."""
+    """Write one ``_fr_review`` catalog with only ``llm_draft`` entries."""
     assert docs_dir.exists(), f"missing docs dir:\n    {docs_dir}"
     catalog_root = docs_dir / "locale" / "fr" / "LC_MESSAGES"
     review_dir = docs_dir / "_fr_review"
@@ -33,13 +33,16 @@ def main_copy_fr_review_catalogs(docs_dir: Path) -> dict:
                 break
 
     stats = copy_review_catalogs(catalog_root=catalog_root, review_dir=review_dir, report_row_l=report_row_l)
-    log.info(f"wrote {stats['review_catalogs']} review catalog(s) to\n    {stats['review_dir']}")
+    log.info(
+        f"wrote {stats['review_entries']} review entrie(s) from {stats['review_catalogs']} catalog(s) to\n"
+        f"    {stats['review_file']}"
+    )
     return stats
 
 
 def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
     """Parse command-line arguments for the French review catalog copy."""
-    parser = argparse.ArgumentParser(description="Write docs/user/_fr_review catalogs with only llm_draft entries.")
+    parser = argparse.ArgumentParser(description="Write docs/user/_fr_review/fr_review.po with only llm_draft entries.")
     parser.add_argument(
         "--docs-dir",
         type=Path,

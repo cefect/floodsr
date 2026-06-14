@@ -11,7 +11,8 @@ BASELINE_COMMIT = "0fe2c899498af12fd65692cb75a2d808d4bd70b5"
 BASELINE_REVIEWED_AT = "2026-03-29"
 BASELINE_REVIEWER = "Emma H"
 REVIEW_STATUSES = {"human_locked", "llm_draft", "stale"}
-METADATA_KEYS = ("review_status", "source_hash", "reviewed_at", "reviewer")
+METADATA_KEYS = ("review_status", "source_hash", "reviewed_at", "reviewer", "po_file")
+REVIEW_CATALOG_NAME = "fr_review.po"
 
 
 def main_sync_fr_translations(
@@ -35,7 +36,7 @@ def main_sync_fr_translations(
     report_dir : Path | None, default=None
         Directory for the reviewer report artifacts. Defaults to ``docs/user/_build``.
     review_dir : Path | None, default=None
-        Directory for copies of catalogs with ``llm_draft`` entries. Defaults to ``docs/user/_fr_review``.
+        Directory for the combined ``llm_draft`` review catalog. Defaults to ``docs/user/_fr_review``.
     dry_run : bool, default=False
         When ``True``, do not write catalogs or reports.
 
@@ -106,60 +107,76 @@ def main_sync_fr_translations(
 
 
 def copy_review_catalogs(catalog_root: Path, review_dir: Path, report_row_l: list[dict], dry_run: bool = False) -> dict:
-    """Write review-only catalogs with ``llm_draft`` entries into the human review folder."""
+    """Write one review-only catalog with ``llm_draft`` entries into the human review folder."""
     assert catalog_root.exists(), f"missing catalog root:\n    {catalog_root}"
     review_dir = review_dir.resolve()
     catalog_rel_l = sorted({row["catalog"] for row in report_row_l if row.get("status") == "llm_draft"})
     if dry_run:
-        return {"review_dir": str(review_dir), "review_catalogs": len(catalog_rel_l)}
+        return {
+            "review_dir": str(review_dir),
+            "review_file": str(review_dir / REVIEW_CATALOG_NAME),
+            "review_catalogs": len(catalog_rel_l),
+            "review_entries": sum(1 for row in report_row_l if row.get("status") == "llm_draft"),
+        }
 
+    # Always clear the export folder before writing the current review packet.
     if review_dir.exists():
         shutil.rmtree(review_dir)
     review_dir.mkdir(parents=True, exist_ok=True)
-    for catalog_rel in catalog_rel_l:
-        source_fp = catalog_root / catalog_rel
-        target_fp = review_dir / catalog_rel
-        assert source_fp.exists(), f"missing review catalog source:\n    {source_fp}"
-        review_catalog = _build_llm_draft_catalog(source_catalog=_read_po_catalog(po_fp=source_fp, locale="fr"))
-        assert any(message.id for message in review_catalog), f"no llm_draft entries found in:\n    {source_fp}"
-        target_fp.parent.mkdir(parents=True, exist_ok=True)
-        target_fp.write_text(_render_po_catalog_text(current_catalog=review_catalog), encoding="utf-8")
-    return {"review_dir": str(review_dir), "review_catalogs": len(catalog_rel_l)}
+    review_catalog = _build_llm_draft_catalog(catalog_root=catalog_root, catalog_rel_l=catalog_rel_l)
+    review_entry_count = sum(1 for message in review_catalog if message.id)
+    review_fp = review_dir / REVIEW_CATALOG_NAME
+    if review_entry_count:
+        review_fp.write_text(_render_po_catalog_text(current_catalog=review_catalog), encoding="utf-8")
+    return {
+        "review_dir": str(review_dir),
+        "review_file": str(review_fp),
+        "review_catalogs": len(catalog_rel_l),
+        "review_entries": review_entry_count,
+    }
 
 
-def _build_llm_draft_catalog(source_catalog: Catalog) -> Catalog:
-    """Build a catalog containing only entries still flagged for human review."""
+def _build_llm_draft_catalog(catalog_root: Path, catalog_rel_l: list[str]) -> Catalog:
+    """Build one catalog containing only entries still flagged for human review."""
+    assert catalog_root.exists(), f"missing catalog root:\n    {catalog_root}"
     review_catalog = Catalog(
-        locale=source_catalog.locale,
-        project=source_catalog.project,
-        version=source_catalog.version,
-        copyright_holder=source_catalog.copyright_holder,
-        msgid_bugs_address=source_catalog.msgid_bugs_address,
-        creation_date=source_catalog.creation_date,
-        revision_date=source_catalog.revision_date,
-        last_translator=source_catalog.last_translator,
-        language_team=source_catalog.language_team,
-        charset=source_catalog.charset,
+        locale="fr",
+        project="floodsr",
+        version="floodsr",
+        copyright_holder="ORGANIZATION",
+        language_team="fr",
+        charset="utf-8",
         fuzzy=False,
     )
-    for message in source_catalog:
-        if not message.id:
-            continue
-        metadata = _parse_review_metadata(message=message)
-        if metadata.get("review_status") != "llm_draft":
-            continue
-        review_catalog.add(
-            message.id,
-            string=message.string,
-            locations=message.locations,
-            flags=message.flags,
-            auto_comments=message.auto_comments,
-            user_comments=message.user_comments,
-            previous_id=message.previous_id,
-            lineno=message.lineno,
-            context=message.context,
-        )
+    for catalog_rel in catalog_rel_l:
+        source_fp = catalog_root / catalog_rel
+        assert source_fp.exists(), f"missing review catalog source:\n    {source_fp}"
+        source_catalog = _read_po_catalog(po_fp=source_fp, locale="fr")
+        for message in source_catalog:
+            if not message.id:
+                continue
+            metadata = _parse_review_metadata(message=message)
+            if metadata.get("review_status") != "llm_draft":
+                continue
+            review_catalog.add(
+                message.id,
+                string=message.string,
+                locations=message.locations,
+                flags=message.flags,
+                auto_comments=_with_po_file_metadata(message=message, catalog_rel=catalog_rel),
+                user_comments=message.user_comments,
+                previous_id=message.previous_id,
+                lineno=message.lineno,
+                context=catalog_rel,
+            )
     return review_catalog
+
+
+def _with_po_file_metadata(message: Message, catalog_rel: str) -> list[str]:
+    """Return auto comments with source catalog metadata for the combined review file."""
+    auto_comment_l = [comment for comment in message.auto_comments if _metadata_key(comment) != "po_file"]
+    insert_at = 2 if len(auto_comment_l) >= 2 else len(auto_comment_l)
+    return [*auto_comment_l[:insert_at], f"po_file: {catalog_rel}", *auto_comment_l[insert_at:]]
 
 
 def _run_gettext_build(docs_dir: Path, temp_dir: Path) -> Path:
@@ -361,20 +378,24 @@ def _parse_review_metadata(message: Message) -> dict:
     """Parse translator-comment review metadata from one PO message."""
     metadata = {}
     for comment in message.auto_comments:
-        if ":" not in comment:
-            continue
-        key, value = comment.split(":", 1)
-        key = key.strip()
+        key = _metadata_key(comment)
         if key in METADATA_KEYS:
-            metadata[key] = value.strip()
+            metadata[key] = comment.split(":", 1)[1].strip()
     return metadata
+
+
+def _metadata_key(comment: str) -> str | None:
+    """Return the metadata key from a translator comment when present."""
+    if ":" not in comment:
+        return None
+    return comment.split(":", 1)[0].strip()
 
 
 def _strip_metadata_comments(auto_comment_l: list[str]) -> list[str]:
     """Return auto comments with only review metadata comments removed."""
     cleaned_comment_l = []
     for comment in auto_comment_l:
-        if ":" in comment and comment.split(":", 1)[0].strip() in METADATA_KEYS:
+        if _metadata_key(comment) in METADATA_KEYS:
             continue
         cleaned_comment_l.append(comment)
     return cleaned_comment_l
@@ -507,7 +528,7 @@ def _parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
         "--review-dir",
         type=Path,
         default=Path(__file__).resolve().parents[1] / "_fr_review",
-        help="Output directory for .po catalogs that still contain llm_draft entries.",
+        help="Output directory for the combined .po review catalog with llm_draft entries.",
     )
     parser.add_argument("--dry-run", action="store_true", help="Compute updates without writing catalogs or reports.")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging.")
