@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version:  floodsr\n"
-"POT-Creation-Date: 2026-04-01 15:55-0600\n"
+"POT-Creation-Date: 2026-06-13 17:46-0600\n"
 "PO-Revision-Date: 2026-03-31 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
@@ -310,17 +310,18 @@ msgid "Extended Install"
 msgstr "Installation étendue"
 
 #. review_status: llm_draft
-#. source_hash: 446e3559
+#. source_hash: d9e3bc07
 msgid ""
 "For handling rasters too large for memory, floodsr uses GDAL backends. To enable these features, "
-"install `floodsr` into an environment with `GDAL <https://gdal.org/en/stable/>`_. If you also "
-"want to run the ``CostGrow_Terrain`` model, install `PCRaster <https://pcraster.geo.uu.nl/>`_ "
-"into that same environment."
+"install `floodsr` into an environment with `GDAL <https://gdal.org/en/stable/>`_. The downloaded "
+"``ResUNet_16x_DEM`` model works in this environment, and the built-in ``CostGrow_Terrain`` model "
+"additionally requires `PCRaster <https://pcraster.geo.uu.nl/>`_ in that same environment."
 msgstr ""
 "Pour traiter des rasters trop volumineux pour la mémoire, ``floodsr`` utilise des moteurs GDAL. "
 "Pour activer ces fonctionnalités, installez `floodsr` dans un environnement avec `GDAL "
-"<https://gdal.org/en/stable/>`_. Si vous voulez aussi exécuter le modèle ``CostGrow_Terrain``, "
-"installez `PCRaster <https://pcraster.geo.uu.nl/>`_ dans ce même environnement."
+"<https://gdal.org/en/stable/>`_. Le modèle téléchargé ``ResUNet_16x_DEM`` fonctionne dans cet "
+"environnement, et le modèle intégré ``CostGrow_Terrain`` nécessite en plus `PCRaster "
+"<https://pcraster.geo.uu.nl/>`_ dans ce même environnement."
 
 #. review_status: human_locked
 #. source_hash: 38064ff1
@@ -360,13 +361,15 @@ msgid "Then confirm the GDAL-backed environment is active:"
 msgstr "Confirmez ensuite que l'environnement avec GDAL est bien actif :"
 
 #. review_status: llm_draft
-#. source_hash: a23c5ed6
+#. source_hash: 7e1df788
 msgid ""
 "You should see something like *gdal_config_installed=True*. If PCRaster is installed, ``floodsr "
-"doctor`` should also report *pcraster_installed=True*."
+"doctor`` should also report *pcraster_installed=True*. At that point you can run either "
+"``ResUNet_16x_DEM`` or ``CostGrow_Terrain`` through ``floodsr tohr``."
 msgstr ""
 "Vous devriez voir quelque chose comme *gdal_config_installed=True*. Si PCRaster est installé, "
-"``floodsr doctor`` devrait aussi indiquer *pcraster_installed=True*."
+"``floodsr doctor`` devrait aussi indiquer *pcraster_installed=True*. À ce stade, vous pouvez "
+"exécuter ``ResUNet_16x_DEM`` ou ``CostGrow_Terrain`` avec ``floodsr tohr``."
 
 #. review_status: human_locked
 #. source_hash: 9496dc4f

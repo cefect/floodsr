@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version:  floodsr\n"
-"POT-Creation-Date: 2026-04-01 15:39-0600\n"
+"POT-Creation-Date: 2026-06-13 17:47-0600\n"
 "PO-Revision-Date: 2026-03-31 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
@@ -140,38 +140,31 @@ msgstr ""
 msgid "Model Setup"
 msgstr "Configuration du modèle"
 
-#. review_status: human_locked
-#. source_hash: ff89b87c
-#. reviewed_at: 2026-03-29
-#. reviewer: Emma H
+#. review_status: llm_draft
+#. source_hash: b8d64c69
 msgid ""
-"Before using the machine-learning backend, we need to fetch the model weights. This only needs to"
-" be done once, and the weights will be cached for future runs."
+"``floodsr`` currently exposes both a downloaded machine-learning model (``ResUNet_16x_DEM``) and "
+"a built-in rules-based model (``CostGrow_Terrain``). List the available model versions with:"
 msgstr ""
-"Avant d'utiliser le moteur d'apprentissage automatique, il faut récupérer les poids du modèle. "
-"Cette étape n'est nécessaire qu'une seule fois, puis les poids seront mis en cache pour les "
-"exécutions suivantes."
+"``floodsr`` expose actuellement à la fois un modèle d'apprentissage automatique téléchargé "
+"(``ResUNet_16x_DEM``) et un modèle intégré basé sur des règles (``CostGrow_Terrain``). Listez les"
+" versions de modèle disponibles avec :"
 
-#. review_status: human_locked
-#. source_hash: e3ac20c1
-#. reviewed_at: 2026-03-29
-#. reviewer: Emma H
-msgid "List available model versions:"
-msgstr "Lister les versions de modèle disponibles :"
+#. review_status: llm_draft
+#. source_hash: 1bffc62a
+msgid "For the machine-learning backend, fetch the weights once and reuse them from cache:"
+msgstr ""
+"Pour le moteur d'apprentissage automatique, récupérez les poids une fois et réutilisez-les depuis"
+" le cache :"
 
-#. review_status: human_locked
-#. source_hash: 452ffa45
-#. reviewed_at: 2026-03-29
-#. reviewer: Emma H
-msgid "You should see `ResUNet_16x_DEM` in the list, which is the only model currently available."
-msgstr "Vous devriez voir `ResUNet_16x_DEM` dans la liste ; c'est le seul modèle actuellement disponible."
-
-#. review_status: human_locked
-#. source_hash: 92ef5f5d
-#. reviewed_at: 2026-03-29
-#. reviewer: Emma H
-msgid "Fetch a model by version into the default cache:"
-msgstr "Récupérer un modèle par version dans le cache par défaut :"
+#. review_status: llm_draft
+#. source_hash: b61f26f9
+msgid ""
+"``CostGrow_Terrain`` does not require downloaded weights, but it does require the extended "
+"install with PCRaster. See :doc:`installation` if you want to use that model."
+msgstr ""
+"``CostGrow_Terrain`` ne nécessite pas de poids téléchargés, mais requiert l'installation étendue "
+"avec PCRaster. Consultez :doc:`installation` si vous voulez utiliser ce modèle."
 
 #. review_status: human_locked
 #. source_hash: cb257c1b
@@ -217,6 +210,13 @@ msgstr "Pour passer en haute résolution en récupérant le DEM depuis la Mosaï
 #. reviewer: Emma H
 msgid "Alternatively, specify your own local DEM file:"
 msgstr "Sinon, spécifiez votre propre fichier DEM local :"
+
+#. review_status: llm_draft
+#. source_hash: 41405602
+msgid "To run the built-in CostGrow model explicitly, use the same command with a model version:"
+msgstr ""
+"Pour exécuter explicitement le modèle CostGrow intégré, utilisez la même commande avec une "
+"version de modèle :"
 
 #. review_status: human_locked
 #. source_hash: da521662

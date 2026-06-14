@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version:  floodsr\n"
-"POT-Creation-Date: 2026-04-01 15:57-0600\n"
+"POT-Creation-Date: 2026-06-13 17:47-0600\n"
 "PO-Revision-Date: 2026-03-31 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
@@ -224,12 +224,14 @@ msgstr "Arguments positionnels"
 msgid "``version``"
 msgstr "``version``"
 
-#. review_status: human_locked
-#. source_hash: fb8d89c3
-#. reviewed_at: 2026-03-29
-#. reviewer: Emma H
-msgid "Model version key to fetch from the manifest."
-msgstr "Clé de version du modèle à récupérer dans le manifeste."
+#. review_status: llm_draft
+#. source_hash: a474efa6
+msgid ""
+"Model version key to fetch from the manifest. Built-in models such as `CostGrow_Terrain` report "
+"metadata without downloading weights."
+msgstr ""
+"Clé de version du modèle à récupérer dans le manifeste. Les modèles intégrés comme "
+"`CostGrow_Terrain` renvoient les métadonnées sans télécharger les poids."
 
 #. review_status: llm_draft
 #. source_hash: 225c49df
@@ -396,28 +398,30 @@ msgstr ""
 msgid "``--model-version MODEL_VERSION``"
 msgstr "``--model-version MODEL_VERSION``"
 
-#. review_status: human_locked
-#. source_hash: 8a7697b4
-#. reviewed_at: 2026-03-29
-#. reviewer: Emma H
-msgid "Manifest model version to run or fetch when `--model-path` is not provided."
+#. review_status: llm_draft
+#. source_hash: 8bc18688
+msgid ""
+"Model version to run when `--model-path` is not provided. Use `ResUNet_16x_DEM` for the "
+"downloaded ONNX model or `CostGrow_Terrain` for the built-in PCRaster-backed rules model."
 msgstr ""
-"Version du modèle du manifeste à exécuter ou à récupérer lorsque ``--model-path`` n'est pas "
-"fourni."
+"Version du modèle à exécuter lorsque `--model-path` n'est pas fourni. Utilisez `ResUNet_16x_DEM` "
+"pour le modèle ONNX téléchargé ou `CostGrow_Terrain` pour le modèle intégré basé sur des règles "
+"et s'appuyant sur PCRaster."
 
 #. review_status: llm_draft
 #. source_hash: 97c75a86
 msgid "``--model-path MODEL_PATH``"
 msgstr "``--model-path MODEL_PATH``"
 
-#. review_status: human_locked
-#. source_hash: 2a630664
-#. reviewed_at: 2026-03-29
-#. reviewer: Emma H
-msgid "Use an explicit local ONNX model file instead of resolving from cache/manifest."
+#. review_status: llm_draft
+#. source_hash: 59fea94d
+msgid ""
+"Use an explicit local ONNX model file instead of resolving a downloaded model from "
+"cache/manifest. Not used by built-in models such as `CostGrow_Terrain`."
 msgstr ""
-"Utilise un fichier modèle ONNX local explicite au lieu de le résoudre depuis le cache ou le "
-"manifeste."
+"Utilise un fichier modèle ONNX local explicite au lieu de résoudre un modèle téléchargé depuis le"
+" cache ou le manifeste. Cette option n'est pas utilisée par les modèles intégrés comme "
+"`CostGrow_Terrain`."
 
 #. review_status: human_locked
 #. source_hash: 5c34104c
