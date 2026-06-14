@@ -52,7 +52,7 @@ git pull --ff-only origin master
 git tag --sort=-v:refname | grep '^v' | head -n4
 
 # 3) create the annotated pre-release tag on the current master commit
-tag="v0.2.0a1"
+tag="v0.2.0a2"
 git tag -a "$tag" -m "Release $tag"
 
 # 4) push the branch first, then the tag
@@ -66,6 +66,31 @@ This triggers `.github/workflows/release.yml`, which:
 - runs unit and install-smoke validation
 - publishes the pre-release to TestPyPI only
 - creates or updates the GitHub Release as a pre-release
+
+### re-run an existing release workflow
+
+You can re-run an existing release workflow without pushing the tag again.
+This reuses the same tag, commit SHA, and workflow file from that run, so use this for transient runner/package failures.
+If you changed `.github/workflows/release.yml` after the tag was pushed, this will not pick up those edits.
+
+```bash
+# find the GitHub Actions database ID for release workflow run number 14
+run_id="$(gh run list --workflow release.yml --limit 50 --json databaseId,number \
+  --jq '.[] | select(.number == 14) | .databaseId')"
+
+# re-run only failed jobs from that release attempt
+gh run rerun "$run_id" --failed
+
+# watch the re-run
+gh run watch "$run_id"
+```
+
+To re-run all jobs from that same release attempt:
+
+```bash
+gh run rerun "$run_id"
+gh run watch "$run_id"
+```
 
 ### stable release to PyPI
 Use a stable tag only after the release commit is already pushed to `origin/master`.
