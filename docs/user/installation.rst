@@ -1,3 +1,5 @@
+.. _installation:
+
 Installation
 ============
 
@@ -147,6 +149,8 @@ Extended Install
 ----------------
 For handling rasters too large for memory, floodsr uses GDAL backends.
 To enable these features, install `floodsr` into an environment with `GDAL <https://gdal.org/en/stable/>`_.
+The downloaded ``ResUNet_16x_DEM`` model works in this environment, and the built-in
+``CostGrow_Terrain`` model additionally requires `PCRaster <https://pcraster.geo.uu.nl/>`_ in that same environment.
 
 
 .. _extended_install_cli:
@@ -163,6 +167,12 @@ Once you have conda installed, use it to create a dedicated environment with GDA
    conda activate floodsr-gdal
    python -m pip install floodsr
 
+If you want the ``CostGrow_Terrain`` model, install PCRaster into that same environment:
+
+.. code-block:: bash
+
+   conda install -n floodsr-gdal -c conda-forge pcraster -y
+
 Then confirm the GDAL-backed environment is active:
 
 .. code-block:: bash
@@ -170,7 +180,9 @@ Then confirm the GDAL-backed environment is active:
    floodsr doctor
 
 
-You should see something like *gdal_config_installed=True*. 
+You should see something like *gdal_config_installed=True*.
+If PCRaster is installed, ``floodsr doctor`` should also report *pcraster_installed=True*.
+At that point you can run either ``ResUNet_16x_DEM`` or ``CostGrow_Terrain`` through ``floodsr tohr``.
 
 .. _extended_install_notebook:
 
@@ -180,7 +192,8 @@ Follow the same :ref:`extended_install_cli` instructions to set up your GDAL-bac
 
 .. code-block:: bash
 
-   python -m pip install jupyterlab ipykernel
+   conda activate floodsr-gdal # make sure you're in the GDAL-backed environment created above
+   python -m pip install jupyterlab ipykernel matplotlib 
    python -m ipykernel install --user --name floodsr-gdal --display-name "Python (floodsr-gdal)"
 
 Then launch Jupyter from that environment and select the "Python (floodsr-gdal)" kernel:
@@ -214,4 +227,47 @@ For the foolhardy, the below seems to be working as of March 2026, but this will
    # install floodsr
    !pip install -q floodsr
 
+
+Uninstall
+---------
+Use the uninstall command that matches both your install mode and execution context.
+
+Basic uninstall
+^^^^^^^^^^^^^^^
+
+- **Command line (CLI)** with ``pipx``:
+
+.. code-block:: bash
+
+   pipx uninstall floodsr
+
+- **Local notebook (Jupyter)** with ``pip`` in the kernel environment:
+
+.. code-block:: bash
+
+   python -m pip uninstall floodsr
+   jupyter kernelspec uninstall floodsr
+
+- **Hosted notebook (Colab)** with ``pip`` in the runtime:
+
+.. code-block:: bash
+
+   !python -m pip uninstall -y floodsr
+
+Extended uninstall
+^^^^^^^^^^^^^^^^^^
+
+- **Command line (CLI)** or **local notebook (Jupyter)** in the ``floodsr-gdal`` conda environment:
+
+.. code-block:: bash
+
+   conda deactivate
+   conda env remove -n floodsr-gdal
+
+- **Hosted notebook (Colab)** experimental GDAL setup:
+
+.. code-block:: bash
+
+   # easiest cleanup is to restart the runtime
+   # Runtime > Restart session
  

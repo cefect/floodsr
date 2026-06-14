@@ -1,128 +1,285 @@
+
 msgid ""
 msgstr ""
-"Project-Id-Version: floodsr\n"
-"POT-Creation-Date: 2026-03-19 00:00+0000\n"
+"Project-Id-Version:  floodsr\n"
+"POT-Creation-Date: 2026-06-14 11:55-0600\n"
 "PO-Revision-Date: 2026-03-19 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 
+#. review_status: human_locked
+#. source_hash: d131ef7f
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "User Guide"
 msgstr "Guide d'utilisation"
 
+#. review_status: human_locked
+#. source_hash: b605350b
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Introduction"
 msgstr "Introduction"
 
-msgid "``floodsr`` is a flood-depth **resolution enhancement** tool. Or a super-resolution (SR) tool in machine-speak. It takes a low-resolution depth raster as input and reconstructs higher-resolution output, using terrain (DEM) context."
-msgstr "``floodsr`` est un outil qui **améliore la résolution** des rasters de profondeur d'inondation. Autrement dit, un outil de super-résolution (SR), dans le langage des modèles. Il prend en entrée un raster de profondeur à basse résolution et reconstruit une sortie à plus haute résolution en utilisant le contexte du terrain (DEM)."
+#. review_status: human_locked
+#. source_hash: 2e3d89ad
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"``floodsr`` is a flood-depth **resolution enhancement** tool. Or a super-resolution (SR) tool in "
+"machine-speak. It takes a low-resolution depth raster as input and reconstructs higher-resolution"
+" output, using terrain (DEM) context."
+msgstr ""
+"``floodsr`` est un outil qui **améliore la résolution** des rasters de profondeur d'inondation. "
+"Autrement dit, un outil de super-résolution (SR), dans le langage des modèles. Il prend en entrée"
+" un raster de profondeur à basse résolution et reconstruit une sortie à plus haute résolution en "
+"utilisant le contexte du terrain (DEM)."
 
-msgid "``floodsr`` is a flood-depth **resolution enhancement** tool."
-msgstr "``floodsr`` est un outil qui **améliore la résolution** des rasters de profondeur d'inondation."
-
-msgid "Or a super-resolution (SR) tool in machine-speak."
-msgstr "Autrement dit, un outil de super-résolution (SR), dans le langage des modèles."
-
-msgid "It takes a low-resolution depth raster as input and reconstructs higher-resolution output, using terrain (DEM) context."
-msgstr "Il prend en entrée un raster de profondeur à basse résolution et reconstruit une sortie à plus haute résolution en utilisant le contexte du terrain (DEM)."
-
+#. review_status: human_locked
+#. source_hash: 0431c09c
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Basically, moving from the blocky grid on the left to the smooth grid on the right:"
 msgstr "En gros, il s'agit de passer de la grille pixellisée de gauche à la grille plus lisse de droite :"
 
+#. review_status: human_locked
+#. source_hash: 4e81a650
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Super-resolution example"
 msgstr "Exemple de super-résolution"
 
+#. review_status: human_locked
+#. source_hash: cff4746b
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Digital Elevation Models (DEMs)"
 msgstr "Modèles numériques d'élévation (DEM)"
 
-msgid "Unlike some other super-resolution tools, ``floodsr`` leverages terrain information to provide more physically based flood reconstructions. This information is supplied as a high-resolution DEM. ``floodsr tohr`` will propagate water across whatever DEM grid is provided, so a user must take care to ensure the DEM reflects the intended propagation surface. For example, removing buildings or burning flow paths through roads."
-msgstr "Contrairement à d'autres outils de super-résolution, ``floodsr`` exploite des données topographiques pour produire des reconstitutions de crues physiquement plus cohérentes. Cette information est fournie sous la forme d'un DEM à haute résolution. ``floodsr tohr`` propage l'eau sur la grille du DEM fournie ; il faut donc veiller à ce que le DEM représente bien la surface de propagation visée. Par exemple, en filtrant les bâtiments ou en ouvrant des brèches d'écoulement à travers les routes."
+#. review_status: human_locked
+#. source_hash: e576a965
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"Unlike some other super-resolution tools, ``floodsr`` leverages terrain information to provide "
+"more physically based flood reconstructions. This information is supplied as a high-resolution "
+"DEM. ``floodsr tohr`` will propagate water across whatever DEM grid is provided, so a user must "
+"take care to ensure the DEM reflects the intended propagation surface. For example, removing "
+"buildings or burning flow paths through roads."
+msgstr ""
+"Contrairement à d'autres outils de super-résolution, ``floodsr`` exploite des données "
+"topographiques pour produire des reconstitutions de crues physiquement plus cohérentes. Cette "
+"information est fournie sous la forme d'un DEM à haute résolution. ``floodsr tohr`` propage l'eau"
+" sur la grille du DEM fournie ; il faut donc veiller à ce que le DEM représente bien la surface "
+"de propagation visée. Par exemple, en filtrant les bâtiments ou en ouvrant des brèches "
+"d'écoulement à travers les routes."
 
-msgid "Unlike some other super-resolution tools, ``floodsr`` leverages terrain information to provide more physically based flood reconstructions."
-msgstr "Contrairement à d'autres outils de super-résolution, ``floodsr`` exploite des données topographiques pour produire des reconstitutions de crues physiquement plus cohérentes."
-
-msgid "This information is supplied as a high-resolution DEM."
-msgstr "Cette information est fournie sous la forme d'un DEM à haute résolution."
-
-msgid "``floodsr tohr`` will propagate water across whatever DEM grid is provided, so a user must take care to ensure the DEM reflects the intended propagation surface."
-msgstr "``floodsr tohr`` propage l'eau sur la grille du DEM fournie ; il faut donc veiller à ce que le DEM représente bien la surface de propagation visée."
-
-msgid "For example, removing buildings or burning flow paths through roads."
-msgstr "Par exemple, en filtrant les bâtiments ou en ouvrant des brèches d'écoulement à travers les routes."
-
+#. review_status: human_locked
+#. source_hash: d15925a8
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Difference between a digital surface model and a digital terrain model"
 msgstr "Différence entre un modèle numérique de surface et un modèle numérique de terrain"
 
+#. review_status: human_locked
+#. source_hash: 0cdba519
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Image: Arbec, CC BY 4.0, via Wikimedia Commons."
 msgstr "Image : Arbec, CC BY 4.0, via Wikimedia Commons."
 
+#. review_status: human_locked
+#. source_hash: 4153c0b2
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "The hi-res DEM input can be specified with the ``--dem`` flag."
 msgstr "Le DEM haute résolution peut être fourni avec l'option ``--dem``."
 
+#. review_status: human_locked
+#. source_hash: 6e0be763
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "HRDEM Mosaic"
 msgstr "Mosaïque HRDEM"
 
-msgid "For Canadian work, Natural Resources Canada develops and hosts the `High Resolution Digital Elevation Model Mosaic <https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b>`_, which provides a unique and continuous representation of the high resolution elevation data available across Canada. In Southern Canada, this is built mainly from fixed wing LiDAR, providing an awesome resource for fetchable terrain data via their Web Coverage Services (WCS). Coverage circa Feb 2026 is shown below:"
-msgstr "Pour les travaux au Canada, Ressources naturelles Canada développe et héberge le `Modèle numérique d'élévation de haute résolution <https://ouvert.canada.ca/data/fr/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b>`_, qui fournit une représentation unique et continue des données d’élévation haute résolution disponibles au pays. Dans le sud du Canada, cet ensemble est principalement dérivé de données LiDAR aéroporté, ce qui en fait une excellente ressource de données de terrain accessibles via leurs services WCS. La couverture vers février 2026 est montrée ci-dessous :"
+#. review_status: human_locked
+#. source_hash: 496c7474
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"For Canadian work, Natural Resources Canada develops and hosts the `High Resolution Digital "
+"Elevation Model Mosaic <https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-"
+"9d9245fba06b>`_, which provides a unique and continuous representation of the high resolution "
+"elevation data available across Canada. In Southern Canada, this is built mainly from fixed wing "
+"LiDAR, providing an awesome resource for fetchable terrain data via their Web Coverage Services "
+"(WCS). Coverage circa Feb 2026 is shown below:"
+msgstr ""
+"Pour les travaux au Canada, Ressources naturelles Canada développe et héberge le `Modèle "
+"numérique d'élévation de haute résolution <https://ouvert.canada.ca/data/fr/dataset/0fe65119"
+"-e96e-4a57-8bfe-9d9245fba06b>`_, qui fournit une représentation unique et continue des données "
+"d’élévation haute résolution disponibles au pays. Dans le sud du Canada, cet ensemble est "
+"principalement dérivé de données LiDAR aéroporté, ce qui en fait une excellente ressource de "
+"données de terrain accessibles via leurs services WCS. La couverture vers février 2026 est "
+"montrée ci-dessous :"
 
-msgid "For Canadian work, Natural Resources Canada develops and hosts the `High Resolution Digital Elevation Model Mosaic <https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b>`_, which provides a unique and continuous representation of the high resolution elevation data available across Canada."
-msgstr "Pour les travaux au Canada, Ressources naturelles Canada développe et héberge le `Modèle numérique d'élévation de haute résolution <https://ouvert.canada.ca/data/fr/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b>`_, qui fournit une représentation unique et continue des données d’élévation haute résolution disponibles au pays."
+#. review_status: human_locked
+#. source_hash: 779903cd
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"To automate the use of HRDEM data for resolution enhancement of flood grids in Canada, ``floodsr "
+"tohr`` can directly fetch HRDEM tiles with the ``--fetch-hrdem`` flag."
+msgstr ""
+"Pour automatiser l'utilisation des données HRDEM pour le rehaussement de la résolution des trames"
+" d’inondation au Canada, ``floodsr tohr`` peut récupérer directement les tuiles HRDEM avec "
+"l'option ``--fetch-hrdem``."
 
-msgid "In Southern Canada, this is built mainly from fixed wing LiDAR, providing an awesome resource for fetchable terrain data via their Web Coverage Services (WCS)."
-msgstr "Dans le sud du Canada, cet ensemble est principalement dérivé de données LiDAR aéroporté, ce qui en fait une excellente ressource de données de terrain accessibles via leurs services WCS."
-
-msgid "Coverage circa Feb 2026 is shown below:"
-msgstr "La couverture vers février 2026 est montrée ci-dessous :"
-
-msgid "To automate the use of HRDEM data for resolution enhancement of flood grids in Canada, ``floodsr tohr`` can directly fetch HRDEM tiles with the ``--fetch-hrdem`` flag."
-msgstr "Pour automatiser l'utilisation des données HRDEM pour le rehaussement de la résolution des trames d’inondation au Canada, ``floodsr tohr`` peut récupérer directement les tuiles HRDEM avec l'option ``--fetch-hrdem``."
-
+#. review_status: human_locked
+#. source_hash: d17d2d78
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Models"
 msgstr "Modèles"
 
-msgid "To support a wide range of use cases and adaptability, ``floodsr`` employs *models* to perform resolution enhancement. To see the supported models, use the ``floodsr models list`` command."
-msgstr "Pour couvrir un large éventail de cas d'usage et rester adaptable, ``floodsr`` s'appuie sur des *modèles* pour réaliser le rehaussement de la résolution. Pour voir les modèles pris en charge, utilisez la commande ``floodsr models list``."
+#. review_status: human_locked
+#. source_hash: 0916d813
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"To support a wide range of use cases and adaptability, ``floodsr`` employs *models* to perform "
+"resolution enhancement. To see the supported models, use the ``floodsr models list`` command."
+msgstr ""
+"Pour couvrir un large éventail de cas d'usage et rester adaptable, ``floodsr`` s'appuie sur des "
+"*modèles* pour réaliser le rehaussement de la résolution. Pour voir les modèles pris en charge, "
+"utilisez la commande ``floodsr models list``."
 
-msgid "To support a wide range of use cases and adaptability, ``floodsr`` employs *models* to perform resolution enhancement."
-msgstr "Pour couvrir un large éventail de cas d'usage et rester adaptable, ``floodsr`` s'appuie sur des *modèles* pour réaliser le rehaussement de la résolution."
+#. review_status: human_locked
+#. source_hash: 76f6be9e
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "ResUNet_16x_DEM"
+msgstr "ResUNet_16x_DEM"
 
-msgid "To see the supported models, use the ``floodsr models list`` command."
-msgstr "Pour voir les modèles pris en charge, utilisez la commande ``floodsr models list``."
+#. review_status: human_locked
+#. source_hash: 05d8da53
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"This is the original machine-learning-based model implemented in `floodsr`. It uses a DEM-aware "
+"ResUNet that fuses low-resolution depth with high-resolution terrain context, reconstructs "
+"features on the low-resolution grid, and upsamples them by 16x to predict high-resolution depth."
+msgstr ""
+"C'est le modèle d'origine, basé sur l'apprentissage automatique, implémenté dans `floodsr`. Il "
+"utilise une architecture ResUNet sensible au DEM qui fusionne les données de profondeur à faible "
+"résolution avec le contexte topographique à haute résolution, reconstitue les structures sur la "
+"trame à basse résolution, puis effectue un suréchantillonnage par un facteur de 16 pour prédire "
+"la profondeur à haute résolution."
 
-msgid "This is the original machine-learning-based model implemented in `floodsr`."
-msgstr "C'est le modèle d'origine, basé sur l'apprentissage automatique, implémenté dans `floodsr`."
+#. review_status: human_locked
+#. source_hash: 95ce862a
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid "**Training**"
+msgstr "**Entraînement**"
 
-msgid "This is the original machine-learning-based model implemented in `floodsr`. It uses a DEM-aware ResUNet that fuses low-resolution depth with high-resolution terrain context, reconstructs features on the low-resolution grid, and upsamples them by 16x to predict high-resolution depth."
-msgstr "C'est le modèle d'origine, basé sur l'apprentissage automatique, implémenté dans `floodsr`. Il utilise une architecture ResUNet sensible au DEM qui fusionne les données de profondeur à faible résolution avec le contexte topographique à haute résolution, reconstitue les structures sur la trame à basse résolution, puis effectue un suréchantillonnage par un facteur de 16 pour prédire la profondeur à haute résolution."
-
-msgid "It uses a DEM-aware ResUNet that fuses low-resolution depth with high-resolution terrain context, reconstructs features on the low-resolution grid, and upsamples them by 16x to predict high-resolution depth."
-msgstr "Il utilise une architecture ResUNet sensible au DEM qui fusionne les données de profondeur à faible résolution avec le contexte topographique à haute résolution, reconstitue les structures sur la trame à basse résolution, puis effectue un suréchantillonnage par un facteur de 16 pour prédire la profondeur à haute résolution."
-
-msgid "Training"
-msgstr "Entraînement"
-
+#. review_status: human_locked
+#. source_hash: 7b8a8885
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Used Rim2D to simulate a large set of inundation tiles for training and HRDEM."
-msgstr "Utilise Rim2D pour simuler un grand ensemble de tuiles d'inondation pour l'entraînement et le HRDEM."
+msgstr ""
+"Utilise Rim2D pour simuler un grand ensemble de tuiles d'inondation pour l'entraînement et le "
+"HRDEM."
 
+#. review_status: human_locked
+#. source_hash: e8cf6400
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Depth and DEM inputs were normalized for stable learning."
 msgstr "Les entrées de profondeur et de DEM ont été normalisées pour stabiliser l'apprentissage."
 
+#. review_status: human_locked
+#. source_hash: 0e288284
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Optimization used Adam with gradient clipping and a scheduled learning rate."
 msgstr "L'optimisation utilise Adam avec un écrêtage du gradient et un taux d'apprentissage planifié."
 
-msgid "Inference"
-msgstr "Inférence"
+#. review_status: human_locked
+#. source_hash: fa5b7e0b
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid "**Inference**"
+msgstr "**Inférence**"
 
+#. review_status: human_locked
+#. source_hash: 8dac2559
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Inference validates the inputs and applies model-specific preprocessing."
 msgstr "L'inférence valide les entrées et applique un prétraitement propre au modèle."
 
+#. review_status: human_locked
+#. source_hash: 0f6bbf62
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "The model runs tile by tile, then blends overlapping predictions into a continuous surface."
-msgstr "Le modèle s'exécute tuile par tuile, puis fusionne les prédictions chevauchantes en une surface continue."
+msgstr ""
+"Le modèle s'exécute tuile par tuile, puis fusionne les prédictions chevauchantes en une surface "
+"continue."
 
+#. review_status: human_locked
+#. source_hash: 4c94cb07
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "The final output is converted back to depth units on the target grid."
 msgstr "Les résultats finaux sont convertis en unités de profondeur sur la trame cible."
 
-msgid "Rules-based. Not implemented yet."
-msgstr "Basé sur des règles. Pas encore implémenté."
+#. review_status: human_locked
+#. source_hash: ebc72588
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "CostGrow"
+msgstr "CostGrow"
+
+#. review_status: llm_draft
+#. source_hash: 5eab5076
+msgid ""
+"``CostGrow_Terrain`` is a built-in rules-based model for propagating low-resolution flood depth "
+"across a high-resolution DEM. Instead of using learned weights, it uses terrain-penalty growth "
+"logic to reconstruct a higher-resolution flood surface from the prepared low-resolution depth "
+"raster and the supplied DEM."
+msgstr ""
+"``CostGrow_Terrain`` est un modèle intégré basé sur des règles pour propager une profondeur "
+"d'inondation basse résolution sur un DEM haute résolution. Au lieu d'utiliser des poids issus de "
+"l'apprentissage, il utilise une logique de croissance pénalisée par le terrain pour reconstruire "
+"une surface d'inondation à plus haute résolution à partir du raster de profondeur basse "
+"résolution préparé et du DEM fourni."
+
+#. review_status: llm_draft
+#. source_hash: 5cd24758
+msgid ""
+"This model is a good fit when you want a deterministic terrain-driven result or if you don't want"
+" to download any model weights. Compared with ``ResUNet_16x_DEM``, CostGrow is more explicitly "
+"tied to the DEM-driven propagation rules, while ResUNet uses a learned DEM-aware reconstruction "
+"model."
+msgstr ""
+"Ce modèle convient bien lorsque vous voulez un résultat déterministe piloté par le terrain ou si "
+"vous ne voulez pas télécharger de poids de modèle. Par rapport à ``ResUNet_16x_DEM``, CostGrow "
+"est plus explicitement lié aux règles de propagation pilotées par le DEM, tandis que ResUNet "
+"utilise un modèle de reconstruction appris qui tient compte du DEM."
+
+#. review_status: llm_draft
+#. source_hash: f5216414
+msgid ""
+"``CostGrow_Terrain`` requires `PCRaster <https://pcraster.geo.uu.nl/>`_, per the extended "
+"installation workflow described in :doc:`installation`. If you use this model in your work, "
+"please cite `Bryant et al. (2024) <https://doi.org/10.5194/hess-28-575-2024>`_."
+msgstr ""
+"``CostGrow_Terrain`` nécessite `PCRaster <https://pcraster.geo.uu.nl/>`_, conformément au flux "
+"d'installation étendue décrit dans :doc:`installation`. Si vous utilisez ce modèle dans vos "
+"travaux, veuillez citer `Bryant et al. (2024) <https://doi.org/10.5194/hess-28-575-2024>`_."

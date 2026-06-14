@@ -56,15 +56,13 @@ ResUNet_16x_DEM
 This is the original machine-learning-based model implemented in `floodsr`.
 It uses a DEM-aware ResUNet that fuses low-resolution depth with high-resolution terrain context, reconstructs features on the low-resolution grid, and upsamples them by 16x to predict high-resolution depth.
 
-Training
-~~~~~~~~
+**Training**
 
 - Used Rim2D to simulate a large set of inundation tiles for training and HRDEM.
 - Depth and DEM inputs were normalized for stable learning.
 - Optimization used Adam with gradient clipping and a scheduled learning rate.
 
-Inference
-~~~~~~~~~
+**Inference**
 
 - Inference validates the inputs and applies model-specific preprocessing.
 - The model runs tile by tile, then blends overlapping predictions into a continuous surface.
@@ -74,4 +72,11 @@ Inference
 CostGrow
 ~~~~~~~~~~~~~~~
 
-Rules-based. Not implemented yet.
+``CostGrow_Terrain`` is a built-in rules-based model for propagating low-resolution flood depth across a high-resolution DEM.
+Instead of using learned weights, it uses terrain-penalty growth logic to reconstruct a higher-resolution flood surface from the prepared low-resolution depth raster and the supplied DEM.
+
+This model is a good fit when you want a deterministic terrain-driven result or if you don't want to download any model weights.
+Compared with ``ResUNet_16x_DEM``, CostGrow is more explicitly tied to the DEM-driven propagation rules, while ResUNet uses a learned DEM-aware reconstruction model.
+
+``CostGrow_Terrain`` requires `PCRaster <https://pcraster.geo.uu.nl/>`_, per the extended installation workflow described in :doc:`installation`.
+If you use this model in your work, please cite `Bryant et al. (2024) <https://doi.org/10.5194/hess-28-575-2024>`_.

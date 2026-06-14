@@ -12,7 +12,8 @@ Run FloodSR model, cache, and runtime utility commands.
 
 ::
 
-   usage: floodsr [-h] [--version] [-v] [-q] [--log-level {DEBUG,INFO,WARNING,ERROR}]
+   usage: floodsr [-h] [--version] [-v] [-q]
+                  [--log-level {DEBUG,INFO,WARNING,ERROR}]
                   {models,tohr,doctor} ...
 
 .. rubric:: Commands
@@ -95,14 +96,15 @@ Fetch one manifest model into the local cache.
 
 ::
 
-   usage: floodsr models fetch [-h] [--manifest MANIFEST] [--cache-dir CACHE_DIR] [--backend {http,file}]
-                               [--force] [--show-progress | --no-progress]
+   usage: floodsr models fetch [-h] [--manifest MANIFEST] [--cache-dir CACHE_DIR]
+                               [--backend {http,file}] [--force]
+                               [--show-progress | --no-progress]
                                version
 
 .. rubric:: Positional Arguments
 
 ``version``
-   Model version key to fetch from the manifest.
+   Model version key to fetch from the manifest. Built-in models such as `CostGrow_Terrain` report metadata without downloading weights.
 
 .. rubric:: Options
 
@@ -136,13 +138,18 @@ Run one super-resolution pass for a low-res depth raster.
 
 ::
 
-   usage: floodsr tohr [-h] [--machine-json MACHINE_JSON] --in IN_FP (--dem DEM | -f) [--fetch-out FETCH_OUT]
-                       [--fetch-force-tiling] [--out OUT] [--model-version MODEL_VERSION]
-                       [--model-path MODEL_PATH] [--manifest MANIFEST] [--cache-dir CACHE_DIR]
-                       [--backend {http,file}] [--force] [--max-depth MAX_DEPTH]
-                       [--min-depth-threshold MIN_DEPTH_THRESHOLD] [--dem-pct-clip DEM_PCT_CLIP]
-                       [--window-method {hard,feather}] [--tile-overlap TILE_OVERLAP] [--tile-size TILE_SIZE]
-                       [--crs-policy {strict,use-dem,use-lores}] [--show-progress | --no-progress]
+   usage: floodsr tohr [-h] [--machine-json MACHINE_JSON] --in IN_FP (--dem DEM |
+                       -f) [--fetch-out FETCH_OUT] [--fetch-force-tiling]
+                       [--out OUT] [--model-version MODEL_VERSION]
+                       [--model-path MODEL_PATH] [--manifest MANIFEST]
+                       [--cache-dir CACHE_DIR] [--backend {http,file}] [--force]
+                       [--max-depth MAX_DEPTH]
+                       [--min-depth-threshold MIN_DEPTH_THRESHOLD]
+                       [--dem-pct-clip DEM_PCT_CLIP]
+                       [--window-method {hard,feather}]
+                       [--tile-overlap TILE_OVERLAP] [--tile-size TILE_SIZE]
+                       [--crs-policy {strict,use-dem,use-lores}]
+                       [--show-progress | --no-progress]
 
 .. rubric:: Options
 
@@ -171,10 +178,10 @@ Run one super-resolution pass for a low-res depth raster.
    Output raster path. Defaults to `./<input_stem>_sr<input_suffix>` in the current working directory.
 
 ``--model-version MODEL_VERSION``
-   Manifest model version to run or fetch when `--model-path` is not provided.
+   Model version to run when `--model-path` is not provided. Use `ResUNet_16x_DEM` for the downloaded ONNX model or `CostGrow_Terrain` for the built-in PCRaster-backed rules model.
 
 ``--model-path MODEL_PATH``
-   Use an explicit local ONNX model file instead of resolving from cache/manifest.
+   Use an explicit local ONNX model file instead of resolving a downloaded model from cache/manifest. Not used by built-in models such as `CostGrow_Terrain`.
 
 ``--manifest MANIFEST``
    Read model metadata from an alternate `models.json` manifest.

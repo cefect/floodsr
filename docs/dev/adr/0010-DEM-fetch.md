@@ -25,16 +25,16 @@ DEFAULT_ASSET = "dtm"
   - if `--fetch-out` is omitted, the implementation may still choose the default suffix based on fetch mode (`.tif` for rapid/non-windowed, `.vrt` for tiled/windowed).
 
 ### implementation strategy (agnostic internals, explicit CLI)
-- keep CLI explicit and hard-coded to HRDEM for now (`--fetch-hrdem`). maybe we add alternate sources later. 
+- keep CLI explicit and hard-coded to HRDEM (`--fetch-hrdem`).
 - implement HRDEM as one backend under a backend-agnostic namespace:
   - `floodsr/dem_sources/base.py`
   - `floodsr/dem_sources/hrdem_mosaic.py`
-  - `floodsr/dem_sources/catalog.py` (optional registry for future backends)
-- this allows future  alternate backends without restructuring CLI flow.
+  - `floodsr/dem_sources/catalog.py`
 
 ### entry point parameter placement
 - store HRDEM STAC defaults in `floodsr/dem_sources/hrdem_mosaic.py` as module-scoped constants.
 - keep these transparent by logging resolved source config at fetch start 
+- DEM fetch owns its own large-raster tiling implementation, but it should build that implementation from shared helpers in `floodsr/tiling.py` per `ADR-0008`.
  
 ### strategy/constraints for HRDEM Mosaic
 - minimize server-side processing:
@@ -53,10 +53,10 @@ DEFAULT_ASSET = "dtm"
 ### proposed implementation
 - retrieve bbox (4326) and footprint polygon (3979) from lores tile exents. 
 - query STAC with bbox (4326) to identify assets. if no intersection found, throw an error.
-- estimate memory of fetch and split workflow into `tiled` and `rapid` paths based on a threshold:
-- `rapid`:
+- estimate memory of fetch and split workflow into shared execution styles based on a threshold:
+- `simple`:
     - fetch from hrdem mosaic in one go (no tiling) and merge in-memory. (current implementation)
-- `tiled`:
+- `windowed`:
   - download HRDEM Project Extent features intersecting fetch footprint polygon (3979). throw error if no features returned.
   - build a tiling scheme in fetch-native/source CRS using source-space pixel windows (not lores pixel windows). if source resolution metadata is unavailable, assume 1m.
   - fetch tiles should align to source pixels/resolution. they do not need to align to lores pixel edges.
@@ -86,10 +86,15 @@ BIGTIFF=IF_SAFER
 ```
  
 ### decision update (memory handling)
-- adopt windowed/on-disk DEM fetch processing as the next implementation step (avoid full in-memory merge for large extents).
+- use windowed/on-disk DEM fetch processing to avoid full in-memory merge for large extents.
 - keep HRDEM fetch at native source resolution in this phase (no fetch-resolution parameter).
 - build and use a VRT to stitch fetched chunks/tiles into one virtual mosaic.
 - add early diagnostics/guards for oversized fetches so failures are explicit (not silent OOM kills).
+- DEM fetch must implement the shared mosaicking vocabulary from `ADR-0008`:
+  - `hard` (no `feather` for DEM fetching)
+- For HRDEM, the current baseline is:
+  - `simple + hard`
+  - `windowed + hard`
 
 ### decision update (explicit output path contract)
 - explicit user output paths are authoritative and must not be silently rewritten. this is a general CLI/API rule; see `0001-architecture-and-cli.md`.

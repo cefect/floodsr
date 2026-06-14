@@ -1,149 +1,533 @@
+
 msgid ""
 msgstr ""
-"Project-Id-Version: floodsr\n"
+"Project-Id-Version:  floodsr\n"
+"POT-Creation-Date: 2026-06-14 15:27-0600\n"
 "PO-Revision-Date: 2026-03-20 00:00+0000\n"
 "Language: fr\n"
 "Language-Team: fr\n"
-"Last-Translator: Codex\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 
-msgid "Tutorial 2: Plotting and CLI options"
-msgstr "Tutoriel 2 : visualisation et options de la CLI"
+#. review_status: llm_draft
+#. source_hash: e6d3d238
+msgid "Tutorial 2: Plotting and Advanced Options"
+msgstr "Tutoriel 2 : visualisation et options avancées"
 
-msgid "This tutorial expands on {doc}`Tutorial 1 <tutorial_1>` with visualization and demonstrating the behavior of some key CLI options."
-msgstr "Ce tutoriel prolonge {doc}`le tutoriel 1 <tutorial_1>` avec un peu de visualisation et une démonstration du comportement de quelques options importantes de la CLI."
+#. review_status: human_locked
+#. source_hash: cca3c72d
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+#, python-brace-format
+msgid ""
+"This tutorial expands on {doc}`Tutorial 1 <tutorial_1>` with visualization and demonstrating the "
+"behavior of some key CLI options."
+msgstr ""
+"Ce tutoriel prolonge {doc}`le tutoriel 1 <tutorial_1>` avec un peu de visualisation et une "
+"démonstration du comportement de quelques options importantes de la CLI."
 
-msgid "This tutorial assumes you have `floodsr` installed per {doc}`Tutorial 1 <tutorial_1>`."
-msgstr "Ce tutoriel suppose que `floodsr` est déjà installé comme indiqué dans {doc}`le tutoriel 1 <tutorial_1>`."
+#. review_status: llm_draft
+#. source_hash: 5bf9e4f9
+#, python-brace-format
+msgid ""
+"This tutorial assumes you have `floodsr` installed per {doc}`Tutorial 1 <tutorial_1>` and are "
+"comfortable with simple python notebooks.  If you've never used a Jupyter notebook before, we "
+"recommend checking out the [Intro Notebooks from Project Jupyter](https://jupyter.org/try-"
+"jupyter/notebooks/?path=notebooks/Intro.ipynb) to get familiar with the interface and basic "
+"features."
+msgstr ""
+"Ce tutoriel suppose que vous avez installé `floodsr` comme indiqué dans {doc}`Tutorial 1 "
+"<tutorial_1>` et que vous êtes à l'aise avec les notebooks Python simples. Si vous n'avez jamais "
+"utilisé de notebook Jupyter, nous vous recommandons de consulter les [notebooks d'introduction du"
+" projet Jupyter](https://jupyter.org/try-jupyter/notebooks/?path=notebooks/Intro.ipynb) pour vous"
+" familiariser avec l'interface et les fonctionnalités de base."
 
+#. review_status: human_locked
+#. source_hash: 138cfb86
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "There are three common ways to run this tutorial (i.e., *execution contexts*):"
-msgstr "Il existe trois façons courantes d'exécuter ce tutoriel (autrement dit, trois *contextes d'exécution*) :"
+msgstr ""
+"Il existe trois façons courantes d'exécuter ce tutoriel (autrement dit, trois *contextes "
+"d'exécution*) :"
 
-msgid "**command line (CLI)**: proceed by copy/pasting the below commands from your web-browser into your terminal. NOTE for most terminals you'll need to remove the prefix `!` from each command."
-msgstr "**ligne de commande (CLI)** : copiez-collez les commandes ci-dessous depuis votre navigateur vers votre terminal. NOTE : dans la plupart des terminaux, il faudra retirer le préfixe `!` de chaque commande."
+#. review_status: human_locked
+#. source_hash: 5f3c7275
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"**command line (CLI)**: proceed by copy/pasting the below commands from your web-browser into "
+"your terminal. NOTE for most terminals you'll need to remove the prefix `!` from each command."
+msgstr ""
+"**ligne de commande (CLI)** : copiez-collez les commandes ci-dessous depuis votre navigateur vers"
+" votre terminal. NOTE : dans la plupart des terminaux, il faudra retirer le préfixe `!` de chaque"
+" commande."
 
-msgid "**local notebook (Jupyter)**: Use the <i class=\"fas fa-download\"></i> button to save this notebook as an `.ipynb` file to your local machine (may need to click *save as*) and open it with your local Jupyter kernel. see {ref}`basic_install_local_notebook` for details."
-msgstr "**carnet local (Jupyter)** : utilisez le bouton <i class=\"fas fa-download\"></i> pour enregistrer ce carnet comme fichier `.ipynb` sur votre machine (il faut parfois cliquer sur *enregistrer sous*), puis ouvrez-le avec votre noyau Jupyter local. Voir {ref}`basic_install_local_notebook` pour plus de détails."
+#. review_status: human_locked
+#. source_hash: d8b73d0c
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+#, python-brace-format
+msgid ""
+"**local notebook (Jupyter)**: Use the <i class=\"fas fa-download\"></i> button to save this "
+"notebook as an `.ipynb` file to your local machine (may need to click *save as*) and open it with"
+" your local Jupyter kernel. see {ref}`basic_install_local_notebook` for details."
+msgstr ""
+"**carnet local (Jupyter)** : utilisez le bouton <i class=\"fas fa-download\"></i> pour "
+"enregistrer ce carnet comme fichier `.ipynb` sur votre machine (il faut parfois cliquer sur "
+"*enregistrer sous*), puis ouvrez-le avec votre noyau Jupyter local. Voir "
+"{ref}`basic_install_local_notebook` pour plus de détails."
 
-msgid "**hosted notebook (Colab)**: Use the <i class=\"fas fa-rocket\"></i> button to open this tutorial on Google Colab."
-msgstr "**carnet hébergé (Colab)** : utilisez le bouton <i class=\"fas fa-rocket\"></i> pour ouvrir ce tutoriel dans Google Colab."
+#. review_status: human_locked
+#. source_hash: 2b186702
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"**hosted notebook (Colab)**: Use the <i class=\"fas fa-rocket\"></i> button to open this tutorial"
+" on Google Colab."
+msgstr ""
+"**carnet hébergé (Colab)** : utilisez le bouton <i class=\"fas fa-rocket\"></i> pour ouvrir ce "
+"tutoriel dans Google Colab."
 
+#. review_status: human_locked
+#. source_hash: 5e0740b6
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Install additional packages"
 msgstr "Installer des paquets supplémentaires"
 
-msgid "For this tutorial, we need the additional python packages `matplotlib` and `rasterio`. Like the install of `floodsr` shown in {doc}`Tutorial 1 <tutorial_1>`, obtaining and implementing these packages depends on your execution context:"
-msgstr "Pour ce tutoriel, nous avons besoin des paquets Python supplémentaires `matplotlib` et `rasterio`. Comme pour l'installation de `floodsr` montrée dans {doc}`le tutoriel 1 <tutorial_1>`, la façon d'obtenir et d'utiliser ces paquets dépend de votre contexte d'exécution :"
+#. review_status: human_locked
+#. source_hash: bc0b5f83
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+#, python-brace-format
+msgid ""
+"For this tutorial, we need the additional python packages `matplotlib` and `rasterio`. Like the "
+"install of `floodsr` shown in {doc}`Tutorial 1 <tutorial_1>`, obtaining and implementing these "
+"packages depends on your execution context:"
+msgstr ""
+"Pour ce tutoriel, nous avons besoin des paquets Python supplémentaires `matplotlib` et "
+"`rasterio`. Comme pour l'installation de `floodsr` montrée dans {doc}`le tutoriel 1 "
+"<tutorial_1>`, la façon d'obtenir et d'utiliser ces paquets dépend de votre contexte d'exécution "
+":"
 
-msgid "The appropriate installation steps depend on your execution context, which is described in detail in {ref}`basic_install`. Here are the basic steps for each:"
-msgstr "Les étapes d'installation adaptées dépendent de votre contexte d'exécution, décrit en détail dans {ref}`basic_install`. Voici le minimum à faire dans chaque cas :"
+#. review_status: human_locked
+#. source_hash: 47f6b7b2
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+#, python-brace-format
+msgid ""
+"The appropriate installation steps depend on your execution context, which is described in detail"
+" in {ref}`basic_install`. Here are the basic steps for each:"
+msgstr ""
+"Les étapes d'installation adaptées dépendent de votre contexte d'exécution, décrit en détail dans"
+" {ref}`basic_install`. Voici le minimum à faire dans chaque cas :"
 
-msgid "**command line (CLI)**: first, ensure pipx is installed and on PATH, then run `pipx install floodsr`. see {ref}`basic_install_cli` for more details."
-msgstr "**ligne de commande (CLI)** : commencez par vérifier que `pipx` est installé et disponible dans le PATH, puis exécutez `pipx install floodsr`. Voir {ref}`basic_install_cli` pour plus de détails."
+#. review_status: human_locked
+#. source_hash: c0b1d349
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+#, python-brace-format
+msgid ""
+"**command line (CLI)**: first, ensure pipx is installed and on PATH, then run `pipx install "
+"floodsr`. see {ref}`basic_install_cli` for more details."
+msgstr ""
+"**ligne de commande (CLI)** : commencez par vérifier que `pipx` est installé et disponible dans "
+"le PATH, puis exécutez `pipx install floodsr`. Voir {ref}`basic_install_cli` pour plus de "
+"détails."
 
-msgid "**local notebook (Jupyter)**: same as above. then either follow the additional steps in {ref}`basic_install_local_notebook` to properly set up your environment, or be lazy and uncomment the below Jupyter cell and run."
-msgstr "**carnet local (Jupyter)** : même chose. Ensuite, soit vous suivez les étapes supplémentaires de {ref}`basic_install_local_notebook` pour configurer proprement votre environnement, soit vous faites au plus simple et vous décommentez la cellule Jupyter ci-dessous avant de l'exécuter."
+#. review_status: human_locked
+#. source_hash: 374d2a7b
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+#, python-brace-format
+msgid ""
+"**local notebook (Jupyter)**: same as above. then either follow the additional steps in "
+"{ref}`basic_install_local_notebook` to properly set up your environment, or be lazy and uncomment"
+" the below Jupyter cell and run."
+msgstr ""
+"**carnet local (Jupyter)** : même chose. Ensuite, soit vous suivez les étapes supplémentaires de "
+"{ref}`basic_install_local_notebook` pour configurer proprement votre environnement, soit vous "
+"faites au plus simple et vous décommentez la cellule Jupyter ci-dessous avant de l'exécuter."
 
-msgid "**hosted notebook (Colab)**: uncomment the below colab cell and run. see {ref}`basic_install_google_colab` for details."
-msgstr "**carnet hébergé (Colab)** : décommentez la cellule Colab ci-dessous et exécutez-la. Voir {ref}`basic_install_google_colab` pour les détails."
+#. review_status: human_locked
+#. source_hash: 90ee9841
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+#, python-brace-format
+msgid ""
+"**hosted notebook (Colab)**: uncomment the below colab cell and run. see "
+"{ref}`basic_install_google_colab` for details."
+msgstr ""
+"**carnet hébergé (Colab)** : décommentez la cellule Colab ci-dessous et exécutez-la. Voir "
+"{ref}`basic_install_google_colab` pour les détails."
 
-msgid "Let's check the versions now:"
-msgstr "Vérifions maintenant les versions :"
-
+#. review_status: human_locked
+#. source_hash: f494e4b4
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
 msgid "Prove the install"
 msgstr "Vérifier l'installation"
 
-msgid "The previous cell imports the plotting dependencies and prints their versions so you can confirm the active notebook kernel has the required packages."
-msgstr "La cellule précédente importe les dépendances de visualisation et affiche leurs versions afin que vous puissiez confirmer que le noyau actif du carnet dispose bien des paquets requis."
+#. review_status: human_locked
+#. source_hash: 5e5a0d0a
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid "Let's check the versions now:"
+msgstr "Vérifions maintenant les versions :"
 
+#. review_status: human_locked
+#. source_hash: 7df60b64
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Imports"
 msgstr "Importations"
 
+#. review_status: llm_draft
+#. source_hash: dfd9a28b
+msgid "Here we import our tools and create a small helper function for reading raster data"
+msgstr "Ici, nous importons nos outils et créons une petite fonction d'aide pour lire les données raster"
+
+#. review_status: human_locked
+#. source_hash: ce6bc534
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Download the same test data as Tutorial 1"
 msgstr "Télécharger les mêmes données de test que dans le tutoriel 1"
 
+#. review_status: human_locked
+#. source_hash: 9a45f390
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "If you already downloaded these files while working through Tutorial 1, you can skip this."
-msgstr "Si vous avez déjà téléchargé ces fichiers en suivant le tutoriel 1, vous pouvez passer cette étape."
+msgstr ""
+"Si vous avez déjà téléchargé ces fichiers en suivant le tutoriel 1, vous pouvez passer cette "
+"étape."
 
+#. review_status: llm_draft
+#. source_hash: 86a5a3fa
+msgid "Here we map the downloaded paths to variables for convenience (and check that they exist)"
+msgstr ""
+"Ici, nous associons les chemins téléchargés à des variables pour plus de commodité (et nous "
+"vérifions qu'ils existent)"
+
+#. review_status: human_locked
+#. source_hash: 02318e50
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "Fetch model weights"
+msgstr "Récupérer les poids du modèle"
+
+#. review_status: llm_draft
+#. source_hash: f117e0af
+msgid ""
+"You can skip this if you just ran Tutorial 1, but re-fetching is best-practice and harmless (if "
+"the file already exist, it won't be re-downloaded)."
+msgstr ""
+"Vous pouvez ignorer cette étape si vous venez d'exécuter le tutoriel 1, mais relancer la "
+"récupération est une bonne pratique et sans danger (si le fichier existe déjà, il ne sera pas "
+"retéléchargé)."
+
+#. review_status: human_locked
+#. source_hash: 153272e5
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Plot the tutorial inputs"
 msgstr "Tracer les entrées du tutoriel"
 
-msgid "We start by plotting the low-resolution flood-depth raster in blue and the DEM tile with a terrain colormap."
-msgstr "Nous commençons par afficher en bleu le raster de profondeur d'inondation à basse résolution (une carte grossière), puis la tuile DEM avec une palette de relief."
+#. review_status: llm_draft
+#. source_hash: 97b976c8
+msgid "First, lets define a simple function to help us load raster data into the plots"
+msgstr ""
+"Commençons par définir une fonction simple pour nous aider à charger les données raster dans les "
+"graphiques"
 
+#. review_status: llm_draft
+#. source_hash: 383bc5f3
+msgid "Now we create a simple plot of the low-res inputs and the high-res DEM we downloaded."
+msgstr ""
+"Nous créons maintenant un graphique simple des entrées basse résolution et du DEM haute "
+"résolution que nous avons téléchargés."
+
+#. review_status: human_locked
+#. source_hash: 06e87119
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "this shows the not-so-great coarse pluvial flood raster at 32m"
 msgstr "On voit ici le raster pluvial grossier en 32 m, pas franchement idéal."
 
+#. review_status: human_locked
+#. source_hash: 3594ab81
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "Plot the Tutorial 1 outputs"
+msgstr "Tracer les sorties du tutoriel 1"
+
+#. review_status: llm_draft
+#. source_hash: 72a0623d
+msgid ""
+"Now let's rebuild the high-resolution flood depth raster using the same command as Tutorial 1, "
+"and plot the result."
+msgstr ""
+"Reconstituons maintenant le raster de profondeur d'inondation haute résolution en utilisant la "
+"même commande que dans le tutoriel 1, puis traçons le résultat."
+
+#. review_status: human_locked
+#. source_hash: 7593f480
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "And a quick plot:"
+msgstr "Et un rapide graphique :"
+
+#. review_status: human_locked
+#. source_hash: 3eae61e0
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "CRS policies"
+msgstr "Politiques de SCR"
+
+#. review_status: llm_draft
+#. source_hash: a84c59f5
+msgid ""
+"Here we demonstrate the behaviour of `floodsr` when the input rasters have mismatched CRS "
+"information, and how to use the `--crs-policy` option to control this behaviour."
+msgstr ""
+"Ici, nous montrons le comportement de `floodsr` lorsque les rasters d'entrée ont des informations"
+" de SCR incompatibles, et comment utiliser l'option `--crs-policy` pour contrôler ce "
+"comportement."
+
+#. review_status: human_locked
+#. source_hash: 4cd62230
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Probe the CRS of both rasters"
 msgstr "Examiner le SCR des deux rasters"
 
-msgid "A coordinate reference system (CRS) tells raster software how pixel locations map onto real-world coordinates."
-msgstr "Un système de coordonnées de référence (SCR, ou CRS en anglais) indique au logiciel raster comment les pixels d'une carte se positionnent dans le monde réel."
+#. review_status: llm_draft
+#. source_hash: 9f0acedd
+msgid ""
+"A coordinate reference system (CRS) tells raster software how pixel locations map onto real-world"
+" coordinates. Ideally, your data is all on some obvious, common CRS (e.g., NAD83(CSRS) / Canada "
+"Atlas Lambert aka [EPSG:3979](https://epsg.io/3979)), but in practice you may encounter rasters "
+"with missing or mismatched CRS information; and we need to tell `floodsr` how to handle these "
+"cases."
+msgstr ""
+"Un système de coordonnées de référence (SCR, ou CRS en anglais) indique aux logiciels raster "
+"comment les positions des pixels se mappent sur des coordonnées réelles. Idéalement, toutes vos "
+"données partagent un SCR commun évident (par exemple NAD83(CSRS) / Canada Atlas Lambert, alias "
+"[EPSG:3979](https://epsg.io/3979)), mais en pratique vous pouvez rencontrer des rasters avec des "
+"informations de SCR manquantes ou incompatibles ; il faut alors indiquer à `floodsr` comment "
+"gérer ces cas."
 
-msgid "Before we trigger a CRS mismatch on purpose, let's inspect the CRS metadata on the original rasters."
-msgstr "Avant de provoquer volontairement un décalage de SCR, examinons les métadonnées de SCR des rasters d'origine."
+#. review_status: human_locked
+#. source_hash: 0ae4dfca
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"Before we trigger a CRS mismatch on purpose, let's inspect the CRS metadata on the original "
+"rasters."
+msgstr ""
+"Avant de provoquer volontairement un décalage de SCR, examinons les métadonnées de SCR des "
+"rasters d'origine."
 
+#. review_status: human_locked
+#. source_hash: 3cf7744b
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Here we see that the CRS of both rasters are identical."
 msgstr "On voit ici que les deux rasters partagent exactement le même SCR."
 
-msgid "Nice for simple test data, but not so interesting for demonstrating how `floodsr` handles CRS mismatch. Let's mix it up."
-msgstr "C'est pratique pour un jeu de données de test simple, mais moins intéressant pour montrer comment `floodsr` gère une incompatibilité de SCR. Ajoutons un peu de désordre."
+#. review_status: human_locked
+#. source_hash: b67599fc
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"Nice for simple test data, but not so interesting for demonstrating how `floodsr` handles CRS "
+"mismatch. Let's mix it up."
+msgstr ""
+"C'est pratique pour un jeu de données de test simple, mais moins intéressant pour montrer comment"
+" `floodsr` gère une incompatibilité de SCR. Ajoutons un peu de désordre."
 
-msgid "Create a CRS mismatch on purpose"
+#. review_status: human_locked
+#. source_hash: fff8bdde
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "Create a CRS mismatch"
 msgstr "Créer volontairement un décalage de SCR"
 
-msgid "To demonstrate `--crs-policy`, we reproject the low-resolution raster to `3978` and save it as a new GeoTIFF."
-msgstr "Pour illustrer `--crs-policy`, nous reprojetons le raster basse résolution vers `3978` et l'enregistrons comme nouveau GeoTIFF (un format de fichier raster très courant)."
+#. review_status: human_locked
+#. source_hash: cd615c2c
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid ""
+"To demonstrate `--crs-policy`, we reproject the low-resolution raster to `3978` using [rasterio "
+"CLI](https://rasterio.readthedocs.io/en/stable/cli.html) and save it as a new GeoTIFF."
+msgstr ""
+"Pour démontrer `--crs-policy`, nous reprojetons le raster basse résolution vers `3978` à l'aide "
+"de [rasterio CLI](https://rasterio.readthedocs.io/en/stable/cli.html) et l'enregistrons sous "
+"forme de nouveau GeoTIFF."
 
+#. review_status: human_locked
+#. source_hash: 904290b9
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Run `tohr` with the mismatched CRS"
 msgstr "Exécuter `tohr` avec un SCR incompatible"
 
-msgid "This command should fail because the low-resolution raster and the DEM no longer share the same CRS and we haven't told `floodsr` how to handle this mismatch yet, so it assumes `--crs-policy strict` by default."
-msgstr "Cette commande devrait échouer parce que le raster basse résolution et le DEM ne partagent plus le même SCR, et nous n'avons pas encore indiqué à `floodsr` comment gérer cette incompatibilité ; il suppose donc par défaut `--crs-policy strict`."
+#. review_status: human_locked
+#. source_hash: 3f70b31e
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"This command should fail because the low-resolution raster and the DEM no longer share the same "
+"CRS and we haven't told `floodsr` how to handle this mismatch yet, so it assumes `--crs-policy "
+"strict` by default."
+msgstr ""
+"Cette commande devrait échouer parce que le raster basse résolution et le DEM ne partagent plus "
+"le même SCR, et nous n'avons pas encore indiqué à `floodsr` comment gérer cette incompatibilité ;"
+" il suppose donc par défaut `--crs-policy strict`."
 
+#. review_status: human_locked
+#. source_hash: 2aaaacbf
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "What `--crs-policy` does"
 msgstr "À quoi sert `--crs-policy`"
 
-msgid "`--crs-policy` controls how `floodsr` handles CRS mismatches between the low-resolution depth raster and the DEM. This is necessary because `tohr` needs the rasters to line up on a common projected grid before preprocessing and inference can proceed, and there is not an obvious \"right answer\" for which CRS to use when they don't match."
-msgstr "`--crs-policy` contrôle la manière dont `floodsr` gère les incompatibilités de SCR entre le raster de profondeur basse résolution et le DEM. C'est nécessaire, car `tohr` a besoin que les rasters soient alignés sur une grille projetée commune avant que le prétraitement et l'inférence puissent démarrer, et il n'existe pas de \"bonne réponse\" évidente quant au SCR à utiliser lorsqu'ils ne correspondent pas."
+#. review_status: human_locked
+#. source_hash: 290f068f
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"`--crs-policy` controls how `floodsr` handles CRS mismatches between the low-resolution depth "
+"raster and the DEM. This is necessary because `tohr` needs the rasters to line up on a common "
+"projected grid before preprocessing and inference can proceed, and there is not an obvious "
+"\"right answer\" for which CRS to use when they don't match."
+msgstr ""
+"`--crs-policy` contrôle la manière dont `floodsr` gère les incompatibilités de SCR entre le "
+"raster de profondeur basse résolution et le DEM. C'est nécessaire, car `tohr` a besoin que les "
+"rasters soient alignés sur une grille projetée commune avant que le prétraitement et l'inférence "
+"puissent démarrer, et il n'existe pas de \"bonne réponse\" évidente quant au SCR à utiliser "
+"lorsqu'ils ne correspondent pas."
 
-msgid "For this example we use `--crs-policy=use-dem`, which tells `floodsr` to treat the DEM CRS as the target CRS and reproject the low-resolution depth raster to match it. We could have chosen `--crs-policy=use-lores` which would treat the low-resolution raster CRS as the target and reproject the DEM to match it."
-msgstr "Dans cet exemple, nous utilisons `--crs-policy=use-dem`, ce qui indique à `floodsr` de prendre le SCR du DEM comme SCR cible et de reprojeter le raster de profondeur basse résolution pour s'y conformer. Nous aurions aussi pu choisir `--crs-policy=use-lores`, qui aurait pris le SCR du raster basse résolution comme cible et reprojeté le DEM pour s'y adapter."
+#. review_status: human_locked
+#. source_hash: 5c4413fe
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"For this example we use `--crs-policy=use-dem`, which tells `floodsr` to treat the DEM CRS as the"
+" target CRS and reproject the low-resolution depth raster to match it. We could have chosen "
+"`--crs-policy=use-lores` which would treat the low-resolution raster CRS as the target and "
+"reproject the DEM to match it."
+msgstr ""
+"Dans cet exemple, nous utilisons `--crs-policy=use-dem`, ce qui indique à `floodsr` de prendre le"
+" SCR du DEM comme SCR cible et de reprojeter le raster de profondeur basse résolution pour s'y "
+"conformer. Nous aurions aussi pu choisir `--crs-policy=use-lores`, qui aurait pris le SCR du "
+"raster basse résolution comme cible et reprojeté le DEM pour s'y adapter."
 
+#. review_status: human_locked
+#. source_hash: f7978723
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Plot the CRS-policy result"
 msgstr "Tracer le résultat avec la politique de SCR"
 
-msgid "let's visualize the result"
-msgstr "Visualisons le résultat."
+#. review_status: llm_draft
+#. source_hash: e1244433
+msgid ""
+"Let's compare the `--crs-policy=use-dem` result against the baseline output from the original "
+"matching-CRS run."
+msgstr ""
+"Comparons le résultat de `--crs-policy=use-dem` avec la sortie de référence obtenue lors de "
+"l'exécution initiale avec SCR concordants."
 
-msgid "ooh... pretty"
-msgstr "oh... joli"
+#. review_status: llm_draft
+#. source_hash: 14e0d1ce
+msgid "Looks the same to me! as expected..."
+msgstr "Cela me semble identique ! comme prévu..."
 
-msgid "`--min-depth-threshold`"
-msgstr "`--min-depth-threshold`"
+#. review_status: llm_draft
+#. source_hash: 40d2007f
+#, python-brace-format
+msgid "Check out the {ref}`user_faq` for more discussion on CRS policies."
+msgstr "Consultez {ref}`user_faq` pour en savoir plus sur les politiques de SCR."
 
-msgid "Now lets explore the argument `--min-depth-threshold`, which sets the minimum predicted depth retained in the output raster.  Values below the threshold are written as `0.0`."
-msgstr "Examinons maintenant l'argument `--min-depth-threshold`, qui définit la profondeur prédite minimale conservée dans le raster de sortie. Les valeurs inférieures au seuil sont écrites comme `0.0`."
+#. review_status: human_locked
+#. source_hash: 94ad09f5
+#. reviewed_at: 2026-06-14
+#. reviewer: Codex trivial-review
+msgid "Minimum depth threshold"
+msgstr "Seuil minimal de profondeur"
 
-msgid "This is useful because very small positive predictions can be noisy or physically improbable, making it an important parameter for tuning the result."
-msgstr "C'est utile parce que de très petites prédictions positives peuvent être bruyantes ou physiquement peu plausibles, ce qui en fait un paramètre important pour ajuster le résultat."
+#. review_status: human_locked
+#. source_hash: 462cc411
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"Now lets explore the argument `--min-depth-threshold`, which sets the minimum predicted depth "
+"retained in the output raster.  Values below the threshold are written as `0.0`."
+msgstr ""
+"Examinons maintenant l'argument `--min-depth-threshold`, qui définit la profondeur prédite "
+"minimale conservée dans le raster de sortie. Les valeurs inférieures au seuil sont écrites comme "
+"`0.0`."
 
-msgid "First, let's run `tohr` with the default `--min-depth-threshold` (which is 0.01) against the original CRS matching rasters as a comparison."
-msgstr "Pour commencer, exécutons `tohr` avec le `--min-depth-threshold` par défaut (soit 0.01) sur les rasters d'origine dont les SCR correspondent, afin d'avoir un point de comparaison."
+#. review_status: human_locked
+#. source_hash: 2ec1498a
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
+msgid ""
+"This is useful because very small positive predictions can be noisy or physically improbable, "
+"making it an important parameter for tuning the result."
+msgstr ""
+"C'est utile parce que de très petites prédictions positives peuvent être bruyantes ou "
+"physiquement peu plausibles, ce qui en fait un paramètre important pour ajuster le résultat."
 
+#. review_status: llm_draft
+#. source_hash: ea924313
+msgid ""
+"We already ran `tohr` with the default `--min-depth-threshold` (0.01) above as a baseline, so now"
+" let's run it again with a higher threshold of `0.1` for comparison."
+msgstr ""
+"Nous avons déjà exécuté `tohr` avec le `--min-depth-threshold` par défaut (0.01) ci-dessus comme "
+"référence, alors relançons-le avec un seuil plus élevé de `0.1` pour comparer."
+
+#. review_status: human_locked
+#. source_hash: 56e6e66f
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "you'll noticed we used the `-q` or `--quiet` flag to suppress the usual CLI output here."
-msgstr "Vous remarquerez que nous avons utilisé l'option `-q` ou `--quiet` ici pour supprimer la sortie habituelle de la CLI."
+msgstr ""
+"Vous remarquerez que nous avons utilisé l'option `-q` ou `--quiet` ici pour supprimer la sortie "
+"habituelle de la CLI."
 
+#. review_status: human_locked
+#. source_hash: dc0903e3
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Now let's run `tohr` with a higher `--min-depth-threshold` of `0.1`."
 msgstr "Exécutons maintenant `tohr` avec un `--min-depth-threshold` plus élevé, à `0.1`."
 
+#. review_status: human_locked
+#. source_hash: a0f0539a
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Plot"
 msgstr "Tracé"
 
+#. review_status: human_locked
+#. source_hash: dd00d3d3
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Next steps"
 msgstr "Suite"
 
+#. review_status: human_locked
+#. source_hash: b22dd1af
+#. reviewed_at: 2026-03-29
+#. reviewer: Emma H
 msgid "Continue with Tutorial 3 to see how `floodsr` can operate on large rasters"
-msgstr "Poursuivez avec le tutoriel 3 pour voir comment `floodsr` peut fonctionner sur des rasters de grande taille."
+msgstr ""
+"Poursuivez avec le tutoriel 3 pour voir comment `floodsr` peut fonctionner sur des rasters de "
+"grande taille."

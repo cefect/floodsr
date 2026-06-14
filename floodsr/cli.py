@@ -25,11 +25,17 @@ def _configure_logging(args: argparse.Namespace) -> None:
         logging.basicConfig(level=effective_level)
 
 
-def _resolve_tohr_model_spec(args: argparse.Namespace) -> tuple[str, Path]:
+def _resolve_tohr_model_spec(args: argparse.Namespace) -> tuple[str, Path | None]:
     """Resolve the model worker version and ONNX path for `floodsr tohr`."""
     from floodsr.cache_paths import get_model_cache_path
     from floodsr.checksums import verify_sha256
-    from floodsr.model_registry import fetch_model, list_runnable_model_versions, load_models_manifest, model_worker_exists
+    from floodsr.model_registry import (
+        fetch_model,
+        list_runnable_model_versions,
+        load_models_manifest,
+        model_worker_exists,
+        model_version_requires_artifact,
+    )
 
     if args.model_path is not None:
         model_fp = Path(args.model_path).expanduser().resolve()
@@ -51,12 +57,15 @@ def _resolve_tohr_model_spec(args: argparse.Namespace) -> tuple[str, Path]:
     if args.model_version is None:
         # Try first listed runnable model first, then fallback to first valid cached runnable model.
         first_version = runnable_versions[0]
-        first_payload = models[first_version]
-        first_fp = get_model_cache_path(first_version, first_payload["file_name"], cache_dir=args.cache_dir)
-        if first_fp.exists() and verify_sha256(first_fp, first_payload["sha256"]):
-            return first_version, first_fp
+        if model_version_requires_artifact(first_version):
+            first_payload = models[first_version]
+            first_fp = get_model_cache_path(first_version, first_payload["file_name"], cache_dir=args.cache_dir)
+            if first_fp.exists() and verify_sha256(first_fp, first_payload["sha256"]):
+                return first_version, first_fp
 
         for version in runnable_versions:
+            if not model_version_requires_artifact(version):
+                continue
             payload = models[version]
             cached_fp = get_model_cache_path(version, payload["file_name"], cache_dir=args.cache_dir)
             if cached_fp.exists() and verify_sha256(cached_fp, payload["sha256"]):
@@ -69,6 +78,8 @@ def _resolve_tohr_model_spec(args: argparse.Namespace) -> tuple[str, Path]:
 
     if not model_worker_exists(args.model_version):
         raise ValueError(f"no model worker found for --model-version={args.model_version}")
+    if not model_version_requires_artifact(args.model_version):
+        return args.model_version, None
     return args.model_version, fetch_model(
         args.model_version,
         cache_dir=args.cache_dir,
@@ -216,17 +227,19 @@ def _build_floodsr_package_info() -> dict[str, str]:
 
 def _build_doctor_payload() -> dict[str, object]:
     """Collect runtime dependency diagnostics for the `doctor` command."""
-    from floodsr.engine import get_gdal_info, get_onnxruntime_info, get_rasterio_info
+    from floodsr.engine import get_gdal_info, get_onnxruntime_info, get_pcraster_info, get_rasterio_info
 
     floodsr_info = _build_floodsr_package_info()
     ort_info = get_onnxruntime_info()
     rasterio_info = get_rasterio_info()
     gdal_info = get_gdal_info()
+    pcraster_info = get_pcraster_info()
     return {
         "floodsr": floodsr_info,
         "onnxruntime": ort_info,
         "rasterio": rasterio_info,
         "gdal": gdal_info,
+        "pcraster": pcraster_info,
     }
 
 
@@ -237,7 +250,10 @@ def main_cli(args: argparse.Namespace) -> int:
         from floodsr.model_registry import list_models
 
         for model in list_models(manifest_fp=args.manifest):
-            print(f"{model.version}\t{model.file_name}\t{model.url}")
+            if model.requires_model_artifact:
+                print(f"{model.version}\t{model.file_name}\t{model.url}")
+            else:
+                print(f"{model.version}\t(built-in, no download)\t{model.description}")
         return 0
 
     # Route model fetch command.
@@ -312,6 +328,7 @@ def main_cli(args: argparse.Namespace) -> int:
         ort_info = payload["onnxruntime"]
         rasterio_info = payload["rasterio"]
         gdal_info = payload["gdal"]
+        pcraster_info = payload["pcraster"]
         print(f"floodsr_version={floodsr_info['version']}")
         print(f"floodsr_module_path={floodsr_info['module_path']}")
         print(f"onnxruntime_installed={ort_info['installed']}")
@@ -324,6 +341,9 @@ def main_cli(args: argparse.Namespace) -> int:
         print(f"gdal_config_installed={gdal_info['gdal_config_installed']}")
         print(f"gdal_config_version={gdal_info['gdal_config_version']}")
         print(f"gdal_vrt_enabled={gdal_info['vrt_enabled']}")
+        print(f"pcraster_installed={pcraster_info['installed']}")
+        print(f"pcraster_version={pcraster_info['version']}")
+        print(f"pcraster_spreadzone_available={pcraster_info['spreadzone_available']}")
         return 0
 
     raise ValueError(f"unsupported command path: {args.command}/{getattr(args, 'models_command', None)}")
@@ -403,7 +423,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Fetch one manifest model into the local cache.",
         description="Fetch one manifest model into the local cache.",
     )
-    models_fetch_parser.add_argument("version", help="Model version key to fetch from the manifest.")
+    models_fetch_parser.add_argument(
+        "version",
+        help=(
+            "Model version key to fetch from the manifest. "
+            "Built-in models such as `CostGrow_Terrain` report metadata without downloading weights."
+        ),
+    )
     models_fetch_parser.add_argument(
         "--manifest",
         type=Path,
@@ -473,13 +499,20 @@ def build_parser() -> argparse.ArgumentParser:
     tohr_parser.add_argument(
         "--model-version",
         default=None,
-        help="Manifest model version to run or fetch when `--model-path` is not provided.",
+        help=(
+            "Model version to run when `--model-path` is not provided. "
+            "Use `ResUNet_16x_DEM` for the downloaded ONNX model or "
+            "`CostGrow_Terrain` for the built-in PCRaster-backed rules model."
+        ),
     )
     tohr_parser.add_argument(
         "--model-path",
         type=Path,
         default=None,
-        help="Use an explicit local ONNX model file instead of resolving from cache/manifest.",
+        help=(
+            "Use an explicit local ONNX model file instead of resolving a downloaded model "
+            "from cache/manifest. Not used by built-in models such as `CostGrow_Terrain`."
+        ),
     )
     tohr_parser.add_argument(
         "--manifest",

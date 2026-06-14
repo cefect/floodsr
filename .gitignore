@@ -37,6 +37,7 @@ venv.bak/
 
 # docs
 docs/user/_build
+docs/user/_fr_review
 *.mo
 
 #windows shortcuts
@@ -67,7 +68,10 @@ misc/profiling/output
 
 
 report
-
+PLAN.md
 
 misc/fig/rss_validate/data
 misc/fig/rss_validate/output
+
+
+docs/dev/docs_tutorials_followup.md
