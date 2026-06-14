@@ -178,11 +178,11 @@ msgstr ""
 "la profondeur à haute résolution."
 
 #. review_status: human_locked
-#. source_hash: 36a798e3
+#. source_hash: 95ce862a
 #. reviewed_at: 2026-03-29
 #. reviewer: Emma H
-msgid "Training"
-msgstr "Entraînement"
+msgid "**Training**"
+msgstr "**Entraînement**"
 
 #. review_status: human_locked
 #. source_hash: 7b8a8885
@@ -208,11 +208,11 @@ msgid "Optimization used Adam with gradient clipping and a scheduled learning ra
 msgstr "L'optimisation utilise Adam avec un écrêtage du gradient et un taux d'apprentissage planifié."
 
 #. review_status: human_locked
-#. source_hash: ae5b8a4c
+#. source_hash: fa5b7e0b
 #. reviewed_at: 2026-03-29
 #. reviewer: Emma H
-msgid "Inference"
-msgstr "Inférence"
+msgid "**Inference**"
+msgstr "**Inférence**"
 
 #. review_status: human_locked
 #. source_hash: 8dac2559
@@ -257,40 +257,25 @@ msgstr ""
 "résolution préparé et du DEM fourni."
 
 #. review_status: llm_draft
-#. source_hash: b2970d9c
+#. source_hash: 5cd24758
 msgid ""
-"This model is a good fit when you want a deterministic terrain-driven result and when you prefer "
-"a built-in method over a downloaded machine-learning artifact. Compared with ``ResUNet_16x_DEM``,"
-" CostGrow is more explicitly tied to the DEM-driven propagation rules, while ResUNet uses a "
+"This model is a good fit when you want a deterministic terrain-driven result or if you don't want"
+" to download any model weights. Compared with ``ResUNet_16x_DEM``, CostGrow is more explicitly "
+"tied to the DEM-driven propagation rules, while ResUNet uses a "
 "learned DEM-aware reconstruction model."
 msgstr ""
-"Ce modèle convient bien lorsque vous voulez un résultat déterministe piloté par le terrain et que"
-" vous préférez une méthode intégrée à un artefact d'apprentissage automatique téléchargé. Par "
-"rapport à ``ResUNet_16x_DEM``, CostGrow est plus explicitement lié aux règles de propagation "
-"pilotées par le DEM, tandis que ResUNet utilise un modèle de reconstruction appris qui tient "
-"compte du DEM."
+"Ce modèle convient bien lorsque vous voulez un résultat déterministe piloté par le terrain ou si "
+"vous ne voulez pas télécharger de poids de modèle. Par rapport à ``ResUNet_16x_DEM``, CostGrow "
+"est plus explicitement lié aux règles de propagation pilotées par le DEM, tandis que ResUNet "
+"utilise un modèle de reconstruction appris qui tient compte du DEM."
 
 #. review_status: llm_draft
-#. source_hash: 923b5129
+#. source_hash: f5216414
 msgid ""
-"``CostGrow_Terrain`` runs through the same ``floodsr tohr`` command as the other models and "
-"produces the same final high-resolution depth raster output contract. As with any ``tohr`` "
-"workflow, the quality of the result depends heavily on the quality of the DEM and on whether that"
-" DEM represents the intended flood propagation surface."
+"``CostGrow_Terrain`` requires `PCRaster <https://pcraster.geo.uu.nl/>`_, per the extended "
+"installation workflow described in :doc:`installation`. If you use this model in your work, "
+"please cite `Bryant et al. (2024) <https://doi.org/10.5194/hess-28-575-2024>`_."
 msgstr ""
-"``CostGrow_Terrain`` s'exécute avec la même commande ``floodsr tohr`` que les autres modèles et "
-"produit le même type de raster final de profondeur haute résolution. Comme pour"
-" tout flux ``tohr``, la qualité du résultat dépend fortement de la qualité du DEM et du fait que "
-"ce DEM représente bien la surface de propagation d'inondation visée."
-
-#. review_status: llm_draft
-#. source_hash: 680182a6
-msgid ""
-"Unlike ``ResUNet_16x_DEM``, ``CostGrow_Terrain`` does not require downloaded model weights. It "
-"does require `PCRaster <https://pcraster.geo.uu.nl/>`_. If PCRaster is not available in your "
-"environment, use the extended installation workflow described in :doc:`installation`."
-msgstr ""
-"Contrairement à ``ResUNet_16x_DEM``, ``CostGrow_Terrain`` ne nécessite pas de poids de modèle "
-"téléchargés. Il nécessite toutefois `PCRaster <https://pcraster.geo.uu.nl/>`_. Si PCRaster n'est "
-"pas disponible dans votre environnement, utilisez le flux d'installation étendue décrit dans "
-":doc:`installation`."
+"``CostGrow_Terrain`` nécessite `PCRaster <https://pcraster.geo.uu.nl/>`_, conformément au flux "
+"d'installation étendue décrit dans :doc:`installation`. Si vous utilisez ce modèle dans vos "
+"travaux, veuillez citer `Bryant et al. (2024) <https://doi.org/10.5194/hess-28-575-2024>`_."

@@ -75,7 +75,7 @@ CostGrow
 ``CostGrow_Terrain`` is a built-in rules-based model for propagating low-resolution flood depth across a high-resolution DEM.
 Instead of using learned weights, it uses terrain-penalty growth logic to reconstruct a higher-resolution flood surface from the prepared low-resolution depth raster and the supplied DEM.
 
-This model is a good fit when you want a deterministic terrain-driven result or if you don't want to download any model-weights.
+This model is a good fit when you want a deterministic terrain-driven result or if you don't want to download any model weights.
 Compared with ``ResUNet_16x_DEM``, CostGrow is more explicitly tied to the DEM-driven propagation rules, while ResUNet uses a learned DEM-aware reconstruction model.
 
 ``CostGrow_Terrain`` requires `PCRaster <https://pcraster.geo.uu.nl/>`_, per the extended installation workflow described in :doc:`installation`.
