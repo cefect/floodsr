@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [0.2.0]
 
 ### Added
 - Added `CostGrow_Terrain` as a built-in PCRaster-backed model worker.

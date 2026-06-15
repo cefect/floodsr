@@ -17,6 +17,7 @@ Built on PyTorch and GDAL, floodsr is designed for geospatial practitioners who 
 
 Implemented models (see `floodsr/models.json`):
 - **ResUNet_16x_DEM**: 16x DEM-conditioned ResUNet
+- **CostGrow_Terrain**: built-in terrain-penalty growth model from [Bryant et al. (2024)](https://doi.org/10.5194/hess-28-575-2024)
  
 
 ## Installation

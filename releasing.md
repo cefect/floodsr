@@ -52,7 +52,7 @@ git pull --ff-only origin master
 git tag --sort=-v:refname | grep '^v' | head -n4
 
 # 3) create the annotated pre-release tag on the current master commit
-tag="v0.2.0a2"
+tag="v0.2.0a3"
 git tag -a "$tag" -m "Release $tag"
 
 # 4) push the branch first, then the tag
