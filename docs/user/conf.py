@@ -8,7 +8,7 @@ from setuptools_scm import get_version
 # -- Project information -----------------------------------------------------
 
 project = "floodsr"
-author = "floodsr developers"
+author = "CEFlood"
 current_year = datetime.now().year
 copyright = f"{current_year}, {author}"
 
