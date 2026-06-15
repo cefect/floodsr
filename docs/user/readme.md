@@ -27,8 +27,20 @@ python -m sphinx --fresh-env -b html . "_build/manual"
 ```
 
 or.. run containerized from wsl
+
+This host-side wrapper runs the Sphinx build in the docs container so the build uses the same docs toolchain as the devcontainer/RTD image instead of whatever Python environment is active on the host.
+It mounts the repo at `/workspace`, sets `PYTHONPATH=/workspace`, uses the `cefect/floodsr-docs:dev-v0.1` image, and delegates the in-container build to `scripts/_run_sphinx_inside.sh`.
+With no arguments it builds the English docs to `docs/user/_build/manual` and prints the generated `index.html` path.
+
 ```bash
-`/home/cefect/LS/09_REPOS/04_TOOLS/floodsr/docs/user/scripts/run_sphinx_docker.sh`
+/home/cefect/LS/09_REPOS/04_TOOLS/floodsr/docs/user/scripts/run_sphinx_docker.sh
+```
+
+To build the French docs through the same container, pass `--french`.
+That first compiles the French `.po` catalogs to `.mo`, then builds with `-D language=fr` into `docs/user/_build/fr_html`.
+
+```bash
+/home/cefect/LS/09_REPOS/04_TOOLS/floodsr/docs/user/scripts/run_sphinx_docker.sh --french
 ```
 
 ## french

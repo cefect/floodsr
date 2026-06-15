@@ -49,7 +49,13 @@ pytest -q tests/test_cli_models.py 2>&1 | tee "tests/log/pytest_$(date -u +%Y%m%
 NOTE: these use a different .devcontainer
 ```bash
 cd /home/cefect/LS/09_REPOS/04_TOOLS/floodsr
-# from the WSL repo root, run sphinx/docs tests inside the docs container
+
+pytest -q -m "sphinx"
+
+```
+
+or,  from the WSL repo root, run sphinx/docs tests inside the docs container
+```bash
 docker compose -f .devcontainer/docs/docker-compose.yml run --rm dev 'pytest -q -m "sphinx"'
 
 ```
