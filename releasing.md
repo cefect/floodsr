@@ -34,7 +34,6 @@ This means:
 If the tag points to a commit that is not already on `origin/master`, the release workflow will fail before publishing.
 
 ### pre-release to TestPyPI
-Use a pre-release tag when you want to test packaging or installation behavior on TestPyPI without publishing a stable release to PyPI.
 
 Accepted pre-release tag forms:
 - `v0.1.3rc1`
@@ -42,6 +41,7 @@ Accepted pre-release tag forms:
 - `v0.1.3b1`
 
 These route to the `publish-testpypi` job in `.github/workflows/release.yml`.
+NOTE: the testPyPi landing page shows the stable release by default (click ["release history"](https://test.pypi.org/project/floodsr/#history) to see pre-releases).
 
 ```bash
 # 1) start from an up-to-date master branch
@@ -52,7 +52,7 @@ git pull --ff-only origin master
 git tag --sort=-v:refname | grep '^v' | head -n4
 
 # 3) create the annotated pre-release tag on the current master commit
-tag="v0.1.3rc1"
+tag="v0.2.0a2"
 git tag -a "$tag" -m "Release $tag"
 
 # 4) push the branch first, then the tag
@@ -66,6 +66,9 @@ This triggers `.github/workflows/release.yml`, which:
 - runs unit and install-smoke validation
 - publishes the pre-release to TestPyPI only
 - creates or updates the GitHub Release as a pre-release
+
+NOTE: if this fails, usually need to re-tag and push.
+
 
 ### stable release to PyPI
 Use a stable tag only after the release commit is already pushed to `origin/master`.
@@ -113,10 +116,25 @@ docker run --rm --init condaforge/miniforge3:25.3.1-0 bash -lc "
   export PIPX_HOME=/opt/pipx &&
   export PIPX_BIN_DIR=/usr/local/bin &&
   python -m pip install --upgrade pip pipx &&
-  pipx install --index-url https://test.pypi.org/simple/ --pip-args='--extra-index-url https://pypi.org/simple' floodsr &&
+  pipx install --index-url https://test.pypi.org/simple/ --pip-args='--extra-index-url https://pypi.org/simple' 'floodsr==${tag#v}' &&
   pipx runpip floodsr show floodsr &&
   floodsr doctor &&
   floodsr models list
+"
+```
+
+
+
+```bash
+# extended
+docker run --rm --init condaforge/miniforge3:25.3.1-0 bash -lc "
+  set -euo pipefail &&
+  conda create -n floodsr-gdal -c conda-forge python=3.12 gdal pcraster -y &&
+  conda run -n floodsr-gdal python -m pip install --upgrade pip &&
+  conda run -n floodsr-gdal python -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple floodsr==${tag#v} &&
+  conda run -n floodsr-gdal python -m pip show floodsr &&
+  conda run -n floodsr-gdal floodsr doctor &&
+  conda run -n floodsr-gdal floodsr models list
 "
 ```
 
@@ -135,6 +153,8 @@ docker run --rm --init condaforge/miniforge3:25.3.1-0 bash -lc "
   floodsr models list
 "
 ```
+
+
 
 
 

@@ -80,7 +80,7 @@ see the [tests readme](../../tests/README.md) also
   - runs one constrained minimum-core test slice
   - builds and validates `dist/*`
   - smoke-tests the core install on Ubuntu
-  - smoke-tests the extended conda install on Ubuntu and Windows
+  - smoke-tests the extended conda install on Ubuntu
   - publishes to TestPyPI or PyPI
   - updates the GitHub Release
 - Trigger: `push` tags matching `v*`.

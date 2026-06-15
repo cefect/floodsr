@@ -224,7 +224,6 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          - windows-latest
 
     steps:
       # Fetch the previously built artifacts instead of rebuilding from source.
@@ -247,7 +246,7 @@ jobs:
       - name: Install extended dependencies and wheel
         shell: pwsh
         run: |
-          conda install -n floodsr-gdal -c conda-forge gdal -y
+          conda install -n floodsr-gdal -c conda-forge gdal pip -y
           $wheel = (Get-ChildItem dist/*.whl | Select-Object -First 1).FullName
           conda run -n floodsr-gdal python -m pip install --upgrade pip
           conda run -n floodsr-gdal python -m pip install "$wheel"
