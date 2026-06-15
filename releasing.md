@@ -82,7 +82,7 @@ git pull --ff-only origin master
 git tag --sort=-v:refname | grep '^v' | head -n4
 
 # 3) create and push an annotated pre-release tag
-tag="v0.1.4"
+tag="v0.2.0"
 git tag -a $tag -m "Release $tag"
 git push origin master
 git push origin "$tag"
@@ -151,6 +151,19 @@ docker run --rm --init condaforge/miniforge3:25.3.1-0 bash -lc "
   pipx runpip floodsr show floodsr &&
   floodsr doctor &&
   floodsr models list
+"
+```
+
+```bash
+# extended
+docker run --rm --init condaforge/miniforge3:25.3.1-0 bash -lc "
+  set -euo pipefail &&
+  conda create -n floodsr-gdal -c conda-forge python=3.12 gdal pcraster -y &&
+  conda run -n floodsr-gdal python -m pip install --upgrade pip &&
+  conda run -n floodsr-gdal python -m pip install floodsr &&
+  conda run -n floodsr-gdal python -m pip show floodsr &&
+  conda run -n floodsr-gdal floodsr doctor &&
+  conda run -n floodsr-gdal floodsr models list
 "
 ```
 
