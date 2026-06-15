@@ -10,7 +10,7 @@ Fuse low-res flood grids with high-res DEMs to infer fine-scale flood patterns.
 Built on PyTorch and GDAL, floodsr is designed for geospatial practitioners who need to enhance flood hazard data for better risk assessment and planning.
 
 
-![floodsr header](docs/user/img/header.png)
+![floodsr header](https://raw.githubusercontent.com/cefect/floodsr/master/docs/user/img/header.png)
 
 - **Documentation**: https://floodsr.readthedocs.io/en/latest/
 - **Contribute**: https://github.com/cefect/floodsr/blob/master/CONTRIBUTING.md
